@@ -1,4 +1,4 @@
-import type { Product, Customer, Supplier, SalesOrder } from './types';
+import type { Product, Customer, Supplier, SalesOrder, PurchaseOrder, User } from './types';
 
 export const products: Product[] = [
   {
@@ -111,4 +111,17 @@ export const recentSales: SalesOrder[] = [
     { id: 'SALE003', date: '2024-07-22', customerName: 'Maria Garcia', total: 3500.00, status: 'Pending' },
     { id: 'SALE004', date: '2024-07-22', customerName: 'Carlos Sanchez', total: 85.50, status: 'Completed' },
     { id: 'SALE005', date: '2024-07-21', customerName: 'Publico General', total: 99.18, status: 'Cancelled' },
+];
+
+export const purchaseOrders: PurchaseOrder[] = [
+    { id: 'PO-001', supplierName: 'Proveedor A', date: '2024-07-20', total: 5500.00, status: 'Received' },
+    { id: 'PO-002', supplierName: 'Proveedor B', date: '2024-07-21', total: 12000.50, status: 'Pending' },
+    { id: 'PO-003', supplierName: 'Proveedor C', date: '2024-07-22', total: 350.00, status: 'Received' },
+    { id: 'PO-004', supplierName: 'Proveedor A', date: '2024-07-23', total: 890.00, status: 'Cancelled' },
+];
+
+export const users: User[] = [
+    { id: 'USR001', name: 'Admin User', email: 'admin@example.com', role: 'Admin', status: 'Active' },
+    { id: 'USR002', name: 'Manager User', email: 'manager@example.com', role: 'Manager', status: 'Active' },
+    { id: 'USR003', name: 'Cashier User', email: 'cashier@example.com', role: 'Cashier', status: 'Invited' },
 ];

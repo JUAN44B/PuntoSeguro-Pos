@@ -41,3 +41,19 @@ export type SalesOrder = {
     total: number;
     status: 'Completed' | 'Pending' | 'Cancelled';
 };
+
+export type PurchaseOrder = {
+  id: string;
+  supplierName: string;
+  date: string;
+  total: number;
+  status: 'Received' | 'Pending' | 'Cancelled';
+};
+
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: 'Admin' | 'Manager' | 'Cashier';
+  status: 'Active' | 'Invited';
+};
