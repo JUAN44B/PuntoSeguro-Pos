@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -24,10 +25,13 @@ import {
 } from "@/components/ui/table";
 import { products } from "@/lib/data";
 import type { Product } from "@/lib/types";
+import PaymentDialog from "./components/payment-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function POSPage() {
   const [cart, setCart] = React.useState<Map<string, { product: Product; quantity: number }>>(new Map());
   const [searchTerm, setSearchTerm] = React.useState("");
+  const { toast } = useToast();
 
   const addToCart = (product: Product) => {
     setCart((prevCart) => {
@@ -54,6 +58,14 @@ export default function POSPage() {
             }
         }
         return newCart;
+    });
+  };
+
+  const handlePaymentSuccess = () => {
+    setCart(new Map());
+    toast({
+      title: "Sale Completed",
+      description: "The transaction was successful.",
     });
   };
 
@@ -171,9 +183,11 @@ export default function POSPage() {
                     <span>${total.toFixed(2)}</span>
                 </div>
              </div>
-            <Button className="w-full bg-primary hover:bg-primary/90" size="lg">
-              Proceed to Payment
-            </Button>
+             <PaymentDialog total={total} onPaymentSuccess={handlePaymentSuccess}>
+                <Button className="w-full bg-primary hover:bg-primary/90" size="lg" disabled={cart.size === 0}>
+                  Proceed to Payment
+                </Button>
+            </PaymentDialog>
           </CardFooter>
         </Card>
       </div>
