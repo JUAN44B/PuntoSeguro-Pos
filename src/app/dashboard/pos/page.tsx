@@ -183,7 +183,13 @@ export default function POSPage() {
                     <span>${total.toFixed(2)}</span>
                 </div>
              </div>
-             <PaymentDialog total={total} onPaymentSuccess={handlePaymentSuccess}>
+             <PaymentDialog 
+                total={total}
+                subtotal={subtotal}
+                tax={tax}
+                cart={cart}
+                onPaymentSuccess={handlePaymentSuccess}
+             >
                 <Button className="w-full bg-primary hover:bg-primary/90" size="lg" disabled={cart.size === 0}>
                   Proceed to Payment
                 </Button>

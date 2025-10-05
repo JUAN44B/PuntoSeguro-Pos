@@ -17,18 +17,25 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import type { Product } from "@/lib/types"
+import Receipt from "./receipt"
 
 interface PaymentDialogProps {
+  cart: Map<string, { product: Product; quantity: number }>;
+  subtotal: number;
+  tax: number;
   total: number
   onPaymentSuccess: () => void
   children: React.ReactNode
 }
 
-export default function PaymentDialog({ total, onPaymentSuccess, children }: PaymentDialogProps) {
+export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuccess, children }: PaymentDialogProps) {
   const [open, setOpen] = React.useState(false)
   const [amountReceived, setAmountReceived] = React.useState("")
   const [paymentMethod, setPaymentMethod] = React.useState<"cash" | "card">("cash")
   const [paymentComplete, setPaymentComplete] = React.useState(false)
+  const receiptRef = React.useRef<HTMLDivElement>(null);
+
 
   const numpadKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "C"]
 
@@ -54,7 +61,16 @@ export default function PaymentDialog({ total, onPaymentSuccess, children }: Pay
   }
 
   const handlePrintReceipt = () => {
-    window.print()
+     const printContent = receiptRef.current;
+    if (printContent) {
+      const originalContents = document.body.innerHTML;
+      const printHtml = printContent.innerHTML;
+      document.body.innerHTML = printHtml;
+      window.print();
+      document.body.innerHTML = originalContents;
+      // Reload to restore styles and event handlers
+      window.location.reload();
+    }
   }
 
   const resetState = () => {
@@ -71,22 +87,6 @@ export default function PaymentDialog({ total, onPaymentSuccess, children }: Pay
         {children}
       </AlertDialogTrigger>
       <AlertDialogContent className="max-w-2xl">
-        <style>{`
-          @media print {
-            body * {
-              visibility: hidden;
-            }
-            #receipt-section, #receipt-section * {
-              visibility: visible;
-            }
-            #receipt-section {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-            }
-          }
-        `}</style>
         <AlertDialogHeader>
           <AlertDialogTitle>{paymentComplete ? "Payment Successful" : "Complete Payment"}</AlertDialogTitle>
           <AlertDialogDescription>
@@ -95,17 +95,18 @@ export default function PaymentDialog({ total, onPaymentSuccess, children }: Pay
         </AlertDialogHeader>
 
         {paymentComplete ? (
-           <div id="receipt-section" className="space-y-4 my-4 p-4 border rounded-lg bg-background">
-             <h3 className="text-lg font-semibold text-center">PuntoSeguro POS</h3>
-             <p className="text-center text-sm">Av. Principal 123, Ciudad</p>
-             <p className="text-center text-sm mb-4">Fecha: {new Date().toLocaleString()}</p>
-             <div className="border-t border-b py-2 my-2 space-y-1">
-                <div className="flex justify-between"><span>Total:</span> <span>${total.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span>Amount Received ({paymentMethod}):</span> <span>${received.toFixed(2)}</span></div>
-                <div className="flex justify-between font-bold"><span>Change:</span> <span>${change.toFixed(2)}</span></div>
-             </div>
-             <p className="text-center text-xs mt-4">Gracias por su compra!</p>
-           </div>
+          <div className="hidden">
+            <Receipt 
+              ref={receiptRef}
+              items={cart}
+              total={total}
+              subtotal={subtotal}
+              tax={tax}
+              paymentMethod={paymentMethod}
+              amountReceived={received}
+              change={change}
+            />
+          </div>
         ) : (
              <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-6">
