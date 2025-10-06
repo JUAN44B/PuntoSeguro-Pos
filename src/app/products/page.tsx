@@ -28,8 +28,9 @@ import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import { Input } from "@/components/ui/input"
+import { ProductDialog, Product } from "./components/product-dialog";
 
-const initialProducts = [
+const initialProducts: Product[] = [
     {
         id: "prod-001",
         name: "Balero 6203",
@@ -80,6 +81,8 @@ const initialProducts = [
 export default function ProductsPage() {
   const [products, setProducts] = useState(initialProducts);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm) return products;
@@ -89,20 +92,34 @@ export default function ProductsPage() {
   }, [products, searchTerm]);
 
   const handleAddProduct = () => {
-    const newProduct = {
-      id: `prod-${String(products.length + 1).padStart(3, '0')}`,
-      name: "Nuevo Producto de Ejemplo",
-      status: "Activo",
-      price: Math.floor(Math.random() * 1000),
-      stock: Math.floor(Math.random() * 100),
-      category: "Categoría",
-      image: `https://picsum.photos/seed/${products.length + 1}/64/64`,
-    };
-    setProducts(prevProducts => [...prevProducts, newProduct]);
+    setEditingProduct(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setIsDialogOpen(true);
   };
 
   const handleDeleteProduct = (productId: string) => {
     setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
+  };
+  
+  const handleSaveProduct = (productData: Product) => {
+    if (editingProduct) {
+      // Update existing product
+      setProducts(prevProducts => prevProducts.map(p => p.id === productData.id ? productData : p));
+    } else {
+      // Add new product
+      const newProduct = {
+        ...productData,
+        id: `prod-${String(products.length + 1).padStart(3, '0')}`,
+        image: `https://picsum.photos/seed/${products.length + 1}/64/64`,
+      };
+      setProducts(prevProducts => [...prevProducts, newProduct]);
+    }
+    setIsDialogOpen(false);
+    setEditingProduct(null);
   };
 
   return (
@@ -195,7 +212,7 @@ export default function ProductsPage() {
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
                                       <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                      <DropdownMenuItem>Editar</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleEditProduct(product)}>Editar</DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleDeleteProduct(product.id)}>Eliminar</DropdownMenuItem>
                                   </DropdownMenuContent>
                                   </DropdownMenu>
@@ -213,6 +230,13 @@ export default function ProductsPage() {
                 </Table>
             </CardContent>
         </Card>
+
+        <ProductDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          onSave={handleSaveProduct}
+          product={editingProduct}
+        />
     </div>
   )
 }
