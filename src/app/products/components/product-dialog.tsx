@@ -130,7 +130,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
                 <div className="flex flex-col items-center gap-4">
                     <div className="relative w-32 h-32 border rounded-md flex items-center justify-center bg-muted/40">
                         {imagePreview ? (
-                            <Image src={imagePreview} alt="Vista previa" layout="fill" objectFit="cover" className="rounded-md" />
+                            <Image src={imagePreview} alt="Vista previa" fill={true} objectFit="cover" className="rounded-md" />
                         ) : (
                             <span className="text-xs text-muted-foreground">Imagen</span>
                         )}
