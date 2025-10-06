@@ -20,8 +20,14 @@ import { cn } from "@/lib/utils"
 import type { Product } from "@/lib/types"
 import Receipt from "./receipt"
 
+type CartItem = {
+    product: Product;
+    quantity: number;
+    discount: number;
+};
+
 interface PaymentDialogProps {
-  cart: Map<string, { product: Product; quantity: number }>;
+  cart: Map<string, CartItem>;
   subtotal: number;
   tax: number;
   total: number

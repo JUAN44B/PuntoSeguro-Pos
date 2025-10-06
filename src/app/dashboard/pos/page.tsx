@@ -28,8 +28,14 @@ import type { Product } from "@/lib/types";
 import PaymentDialog from "./components/payment-dialog";
 import { useToast } from "@/hooks/use-toast";
 
+type CartItem = {
+    product: Product;
+    quantity: number;
+    discount: number; // Percentage discount
+};
+
 export default function POSPage() {
-  const [cart, setCart] = React.useState<Map<string, { product: Product; quantity: number }>>(new Map());
+  const [cart, setCart] = React.useState<Map<string, CartItem>>(new Map());
   const [searchTerm, setSearchTerm] = React.useState("");
   const { toast } = useToast();
 
@@ -40,7 +46,7 @@ export default function POSPage() {
       if (existingItem) {
         existingItem.quantity += 1;
       } else {
-        newCart.set(product.id, { product, quantity: 1 });
+        newCart.set(product.id, { product, quantity: 1, discount: 0 });
       }
       return newCart;
     });
@@ -61,6 +67,17 @@ export default function POSPage() {
     });
   };
 
+  const updateDiscount = (productId: string, newDiscount: number) => {
+    setCart((prevCart) => {
+        const newCart = new Map(prevCart);
+        const item = newCart.get(productId);
+        if(item) {
+            item.discount = Math.max(0, Math.min(100, newDiscount));
+        }
+        return newCart;
+    });
+  };
+
   const handlePaymentSuccess = () => {
     setCart(new Map());
     toast({
@@ -70,11 +87,14 @@ export default function POSPage() {
   };
 
   const subtotal = Array.from(cart.values()).reduce(
-    (acc, item) => acc + item.product.salePrice * item.quantity,
+    (acc, item) => {
+        const discountedPrice = item.product.salePrice * (1 - item.discount / 100);
+        return acc + discountedPrice * item.quantity;
+    },
     0
   );
 
-  const tax = subtotal * 0.16; // Assuming 16% tax
+  const tax = subtotal * 0.16; // Assuming 16% tax on the discounted subtotal
   const total = subtotal + tax;
 
   const filteredProducts = products.filter(
@@ -143,24 +163,36 @@ export default function POSPage() {
                     <TableRow>
                     <TableHead>Product</TableHead>
                     <TableHead>Qty</TableHead>
+                    <TableHead>Disc %</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {Array.from(cart.values()).map(({ product, quantity }) => (
+                    {Array.from(cart.values()).map(({ product, quantity, discount }) => (
                     <TableRow key={product.id}>
-                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell className="font-medium text-xs w-[120px]">{product.name}</TableCell>
                         <TableCell>
                             <Input 
                                 type="number" 
                                 value={quantity} 
                                 onChange={(e) => updateQuantity(product.id, parseInt(e.target.value))}
-                                className="h-8 w-16"
+                                className="h-8 w-14"
                                 min="0"
                             />
                         </TableCell>
-                        <TableCell className="text-right">
-                        ${(product.salePrice * quantity).toFixed(2)}
+                        <TableCell>
+                            <Input 
+                                type="number" 
+                                value={discount}
+                                onChange={(e) => updateDiscount(product.id, parseInt(e.target.value))}
+                                className="h-8 w-16"
+                                min="0"
+                                max="100"
+                                placeholder="%"
+                            />
+                        </TableCell>
+                        <TableCell className="text-right text-xs">
+                         ${(product.salePrice * quantity * (1 - discount / 100)).toFixed(2)}
                         </TableCell>
                     </TableRow>
                     ))}

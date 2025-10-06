@@ -2,8 +2,14 @@
 import * as React from 'react';
 import type { Product } from '@/lib/types';
 
+type CartItem = {
+    product: Product;
+    quantity: number;
+    discount: number;
+};
+
 interface ReceiptProps {
-  items: Map<string, { product: Product; quantity: number }>;
+  items: Map<string, CartItem>;
   total: number;
   subtotal: number;
   tax: number;
@@ -22,12 +28,18 @@ const Receipt = React.forwardRef<HTMLDivElement, ReceiptProps>(
         <p>{new Date().toLocaleString()}</p>
       </div>
       <div className="border-t border-b border-dashed border-black my-2 py-2">
-        {Array.from(items.values()).map(({ product, quantity }) => (
-          <div key={product.id} className="flex justify-between">
-            <span>{quantity}x {product.name}</span>
-            <span>${(product.salePrice * quantity).toFixed(2)}</span>
-          </div>
-        ))}
+        {Array.from(items.values()).map(({ product, quantity, discount }) => {
+            const itemTotal = product.salePrice * quantity * (1 - discount / 100);
+            return (
+              <div key={product.id} className="flex justify-between">
+                <div>
+                    <div>{quantity}x {product.name}</div>
+                    {discount > 0 && <div className="text-xs pl-4">(-{discount}%)</div>}
+                </div>
+                <span>${itemTotal.toFixed(2)}</span>
+              </div>
+            )
+        })}
       </div>
       <div className="space-y-1 my-2">
         <div className="flex justify-between">
