@@ -57,19 +57,35 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
             }
           }
         `;
-        document.head.appendChild(style);
-
+        
         const printWindow = window.open('', '', 'height=600,width=800');
-        printWindow?.document.write('<html><head><title>Ticket de Venta</title></head><body>');
-        printWindow?.document.write(printContent.innerHTML);
-        printWindow?.document.write('</body></html>');
-        printWindow?.document.close();
-        printWindow?.focus();
-        setTimeout(() => {
-            printWindow?.print();
-            printWindow?.close();
-        }, 250);
-        document.head.removeChild(style);
+        
+        if (printWindow) {
+            printWindow.document.write('<html><head><title>Ticket de Venta</title>');
+            // A trick to make Tailwind classes work in the new window
+            Array.from(document.styleSheets).forEach(sheet => {
+                try {
+                    if (sheet.cssRules) {
+                        const css = Array.from(sheet.cssRules).map(rule => rule.cssText).join('');
+                        const styleElement = printWindow.document.createElement('style');
+                        styleElement.appendChild(document.createTextNode(css));
+                        printWindow.document.head.appendChild(styleElement);
+                    }
+                } catch (e) {
+                    console.log('Could not read stylesheet', e);
+                }
+            });
+            printWindow.document.head.appendChild(style);
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(printContent.innerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+        }
     }
   };
   
@@ -120,7 +136,9 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
         {/* Receipt Body */}
         <div ref={receiptRef} className="bg-white p-6 rounded-lg shadow-sm text-gray-800 printable-receipt">
             <header className="text-center mb-6">
-                <Logo />
+                <div className='flex justify-center'>
+                    <Logo />
+                </div>
                 <h1 className="text-xl font-bold uppercase tracking-wider mt-2">Ticket de Venta</h1>
             </header>
 
