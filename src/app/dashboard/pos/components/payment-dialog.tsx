@@ -79,7 +79,7 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
     const canvas = await html2canvas(receiptElement, { scale: 2 });
     receiptElement.style.display = 'none';
 
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
     
     // Standard receipt paper width is around 80mm
     const pdf = new jsPDF({
@@ -88,7 +88,7 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
       format: [canvas.height * 80 / canvas.width, 80]
     });
     
-    pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
+    pdf.addImage(imgData, 'JPEG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
     return pdf.output('blob');
   };
 
@@ -241,7 +241,7 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
             </div>
           ) : (
             <>
-                <AlertDialogCancel onClick={resetState}>Cancelar</AlertDialogCancel>
+                <AlertDialogCancel onClick={resetState}>Cancelar</Button>
                 <Button 
                     onClick={handleConfirmPayment} 
                     disabled={paymentMethod === 'cash' && received < total}
