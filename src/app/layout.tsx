@@ -3,6 +3,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import Sidebar from '@/components/sidebar';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
   title: 'ALIRU POS',
@@ -15,16 +16,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body className={cn('min-h-screen w-full bg-background font-sans antialiased')}>
-        <FirebaseClientProvider>
-          <div className="flex">
-            <Sidebar />
-            <main className="flex-1 p-8">
-              {children}
-            </main>
-          </div>
-        </FirebaseClientProvider>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+          <FirebaseClientProvider>
+            <div className="flex">
+              <Sidebar />
+              <main className="flex-1 p-8">
+                {children}
+              </main>
+            </div>
+          </FirebaseClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

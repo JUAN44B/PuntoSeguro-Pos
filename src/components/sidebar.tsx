@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { Home, ShoppingCart, Package, Users, BarChart, Settings, Truck, Building, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from './logo';
+import { ThemeToggle } from './theme-toggle';
+import { Separator } from './ui/separator';
 
 const navItems = [
   { href: '/', label: 'Inicio', icon: Home },
@@ -27,7 +29,7 @@ export default function Sidebar() {
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
           <Logo />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
             {navItems.map(({ href, label, icon: Icon }) => (
               <Link
@@ -45,6 +47,10 @@ export default function Sidebar() {
               </Link>
             ))}
           </nav>
+        </div>
+        <div className="mt-auto p-4">
+          <Separator className='my-4'/>
+          <ThemeToggle />
         </div>
       </div>
     </div>
