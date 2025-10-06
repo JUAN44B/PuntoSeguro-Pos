@@ -184,6 +184,19 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
                       </SelectContent>
                   </Select>
               </div>
+          </div>
+
+          {/* Columna Derecha */}
+          <div className="space-y-4">
+              <div className="space-y-2">
+                  <Label htmlFor="code">Código de Barras (EAN-13)</Label>
+                  <div className='flex gap-2'>
+                      <Input id="code" value={formData.code} onChange={handleCodeChange} maxLength={13} placeholder="Hasta 13 dígitos numéricos" />
+                      <Button variant='outline' size='icon' onClick={() => setFormData(prev => ({...prev, code: generateEAN13()}))}><RefreshCw className='h-4 w-4'/></Button>
+                  </div>
+                  {formData.code && <div className="pt-2"><Barcode text={formData.code}/></div>}
+              </div>
+
               <div className='grid grid-cols-2 gap-4'>
                 <div className="space-y-2">
                     <Label htmlFor="stock">Existencia</Label>
@@ -203,19 +216,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
                     </Select>
                 </div>
               </div>
-          </div>
-
-          {/* Columna Derecha */}
-          <div className="space-y-4">
-              <div className="space-y-2">
-                  <Label htmlFor="code">Código de Barras (EAN-13)</Label>
-                  <div className='flex gap-2'>
-                      <Input id="code" value={formData.code} onChange={handleCodeChange} maxLength={13} placeholder="Hasta 13 dígitos numéricos" />
-                      <Button variant='outline' size='icon' onClick={() => setFormData(prev => ({...prev, code: generateEAN13()}))}><RefreshCw className='h-4 w-4'/></Button>
-                  </div>
-                  {formData.code && <div className="pt-2"><Barcode text={formData.code}/></div>}
-              </div>
-
+              
               <div className='p-4 border rounded-md space-y-4 bg-muted/20'>
                   <h4 className='font-medium text-sm text-muted-foreground'>Cálculo de Precios</h4>
                   <div className="grid grid-cols-3 gap-4">
@@ -234,7 +235,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
                   </div>
               </div>
 
-              <div className="space-y-2 pt-4">
+              <div className="space-y-2">
                   <Label htmlFor="finalPrice">Precio de Venta Final (Automático)</Label>
                   <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={(e) => setFormData(prev => ({...prev, finalPrice: Number(e.target.value)}))} className='border-primary border-2 text-lg font-bold text-center' />
               </div>
