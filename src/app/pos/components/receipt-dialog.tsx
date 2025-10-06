@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import type { CartItem } from '../page';
 import { Printer, Share2 } from 'lucide-react';
 import Barcode from '@/components/barcode';
-import Image from 'next/image';
+import Logo from '@/components/logo';
 
 interface ReceiptDialogProps {
   isOpen: boolean;
@@ -138,7 +138,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
         <div className="flex justify-center overflow-y-auto">
             <div ref={receiptRef} className="bg-white p-4 text-black printable-receipt w-[300px]" style={{fontFamily: "'Courier New', Courier, monospace"}}>
                 <div className="text-center mb-4 flex flex-col items-center">
-                    <Image src="/aliru-logo.svg" alt="ALIRU Logo" width={120} height={40} />
+                    <Logo />
                     <p className='text-xs'>Av. Principal #123, 00000, Ciudad, Estado</p>
                     <p className='text-xs'>TLF: 123 456 789</p>
                 </div>
