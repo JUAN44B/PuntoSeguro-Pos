@@ -119,4 +119,3 @@ export default function AddSupplierDialog({ children, onSupplierAdd }: AddSuppli
     </Dialog>
   )
 }
-
