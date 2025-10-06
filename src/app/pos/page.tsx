@@ -22,7 +22,7 @@ import Image from 'next/image';
 import { PaymentDialog } from './components/payment-dialog';
 import { ReceiptDialog } from './components/receipt-dialog';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { Product } from '../products/components/product-dialog';
 
 
@@ -80,14 +80,31 @@ export default function POSPage() {
     setCart([]);
   }
 
-  const handlePaymentSuccess = (paymentMethod: string) => {
-    setLastSale({ cart, total, paymentMethod });
-    setIsPaymentOpen(false);
-    setIsReceiptOpen(true);
-    setCart([]); // Clear cart after successful payment
+  const handlePaymentSuccess = async (paymentMethod: string) => {
+    const saleId = `ALIRU-${Date.now().toString().slice(-6)}`;
+    const saleData = {
+      saleId,
+      createdAt: serverTimestamp(),
+      items: cart.map(({ image, ...item }) => item), // Don't store image in sale items
+      total,
+      subtotal,
+      iva,
+      paymentMethod,
+    };
+    
+    try {
+      await addDoc(collection(firestore, 'sales'), saleData);
+      setLastSale({ cart, total, paymentMethod });
+      setIsPaymentOpen(false);
+      setIsReceiptOpen(true);
+      setCart([]); // Clear cart after successful payment
+    } catch (error) {
+      console.error("Error saving sale: ", error);
+      // Here you could add a toast or alert to inform the user
+    }
   };
   
-  const filteredProducts = (products as ProductFromDB[]).filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredProducts = (products as ProductFromDB[]).filter(p => p.status === 'Activo' && p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const subtotal = total / 1.16;

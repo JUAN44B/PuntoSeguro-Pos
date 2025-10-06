@@ -40,6 +40,33 @@
                 "description": { "type": "string" }
             },
             "required": ["name"]
+        },
+        "sale": {
+            "title": "Sale",
+            "description": "Represents a completed sale transaction.",
+            "type": "object",
+            "properties": {
+                "saleId": { "type": "string" },
+                "createdAt": { "type": "string", "format": "date-time" },
+                "items": { 
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": { "type": "string" },
+                            "name": { "type": "string" },
+                            "price": { "type": "number" },
+                            "quantity": { "type": "number" }
+                        },
+                        "required": ["id", "name", "price", "quantity"]
+                    }
+                },
+                "total": { "type": "number" },
+                "subtotal": { "type": "number" },
+                "iva": { "type": "number" },
+                "paymentMethod": { "type": "string" }
+            },
+            "required": ["saleId", "createdAt", "items", "total"]
         }
     },
     "firestore": {
@@ -54,6 +81,10 @@
         "/categories/{categoryId}": {
             "schema": { "$ref": "#/entities/category" },
             "description": "Stores product categories."
+        },
+        "/sales/{saleId}": {
+            "schema": { "$ref": "#/entities/sale" },
+            "description": "Stores completed sale transactions."
         }
     },
     "auth": {

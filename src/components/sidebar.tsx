@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShoppingCart, Package, Users, BarChart, Settings, Truck, Building } from 'lucide-react';
+import { Home, ShoppingCart, Package, Users, BarChart, Settings, Truck, Building, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from './logo';
 
@@ -13,7 +13,7 @@ const navItems = [
   { href: '/categories', label: 'Categorías', icon: Building },
   { href: '/inventory', label: 'Inventario', icon: Truck },
   { href: '/customers', label: 'Clientes', icon: Users },
-  { href: '/sales', label: 'Ventas Históricas', icon: BarChart },
+  { href: '/sales', label: 'Ventas Históricas', icon: History },
   { href: '/reports', label: 'Reportes', icon: BarChart },
   { href: '/settings', label: 'Configuración', icon: Settings },
 ];
