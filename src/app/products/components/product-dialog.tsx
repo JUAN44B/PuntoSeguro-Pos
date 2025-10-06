@@ -67,29 +67,29 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
   const { data: categories } = useCollection(collection(firestore, 'categories'));
   const [formData, setFormData] = useState<Omit<Product, 'id' | 'image'>>(emptyProduct);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [suggestedPrice, setSuggestedPrice] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (product) {
-      setFormData(product);
-      setImagePreview(product.image);
-    } else {
-      setFormData(emptyProduct);
-      setImagePreview(null);
+    if (isOpen) {
+        if (product) {
+            setFormData(product);
+            setImagePreview(product.image);
+        } else {
+            // For new products, start with empty form and calculate initial price
+            const initialPrice = calculateFinalPrice(emptyProduct);
+            setFormData({...emptyProduct, finalPrice: initialPrice});
+            setImagePreview(null);
+        }
     }
   }, [product, isOpen]);
 
-  useEffect(() => {
-    const { purchasePrice, discount, profitMargin } = formData;
+  const calculateFinalPrice = (data: Omit<Product, 'id' | 'image'>) => {
+    const { purchasePrice, discount, profitMargin } = data;
     const priceAfterDiscount = purchasePrice * (1 - discount / 100);
     const priceWithVat = priceAfterDiscount * 1.16; // Assuming 16% VAT
     const calculatedPrice = priceWithVat * (1 + profitMargin / 100);
-    setSuggestedPrice(calculatedPrice);
-    if (!product) { // Only auto-update final price for new products
-        setFormData(prev => ({...prev, finalPrice: parseFloat(calculatedPrice.toFixed(2))}))
-    }
-  }, [formData.purchasePrice, formData.discount, formData.profitMargin, product]);
+    return parseFloat(calculatedPrice.toFixed(2));
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -97,12 +97,14 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
   };
 
   const handleSelectChange = (id: keyof Omit<Product, 'id' | 'image'>, value: string) => {
-    setFormData(prev => ({...prev, [id]: value}))
+    setFormData(prev => ({...prev, [id]: value}));
   }
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: Number(value) }));
+    const newFormData = { ...formData, [id]: Number(value) };
+    const newFinalPrice = calculateFinalPrice(newFormData);
+    setFormData({ ...newFormData, finalPrice: newFinalPrice });
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,7 +167,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
                             <SelectValue placeholder="Selecciona una categoría..." />
                         </SelectTrigger>
                         <SelectContent>
-                            {(categories as Category[]).map(cat => (
+                            {(categories as Category[] || []).map(cat => (
                                 <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                             ))}
                         </SelectContent>
@@ -210,21 +212,15 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
                             <Input id="profitMargin" type="number" value={formData.profitMargin} onChange={handleNumberChange} placeholder="%" />
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label>Precio Sugerido (con 16% IVA)</Label>
-                        <div className="font-bold text-lg p-2 bg-background rounded-md text-center">
-                            ${suggestedPrice.toFixed(2)}
-                        </div>
-                    </div>
                 </div>
                 <div className="space-y-2 pt-4">
-                    <Label htmlFor="finalPrice">Precio de Venta Final</Label>
-                    <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={handleNumberChange} className='border-primary border-2 text-lg font-bold text-center' />
+                    <Label htmlFor="finalPrice">Precio de Venta Final (Automático)</Label>
+                    <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={(e) => setFormData(prev => ({...prev, finalPrice: Number(e.target.value)}))} className='border-primary border-2 text-lg font-bold text-center' />
                 </div>
             </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className='mt-4'>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button type="submit" onClick={handleSubmit}>Guardar Cambios</Button>
         </DialogFooter>
