@@ -6,7 +6,7 @@ export const products: Product[] = [
     name: 'Muelle',
     description: 'Muelle para remolques de alta resistencia.',
     category: 'Remolques',
-    stock: 30,
+    stock: 50,
     purchasePrice: 95.00,
     salePrice: 130.00,
     tax: 16,
