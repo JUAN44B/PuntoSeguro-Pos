@@ -126,9 +126,9 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
     const pdfUrl = URL.createObjectURL(pdfBlob);
     const printWindow = window.open(pdfUrl);
     if (printWindow) {
-      printWindow.onload = () => {
-        printWindow.print();
-      };
+        printWindow.onload = () => {
+            printWindow.print();
+        };
     } else {
         toast({ variant: 'destructive', title: "Error de Impresión", description: "No se pudo abrir la ventana de impresión. Revisa si tu navegador bloquea las ventanas emergentes." });
     }
