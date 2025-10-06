@@ -19,6 +19,7 @@ export type UserProfileData = {
     displayName: string;
     email: string;
     role: 'Administrador' | 'Cajero' | 'Supervisor';
+    password?: string;
 };
 
 interface UserDialogProps {
@@ -26,15 +27,17 @@ interface UserDialogProps {
   onOpenChange: (isOpen: boolean) => void;
   onSave: (userData: UserProfileData) => void;
   user: UserProfile | null;
+  error?: string | null;
 }
 
 const emptyUser: UserProfileData = {
     displayName: '',
     email: '',
     role: 'Cajero',
+    password: '',
 };
 
-export function UserDialog({ isOpen, onOpenChange, onSave, user }: UserDialogProps) {
+export function UserDialog({ isOpen, onOpenChange, onSave, user, error }: UserDialogProps) {
   const [formData, setFormData] = useState<UserProfileData>(emptyUser);
   const isEditing = !!user;
 
@@ -66,7 +69,7 @@ export function UserDialog({ isOpen, onOpenChange, onSave, user }: UserDialogPro
   };
 
   const title = isEditing ? 'Editar Usuario' : 'Agregar Nuevo Usuario';
-  const description = isEditing ? 'Modifica los detalles del perfil del usuario.' : 'Crea un perfil para un nuevo miembro del equipo.';
+  const description = isEditing ? 'Modifica los detalles del perfil del usuario.' : 'Crea una cuenta de acceso y perfil para un nuevo miembro del equipo.';
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -93,6 +96,12 @@ export function UserDialog({ isOpen, onOpenChange, onSave, user }: UserDialogPro
                 />
                  {isEditing && <p className="text-xs text-muted-foreground">El correo no se puede cambiar.</p>}
             </div>
+            {!isEditing && (
+                 <div className="space-y-2">
+                    <Label htmlFor="password">Contraseña</Label>
+                    <Input id="password" type="password" value={formData.password} onChange={handleChange} placeholder="Mínimo 6 caracteres" />
+                </div>
+            )}
             <div className="space-y-2">
                 <Label htmlFor="role">Rol</Label>
                 <Select value={formData.role} onValueChange={handleRoleChange}>
@@ -107,6 +116,8 @@ export function UserDialog({ isOpen, onOpenChange, onSave, user }: UserDialogPro
                 </Select>
             </div>
         </div>
+
+        {error && <p className="text-sm text-destructive mt-4 text-center">{error}</p>}
 
         <DialogFooter className='mt-4'>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>

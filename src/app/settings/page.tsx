@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection, doc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
+import { useFirestore, useCollection, useAuth } from '@/firebase';
+import { collection, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -10,15 +11,15 @@ import { UserPlus, MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { UserDialog, UserProfileData } from './components/user-dialog';
 
-// NOTE: Creating a user in Firebase Auth from a frontend admin panel is not secure.
-// The standard practice is to use a backend function (like a Firebase Cloud Function)
-// that uses the Admin SDK to create the user. The client then calls this function.
-// This implementation simulates the UI/Firestore part of that flow. The admin would
-// add the user profile here, and then create the corresponding auth user in the Firebase Console.
+// NOTE: This implementation uses the client-side SDK to create users.
+// For enhanced security in a production environment, this operation should ideally
+// be handled by a backend service (e.g., a Firebase Cloud Function) using the Admin SDK.
+// This client-side approach is functional but means the admin creating the user
+// might be temporarily authenticated as the new user before being signed out.
 
 export type UserProfile = {
-    id: string;
-    uid?: string;
+    id: string; // This is the Firestore document ID
+    uid: string; // This is the Firebase Auth UID
     displayName: string;
     email: string;
     role: 'Administrador' | 'Cajero' | 'Supervisor';
@@ -26,32 +27,38 @@ export type UserProfile = {
 
 export default function SettingsPage() {
     const firestore = useFirestore();
+    const auth = useAuth(); // Use the auth instance from the provider
     const { data: users, loading } = useCollection(collection(firestore, 'users'));
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const handleAddUser = () => {
         setEditingUser(null);
+        setError(null);
         setIsDialogOpen(true);
     };
 
     const handleEditUser = (user: UserProfile) => {
         setEditingUser(user);
+        setError(null);
         setIsDialogOpen(true);
     };
 
     const handleDeleteUser = async (userId: string) => {
         if (!userId) return;
         // NOTE: This only deletes the Firestore document. Deleting the actual
-        // Firebase Auth user requires a backend function.
+        // Firebase Auth user requires a backend function with the Admin SDK.
         try {
             await deleteDoc(doc(firestore, "users", userId));
         } catch(e) {
             console.error("Error deleting user document: ", e);
+            setError("Error al eliminar el perfil de usuario.");
         }
     };
 
     const handleSaveUser = async (userData: UserProfileData) => {
+        setError(null);
         try {
             if (editingUser) {
                 // Update existing user's Firestore document
@@ -61,20 +68,40 @@ export default function SettingsPage() {
                     role: userData.role,
                 });
             } else {
-                // Add new user profile to Firestore.
-                // This does NOT create a Firebase Auth user.
-                await addDoc(collection(firestore, 'users'), {
-                    // A placeholder UID is often used until the real one is known
-                    uid: `pending-${Date.now()}`, 
+                // Create a new user
+                if (!userData.password) {
+                    setError("La contraseña es obligatoria para nuevos usuarios.");
+                    return;
+                }
+                
+                // 1. Create user in Firebase Authentication
+                const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+                const newUser = userCredential.user;
+
+                // 2. Create user profile in Firestore using the Auth UID as the document ID
+                await setDoc(doc(firestore, 'users', newUser.uid), {
+                    uid: newUser.uid,
                     displayName: userData.displayName,
                     email: userData.email,
                     role: userData.role,
                 });
+
+                // Note: createUserWithEmailAndPassword also signs in the new user.
+                // In a real admin panel, you'd likely want to sign them out immediately
+                // and sign the admin back in, but that requires more complex state management.
+                // For now, we'll just close the dialog.
             }
             setIsDialogOpen(false);
             setEditingUser(null);
-        } catch (error) {
-            console.error("Error saving user profile: ", error);
+        } catch (error: any) {
+            console.error("Error saving user: ", error);
+            if (error.code === 'auth/email-already-in-use') {
+                setError("Este correo electrónico ya está en uso. Por favor, utiliza otro.");
+            } else if (error.code === 'auth/weak-password') {
+                setError("La contraseña es demasiado débil. Debe tener al menos 6 caracteres.");
+            } else {
+                setError("Ocurrió un error al guardar el usuario.");
+            }
         }
     };
 
@@ -92,7 +119,7 @@ export default function SettingsPage() {
                 <CardHeader>
                     <CardTitle>Gestión de Usuarios y Roles</CardTitle>
                     <CardDescription>
-                        Agrega perfiles de usuario y asigna roles. Para que puedan iniciar sesión, deberás crear sus cuentas en la consola de Firebase Authentication.
+                        Agrega, edita y elimina perfiles de usuario y asigna sus roles en el sistema.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -149,6 +176,7 @@ export default function SettingsPage() {
                 onOpenChange={setIsDialogOpen}
                 onSave={handleSaveUser}
                 user={editingUser}
+                error={error}
             />
         </div>
     );
