@@ -27,11 +27,11 @@ interface ReceiptDialogProps {
 const Barcode = ({ text }: { text: string }) => {
     // A simple visual representation, not a real scannable barcode
     const bars = text.split('').map((char, i) => {
-        const value = char.charCodeAt(0) % 3 + 1; // Simple transformation to get 1, 2, or 3
-        return <rect key={i} x={i * 4} y="0" width={value} height="50" fill="black" />;
+        const value = (char.charCodeAt(0) % 3) + 1; // Simple transformation to get 1, 2, or 3
+        return <rect key={i} x={i * 4} y="0" width={value * 1.5} height="40" fill="black" />;
     });
     return (
-        <svg height="50" className='w-full'>{bars}</svg>
+        <svg height="40" className='w-full'>{bars}</svg>
     );
 };
 
@@ -145,60 +145,65 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
         {/* Receipt Body */}
         <div ref={receiptRef} className="bg-white p-4 mx-auto w-full text-black printable-receipt" style={{fontFamily: "'Courier New', Courier, monospace"}}>
             <div className="text-center mb-4">
-                <h1 className="text-3xl font-bold tracking-widest">PRESTAPOS</h1>
+                <h1 className="text-2xl font-bold tracking-widest">PRESTAPOS</h1>
                 <p className='text-xs'>Refacciones para Remolques ALIRU</p>
-                <p className='text-xs'>Av. Principal #123</p>
-                <p className='text-xs'>00000, Ciudad, Estado</p>
+                <p className='text-xs'>Av. Principal #123, 00000, Ciudad, Estado</p>
                 <p className='text-xs'>TLF: 123 456 789</p>
             </div>
 
-            <div className="mb-4 text-xs">
+            <div className="mb-4 text-xs space-y-1">
                 <p>Factura simplificada</p>
                 <p>Nº: {saleId}</p>
                 <p>Fecha: {new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })}</p>
                 <p>Forma de pago: {paymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}</p>
             </div>
 
-            <div className="text-xs">
-                <div className="flex justify-between font-bold border-t border-b border-black py-1">
+            <div className="text-xs border-t border-b border-black py-1">
+                <div className="flex justify-between font-bold">
                     <span>PRODUCTO</span>
                     <span>SUBTOTAL</span>
                 </div>
-                <div className="py-2 space-y-2">
-                    {cart.map(item => (
-                        <div key={item.id}>
-                             <div className="flex justify-between">
-                                <span>{item.name}</span>
-                                <span>${(item.price * item.quantity).toFixed(2)}</span>
-                            </div>
-                            <div className='text-gray-600' style={{fontSize: '9px'}}>
-                                {item.quantity} x ${item.price.toFixed(2)}
-                            </div>
+            </div>
+
+            <div className="text-xs py-2 space-y-2">
+                {cart.map(item => (
+                    <div key={item.id}>
+                         <div className="flex justify-between">
+                            <span>{item.name}</span>
+                            <span>${(item.price * item.quantity).toFixed(2)}</span>
                         </div>
-                    ))}
-                </div>
+                        <div className='text-gray-600' style={{fontSize: '10px', paddingLeft: '4px'}}>
+                            {item.quantity} x ${item.price.toFixed(2)}
+                        </div>
+                    </div>
+                ))}
             </div>
 
             <div className="text-xs mt-2 border-t border-black pt-2">
-                <div className="flex justify-end">
-                    <div className='text-right'>
-                        <p>BI: ${subtotal.toFixed(2)}</p>
-                        <p>IVA (16%): ${iva.toFixed(2)}</p>
+                <div className="space-y-1">
+                    <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span>IVA (16%):</span>
+                        <span>${iva.toFixed(2)}</span>
                     </div>
                 </div>
-                <div className="flex justify-end font-bold text-sm mt-2">
-                    <p>TOTAL: ${total.toFixed(2)}</p>
+                <div className="flex justify-between font-bold text-base mt-2 border-t border-black pt-1">
+                    <span>TOTAL:</span>
+                    <span>${total.toFixed(2)}</span>
                 </div>
             </div>
             
-            <div className="my-4">
+            <div className="my-5 flex justify-center">
                 <Barcode text={saleId} />
             </div>
 
             <footer className="text-center text-xs space-y-2">
-                <p>Fue atendido por: 1</p>
+                <p>Fue atendido por: Vendedor 1</p>
+                <p className='font-semibold'>¡Gracias por su compra!</p>
                 <p>Este ticket es imprescindible para cualquier cambio o devolución.</p>
-                <p>Dispone de 30 días para realizar cualquier cambio o devolución siempre y cuando el producto esté sin usar y con los precintos de garantía.</p>
             </footer>
         </div>
 
