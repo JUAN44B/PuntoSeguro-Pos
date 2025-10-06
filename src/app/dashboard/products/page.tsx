@@ -46,10 +46,13 @@ import { products as initialProducts } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@/lib/types";
 import AddProductDialog from "./components/add-product-dialog";
+import EditProductDialog from "./components/edit-product-dialog";
 
 
 export default function ProductsPage() {
     const [products, setProducts] = React.useState(initialProducts);
+    const [editingProduct, setEditingProduct] = React.useState<Product | null>(null);
+    const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
     const { toast } = useToast();
 
     const handleAddProduct = (newProduct: Product) => {
@@ -58,6 +61,21 @@ export default function ProductsPage() {
             title: "Producto Agregado",
             description: `"${newProduct.name}" ha sido agregado a tus productos.`,
         });
+    };
+
+    const handleEditProduct = (product: Product) => {
+        setEditingProduct(product);
+        setIsEditDialogOpen(true);
+    };
+
+    const handleUpdateProduct = (updatedProduct: Product) => {
+        setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+        toast({
+            title: "Producto Actualizado",
+            description: `"${updatedProduct.name}" ha sido actualizado.`,
+        });
+        setIsEditDialogOpen(false);
+        setEditingProduct(null);
     };
 
     const handleDeleteProduct = (productId: string) => {
@@ -70,6 +88,7 @@ export default function ProductsPage() {
     };
   
   return (
+    <>
     <Tabs defaultValue="all">
       <div className="flex items-center">
         <TabsList>
@@ -190,7 +209,7 @@ export default function ProductsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuItem>Editar</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditProduct(product)}>Editar</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDeleteProduct(product.id)}>Eliminar</DropdownMenuItem>
                         </DropdownMenuContent>
                         </DropdownMenu>
@@ -209,5 +228,15 @@ export default function ProductsPage() {
         </Card>
       </TabsContent>
     </Tabs>
+    {editingProduct && (
+        <EditProductDialog
+            key={editingProduct.id}
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            product={editingProduct}
+            onProductUpdate={handleUpdateProduct}
+        />
+    )}
+    </>
   )
 }
