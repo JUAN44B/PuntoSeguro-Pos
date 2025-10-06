@@ -3,12 +3,22 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShoppingCart, Package, Users, BarChart, Settings, Truck, Building, History } from 'lucide-react';
+import { Home, ShoppingCart, Package, Users, BarChart, Settings, Truck, Building, History, LogOut, User as UserIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from './logo';
 import { ThemeToggle } from './theme-toggle';
 import { Separator } from './ui/separator';
-import { useUser } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from './ui/button';
 
 const allNavItems = [
   { href: '/', label: 'Inicio', icon: Home, roles: ['Administrador', 'Supervisor', 'Cajero'] },
@@ -24,7 +34,17 @@ const allNavItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const auth = useAuth();
   const { user, loading } = useUser();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      // The redirect is handled by the AuthWrapper in layout.tsx
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
 
   const userRole = user?.role || 'Cajero'; // Default to most restrictive role
   
@@ -36,7 +56,7 @@ export default function Sidebar() {
   if (loading) {
     // You can return a skeleton loader here if you want
     return (
-        <div className="hidden border-r bg-muted/40 md:block">
+        <div className="hidden border-r bg-muted/40 md:block w-64">
             <div className="flex h-full max-h-screen flex-col gap-2">
                 <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
                     <Logo />
@@ -48,19 +68,23 @@ export default function Sidebar() {
                         ))}
                     </div>
                 </div>
+                 <div className="mt-auto p-4 space-y-2">
+                    <div className="h-10 w-full bg-muted rounded animate-pulse" />
+                    <div className="h-10 w-full bg-muted rounded animate-pulse" />
+                 </div>
             </div>
         </div>
     );
   }
 
   return (
-    <div className="hidden border-r bg-muted/40 md:block">
-      <div className="flex h-full max-h-screen flex-col gap-2">
+    <div className="hidden border-r bg-muted/40 md:block w-64">
+      <div className="flex h-full max-h-screen flex-col">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
           <Logo />
         </div>
         <div className="flex-1 overflow-y-auto">
-          <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+          <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-4">
             {navItems.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
@@ -78,11 +102,45 @@ export default function Sidebar() {
             ))}
           </nav>
         </div>
-        <div className="mt-auto p-4">
-          <Separator className='my-4'/>
-          <ThemeToggle />
+        <div className="mt-auto border-t p-4">
+          <div className="flex items-center justify-between">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                   <Button variant="ghost" className="w-full justify-start text-left h-auto p-2">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
+                           <UserIcon className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium leading-none">{user?.displayName || 'Usuario'}</span>
+                          <span className="text-xs text-muted-foreground leading-none mt-1">{user?.role || 'Rol'}</span>
+                        </div>
+                      </div>
+                   </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 mb-2" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user?.displayName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Cerrar Sesión</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+    
