@@ -45,24 +45,36 @@ import {
 import { purchaseOrders as initialPurchaseOrders } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast"
 import type { PurchaseOrder } from "@/lib/types"
+import AddPurchaseOrderDialog from "./components/add-purchase-order-dialog"
+import EditPurchaseOrderDialog from "./components/edit-purchase-order-dialog"
 
 export default function PurchasesPage() {
   const [purchaseOrders, setPurchaseOrders] = React.useState(initialPurchaseOrders);
+  const [editingOrder, setEditingOrder] = React.useState<PurchaseOrder | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const { toast } = useToast();
 
-  const handleAddPurchaseOrder = () => {
-    const newPO: PurchaseOrder = {
-      id: `PO-${String(purchaseOrders.length + 1).padStart(3, '0')}`,
-      supplierName: 'Nuevo Proveedor',
-      date: new Date().toISOString().split('T')[0],
-      total: 0,
-      status: 'Pendiente',
-    };
+  const handleAddPurchaseOrder = (newPO: PurchaseOrder) => {
     setPurchaseOrders(prev => [newPO, ...prev]);
     toast({
       title: "Orden de Compra Agregada",
       description: "Se ha creado una nueva orden de compra.",
     });
+  };
+
+  const handleEditOrder = (order: PurchaseOrder) => {
+    setEditingOrder(order);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateOrder = (updatedOrder: PurchaseOrder) => {
+    setPurchaseOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+    toast({
+        title: "Orden de Compra Actualizada",
+        description: `La orden ${updatedOrder.id} ha sido actualizada.`,
+    });
+    setIsEditDialogOpen(false);
+    setEditingOrder(null);
   };
 
   const handleDeletePurchaseOrder = (orderId: string) => {
@@ -75,6 +87,7 @@ export default function PurchasesPage() {
   };
 
   return (
+    <>
     <Tabs defaultValue="all">
       <div className="flex items-center">
         <TabsList>
@@ -113,12 +126,14 @@ export default function PurchasesPage() {
               Exportar
             </span>
           </Button>
-          <Button size="sm" className="h-7 gap-1" onClick={handleAddPurchaseOrder}>
-            <PlusCircle className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Nueva Orden de Compra
-            </span>
-          </Button>
+          <AddPurchaseOrderDialog onPurchaseOrderAdd={handleAddPurchaseOrder}>
+            <Button size="sm" className="h-7 gap-1">
+                <PlusCircle className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                Nueva Orden de Compra
+                </span>
+            </Button>
+          </AddPurchaseOrderDialog>
         </div>
       </div>
       <TabsContent value="all">
@@ -176,7 +191,7 @@ export default function PurchasesPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                          <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditOrder(order)}>Editar</DropdownMenuItem>
                           <DropdownMenuItem>Marcar como Recibido</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDeletePurchaseOrder(order.id)}>Eliminar</DropdownMenuItem>
                         </DropdownMenuContent>
@@ -196,5 +211,15 @@ export default function PurchasesPage() {
         </Card>
       </TabsContent>
     </Tabs>
+    {editingOrder && (
+        <EditPurchaseOrderDialog
+            key={editingOrder.id}
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            order={editingOrder}
+            onPurchaseOrderUpdate={handleUpdateOrder}
+        />
+    )}
+    </>
   )
 }

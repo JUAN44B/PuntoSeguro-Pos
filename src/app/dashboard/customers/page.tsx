@@ -4,7 +4,6 @@
 import * as React from "react"
 import {
   File,
-  ListFilter,
   MoreHorizontal,
   PlusCircle,
 } from "lucide-react"
@@ -24,7 +23,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -38,26 +36,36 @@ import {
 import { customers as initialCustomers } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast"
 import type { Customer } from "@/lib/types"
+import AddCustomerDialog from "./components/add-customer-dialog"
+import EditCustomerDialog from "./components/edit-customer-dialog"
 
 export default function CustomersPage() {
   const [customers, setCustomers] = React.useState(initialCustomers);
+  const [editingCustomer, setEditingCustomer] = React.useState<Customer | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const { toast } = useToast();
 
-  const handleAddCustomer = () => {
-    const newCustomer: Customer = {
-      id: `CUST${String(customers.length + 1).padStart(3, '0')}`,
-      name: 'Nuevo Cliente',
-      rfc: 'XAXX010101000',
-      email: 'nuevo.cliente@email.com',
-      phone: '00-0000-0000',
-      address: 'Nueva Dirección',
-      type: 'Retail',
-    };
+  const handleAddCustomer = (newCustomer: Customer) => {
     setCustomers(prev => [...prev, newCustomer]);
     toast({
       title: "Cliente Agregado",
-      description: "Se ha creado un nuevo cliente. Por favor edita sus detalles.",
+      description: `El cliente "${newCustomer.name}" ha sido agregado.`,
     });
+  };
+
+  const handleEditCustomer = (customer: Customer) => {
+    setEditingCustomer(customer);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateCustomer = (updatedCustomer: Customer) => {
+    setCustomers(prev => prev.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
+    toast({
+      title: "Cliente Actualizado",
+      description: `La información de "${updatedCustomer.name}" ha sido actualizada.`,
+    });
+    setIsEditDialogOpen(false);
+    setEditingCustomer(null);
   };
 
   const handleDeleteCustomer = (customerId: string) => {
@@ -80,12 +88,14 @@ export default function CustomersPage() {
                     Exportar
                     </span>
                 </Button>
-                <Button size="sm" className="h-7 gap-1" onClick={handleAddCustomer}>
-                    <PlusCircle className="h-3.5 w-3.5" />
-                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Agregar Cliente
-                    </span>
-                </Button>
+                <AddCustomerDialog onCustomerAdd={handleAddCustomer}>
+                  <Button size="sm" className="h-7 gap-1">
+                      <PlusCircle className="h-3.5 w-3.5" />
+                      <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                      Agregar Cliente
+                      </span>
+                  </Button>
+                </AddCustomerDialog>
             </div>
         </div>
         <Card>
@@ -120,7 +130,7 @@ export default function CustomersPage() {
                       <div className="text-xs text-muted-foreground">{customer.rfc}</div>
                   </TableCell>
                   <TableCell>
-                      <Badge variant={customer.type === 'Wholesale' ? 'default' : 'secondary'}>{customer.type}</Badge>
+                      <Badge variant={customer.type === 'Mayoreo' ? 'default' : 'secondary'}>{customer.type}</Badge>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                       {customer.email}
@@ -142,8 +152,7 @@ export default function CustomersPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                          <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
-                          <DropdownMenuItem>Editar</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditCustomer(customer)}>Editar</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDeleteCustomer(customer.id)}>Eliminar</DropdownMenuItem>
                       </DropdownMenuContent>
                       </DropdownMenu>
@@ -160,6 +169,15 @@ export default function CustomersPage() {
           </div>
         </CardFooter>
       </Card>
+      {editingCustomer && (
+        <EditCustomerDialog
+          key={editingCustomer.id}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          customer={editingCustomer}
+          onCustomerUpdate={handleUpdateCustomer}
+        />
+      )}
     </div>
   )
 }

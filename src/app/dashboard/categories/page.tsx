@@ -35,9 +35,12 @@ import { categories as initialCategories } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast";
 import type { Category } from "@/lib/types";
 import AddCategoryDialog from "./components/add-category-dialog";
+import EditCategoryDialog from "./components/edit-category-dialog";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = React.useState(initialCategories);
+  const [editingCategory, setEditingCategory] = React.useState<Category | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const { toast } = useToast();
 
   const handleAddCategory = (newCategory: Category) => {
@@ -46,6 +49,21 @@ export default function CategoriesPage() {
       title: "Categoría Agregada",
       description: `La categoría "${newCategory.name}" ha sido agregada.`,
     });
+  };
+
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateCategory = (updatedCategory: Category) => {
+    setCategories(prev => prev.map(c => c.id === updatedCategory.id ? updatedCategory : c));
+    toast({
+        title: "Categoría Actualizada",
+        description: `La categoría "${updatedCategory.name}" ha sido actualizada.`,
+    });
+    setIsEditDialogOpen(false);
+    setEditingCategory(null);
   };
 
   const handleDeleteCategory = (categoryId: string) => {
@@ -120,7 +138,7 @@ export default function CategoriesPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                          <DropdownMenuItem>Editar</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditCategory(category)}>Editar</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDeleteCategory(category.id)}>Eliminar</DropdownMenuItem>
                       </DropdownMenuContent>
                       </DropdownMenu>
@@ -137,6 +155,15 @@ export default function CategoriesPage() {
           </div>
         </CardFooter>
       </Card>
+      {editingCategory && (
+        <EditCategoryDialog
+            key={editingCategory.id}
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            category={editingCategory}
+            onCategoryUpdate={handleUpdateCategory}
+        />
+    )}
     </div>
   )
 }

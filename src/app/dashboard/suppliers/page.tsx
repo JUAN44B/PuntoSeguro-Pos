@@ -35,9 +35,12 @@ import { suppliers as initialSuppliers } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast";
 import type { Supplier } from "@/lib/types";
 import AddSupplierDialog from "./components/add-supplier-dialog";
+import EditSupplierDialog from "./components/edit-supplier-dialog";
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = React.useState(initialSuppliers);
+  const [editingSupplier, setEditingSupplier] = React.useState<Supplier | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const { toast } = useToast();
 
   const handleAddSupplier = (newSupplier: Supplier) => {
@@ -46,6 +49,21 @@ export default function SuppliersPage() {
       title: "Proveedor Agregado",
       description: `El proveedor "${newSupplier.name}" ha sido agregado.`,
     });
+  };
+
+  const handleEditSupplier = (supplier: Supplier) => {
+    setEditingSupplier(supplier);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateSupplier = (updatedSupplier: Supplier) => {
+    setSuppliers(prev => prev.map(s => s.id === updatedSupplier.id ? updatedSupplier : s));
+    toast({
+        title: "Proveedor Actualizado",
+        description: `El proveedor "${updatedSupplier.name}" ha sido actualizado.`,
+    });
+    setIsEditDialogOpen(false);
+    setEditingSupplier(null);
   };
 
   const handleDeleteSupplier = (supplierId: string) => {
@@ -132,8 +150,7 @@ export default function SuppliersPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                          <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
-                          <DropdownMenuItem>Editar</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditSupplier(supplier)}>Editar</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDeleteSupplier(supplier.id)}>Eliminar</DropdownMenuItem>
                       </DropdownMenuContent>
                       </DropdownMenu>
@@ -150,6 +167,15 @@ export default function SuppliersPage() {
           </div>
         </CardFooter>
       </Card>
+      {editingSupplier && (
+        <EditSupplierDialog
+            key={editingSupplier.id}
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            supplier={editingSupplier}
+            onSupplierUpdate={handleUpdateSupplier}
+        />
+    )}
     </div>
   )
 }
