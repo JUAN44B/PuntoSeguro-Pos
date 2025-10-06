@@ -26,9 +26,9 @@ interface ReceiptDialogProps {
 
 export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
+  const saleId = `ALIRU-${Date.now().toString().slice(-6)}`;
 
   const handlePrint = () => {
-    // This is a browser-native print functionality
     const printContent = receiptRef.current;
     if (printContent) {
         const style = document.createElement('style');
@@ -36,20 +36,21 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
           @media print {
             body {
               background-color: #fff;
+              -webkit-print-color-adjust: exact;
             }
             @page {
-              size: 80mm auto; /* Adjust width as needed for thermal printers */
+              size: 80mm auto;
               margin: 0;
             }
             .printable-receipt {
               width: 100%;
               padding: 10px;
-              font-size: 10px; /* Smaller font for thermal printers */
-              line-height: 1.4;
+              color: #000;
+              background-color: #fff;
             }
             .printable-receipt * {
               color: #000 !important;
-              background: #fff !important;
+              background: transparent !important;
             }
             .no-print {
                 display: none;
@@ -60,12 +61,11 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
 
         const printWindow = window.open('', '', 'height=600,width=800');
         printWindow?.document.write('<html><head><title>Ticket de Venta</title></head><body>');
-        printWindow?.document.write('<div class="printable-receipt">');
         printWindow?.document.write(printContent.innerHTML);
-        printWindow?.document.write('</div></body></html>');
+        printWindow?.document.write('</body></html>');
         printWindow?.document.close();
         printWindow?.focus();
-        setTimeout(() => { // Timeout to ensure content is loaded
+        setTimeout(() => {
             printWindow?.print();
             printWindow?.close();
         }, 250);
@@ -79,9 +79,11 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
 
     try {
         const canvas = await html2canvas(receiptElement, {
-            scale: 2, // Higher scale for better quality
+            scale: 2.5,
             backgroundColor: '#ffffff',
             useCORS: true,
+            windowWidth: receiptElement.scrollWidth,
+            windowHeight: receiptElement.scrollHeight,
         });
         const dataUrl = canvas.toDataURL('image/png');
         const blob = await (await fetch(dataUrl)).blob();
@@ -91,13 +93,13 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
             await navigator.share({
                 files: [file],
                 title: 'Ticket de Venta - ALIRU',
-                text: 'Aquí está tu ticket de compra. ¡Gracias por tu preferencia!',
+                text: `Aquí está tu ticket de compra para la venta ${saleId}. ¡Gracias por tu preferencia!`,
             });
         } else {
            alert('La función de compartir no es compatible con este navegador. El ticket se descargará como imagen.');
            const link = document.createElement('a');
            link.href = dataUrl;
-           link.download = 'ticket-aliru.png';
+           link.download = `ticket-${saleId}.png`;
            link.click();
         }
     } catch (error) {
@@ -110,64 +112,75 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-md bg-slate-50">
         <DialogHeader>
           <DialogTitle>Venta Completada</DialogTitle>
         </DialogHeader>
-        <div ref={receiptRef} className="p-4 bg-white text-black font-mono text-xs">
-            <div className="text-center space-y-1 mb-4">
-                <div className='flex justify-center mb-2'>
-                    <Logo />
-                </div>
-                <h2 className='font-bold text-sm'>Refacciones para Remolques ALIRU</h2>
-                <p>Av. Principal #123, Col. Centro</p>
-                <p>Tel: 123-456-7890</p>
-                <p>Fecha: {new Date().toLocaleDateString('es-MX')} {new Date().toLocaleTimeString('es-MX')}</p>
-            </div>
-            
-            <Separator className="my-2 border-dashed bg-black" />
+        
+        {/* Receipt Body */}
+        <div ref={receiptRef} className="bg-white p-6 rounded-lg shadow-sm text-gray-800 printable-receipt">
+            <header className="text-center mb-6">
+                <Logo />
+                <h1 className="text-xl font-bold uppercase tracking-wider mt-2">Ticket de Venta</h1>
+            </header>
 
-            <div className="space-y-1">
-                <div className="grid grid-cols-5 gap-2 font-bold">
-                    <div className="col-span-2">PRODUCTO</div>
-                    <div className='text-center'>CANT</div>
-                    <div className='text-right'>PRECIO</div>
-                    <div className="text-right">TOTAL</div>
+            <div className="grid grid-cols-2 gap-x-4 text-sm mb-6">
+                <div>
+                    <p className="font-bold">Folio:</p>
+                    <p>{saleId}</p>
                 </div>
-                {cart.map(item => (
-                    <div key={item.id} className="grid grid-cols-5 gap-2 items-start">
-                        <div className="col-span-2 break-words">{item.name}</div>
-                        <div className='text-center'>{item.quantity}</div>
-                        <div className='text-right'>${item.price.toFixed(2)}</div>
-                        <div className="text-right">${(item.price * item.quantity).toFixed(2)}</div>
-                    </div>
-                ))}
+                <div className='text-right'>
+                    <p className="font-bold">Fecha:</p>
+                    <p>{new Date().toLocaleDateString('es-MX')} {new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+                <div className='col-span-2 mt-2'>
+                    <p className='font-bold'>Empresa:</p>
+                    <p>Refacciones para Remolques ALIRU</p>
+                    <p>Av. Principal #123, Col. Centro</p>
+                </div>
             </div>
 
-            <Separator className="my-2 border-dashed bg-black" />
+            <div className="text-sm">
+                <div className="grid grid-cols-12 gap-2 font-bold border-b-2 border-dashed pb-2 mb-2">
+                    <div className="col-span-6">Descripción</div>
+                    <div className="col-span-2 text-center">Cant.</div>
+                    <div className="col-span-4 text-right">Importe</div>
+                </div>
+                <div className="space-y-2">
+                    {cart.map(item => (
+                        <div key={item.id} className="grid grid-cols-12 gap-2 items-start">
+                            <div className="col-span-6 break-words">{item.name}</div>
+                            <div className="col-span-2 text-center">{item.quantity}</div>
+                            <div className="col-span-4 text-right">${(item.price * item.quantity).toFixed(2)}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
 
-            <div className="space-y-1">
+            <Separator className="my-4 bg-gray-300" />
+
+            <div className="text-sm space-y-2">
                 <div className="flex justify-between">
-                    <span className="font-medium">Subtotal:</span>
+                    <span className="text-gray-600">Subtotal:</span>
                     <span>${(total / 1.16).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                    <span className="font-medium">IVA (16%):</span>
+                    <span className="text-gray-600">IVA (16%):</span>
                     <span>${(total - (total / 1.16)).toFixed(2)}</span>
                 </div>
-                 <Separator className="my-1 border-dashed bg-black" />
-                <div className="flex justify-between font-bold text-base mt-1">
+                <div className="flex justify-between font-bold text-lg mt-2 p-3 bg-primary text-primary-foreground rounded-md">
                     <span>Total:</span>
                     <span>${total.toFixed(2)}</span>
                 </div>
             </div>
             
-            <Separator className="my-2 border-dashed bg-black" />
-            
-            <p className="text-center font-semibold">¡Gracias por su compra!</p>
+            <footer className="text-center mt-8">
+                <p className="font-semibold text-base">¡Gracias por su compra!</p>
+                <p className="text-xs text-gray-500 mt-1">Refacciones para Remolques ALIRU</p>
+            </footer>
         </div>
 
-        <DialogFooter className='pt-4 grid grid-cols-1 sm:grid-cols-3 gap-2'>
+        <DialogFooter className='pt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 no-print'>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className='sm:col-span-1'>Cerrar</Button>
             <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Button type="button" variant="secondary" onClick={handleShareAsImage} className="gap-2">
