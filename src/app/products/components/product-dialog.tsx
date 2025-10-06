@@ -22,7 +22,7 @@ import {
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select"
-import { Upload } from 'lucide-react';
+import { Upload, RefreshCw } from 'lucide-react';
 import Barcode from '@/components/barcode';
 
 
@@ -79,11 +79,21 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
         } else {
             // For new products, start with empty form and calculate initial price
             const initialPrice = calculateFinalPrice(emptyProduct);
-            setFormData({...emptyProduct, finalPrice: initialPrice});
+            setFormData({...emptyProduct, finalPrice: initialPrice, code: generateEAN13()});
             setImagePreview(null);
         }
     }
   }, [product, isOpen]);
+
+  const generateEAN13 = () => {
+    const code = Math.random().toString().slice(2, 14);
+    let sum = 0;
+    for (let i = 0; i < 12; i++) {
+        sum += parseInt(code[i]) * (i % 2 === 0 ? 1 : 3);
+    }
+    const checksum = (10 - (sum % 10)) % 10;
+    return code + checksum;
+  };
 
   const calculateFinalPrice = (data: Omit<Product, 'id' | 'image'>) => {
     const { purchasePrice, discount, profitMargin } = data;
@@ -93,9 +103,12 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
     return parseFloat(calculatedPrice.toFixed(2));
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    // Allow only numbers and limit to 13 digits
+    if (/^\d*$/.test(value) && value.length <= 13) {
+      setFormData(prev => ({ ...prev, code: value }));
+    }
   };
 
   const handleSelectChange = (id: keyof Omit<Product, 'id' | 'image'>, value: string) => {
@@ -155,13 +168,16 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
                     <Input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="code">Código (para código de barras)</Label>
-                    <Input id="code" value={formData.code} onChange={handleChange} />
+                    <Label htmlFor="code">Código de Barras (EAN-13)</Label>
+                    <div className='flex gap-2'>
+                        <Input id="code" value={formData.code} onChange={handleCodeChange} maxLength={13} placeholder="Hasta 13 dígitos numéricos" />
+                        <Button variant='outline' size='icon' onClick={() => setFormData(prev => ({...prev, code: generateEAN13()}))}><RefreshCw className='h-4 w-4'/></Button>
+                    </div>
                     {formData.code && <div className="pt-2"><Barcode text={formData.code}/></div>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="name">Nombre del Producto</Label>
-                    <Input id="name" value={formData.name} onChange={handleChange} />
+                    <Input id="name" value={formData.name} onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="category">Categoría</Label>
