@@ -15,8 +15,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import type { Product } from "@/lib/types"
+import { categories } from "@/lib/data"
 
 interface AddProductDialogProps {
   children: React.ReactNode;
@@ -77,6 +85,10 @@ export default function AddProductDialog({ children, onProductAdd }: AddProductD
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: parseFloat(value) || 0 }));
   };
+
+  const handleCategoryChange = (value: string) => {
+    setFormData(prev => ({ ...prev, category: value }));
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +151,16 @@ export default function AddProductDialog({ children, onProductAdd }: AddProductD
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="category" className="text-right">Categoría</Label>
-            <Input id="category" value={formData.category} onChange={handleChange} className="col-span-3" />
+             <Select onValueChange={handleCategoryChange} value={formData.category}>
+                <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Selecciona una categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                    {categories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="stock" className="text-right">Existencia</Label>
