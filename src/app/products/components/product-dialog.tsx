@@ -123,88 +123,85 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
             {description}
           </DialogDescription>
         </DialogHeader>
-
-        <div className="flex flex-col items-center gap-4 pt-4">
-            <div className="relative w-32 h-32 border rounded-md flex items-center justify-center bg-muted/40">
-                {imagePreview ? (
-                    <Image src={imagePreview} alt="Vista previa" layout="fill" objectFit="cover" className="rounded-md" />
-                ) : (
-                    <span className="text-xs text-muted-foreground">Imagen</span>
-                )}
-            </div>
-            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                <Upload className="h-4 w-4 mr-2" />
-                Seleccionar archivo
-            </Button>
-            <Input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
-        </div>
-
-        <div className="grid gap-6 py-4">
-            {/* Section 1: Product Info */}
-            <div className='space-y-4'>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="code">Código</Label>
-                        <Input id="code" value={formData.code} onChange={handleChange} />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+            {/* Left Column */}
+            <div className="space-y-4">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="relative w-32 h-32 border rounded-md flex items-center justify-center bg-muted/40">
+                        {imagePreview ? (
+                            <Image src={imagePreview} alt="Vista previa" layout="fill" objectFit="cover" className="rounded-md" />
+                        ) : (
+                            <span className="text-xs text-muted-foreground">Imagen</span>
+                        )}
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Nombre del Producto</Label>
-                        <Input id="name" value={formData.name} onChange={handleChange} />
-                    </div>
+                    <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Seleccionar archivo
+                    </Button>
+                    <Input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="code">Código</Label>
+                    <Input id="code" value={formData.code} onChange={handleChange} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="name">Nombre del Producto</Label>
+                    <Input id="name" value={formData.name} onChange={handleChange} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="category">Categoría</Label>
                     <Input id="category" value={formData.category} onChange={handleChange} />
                 </div>
-            </div>
-
-            {/* Section 2: Pricing */}
-            <div className='space-y-4 p-4 border rounded-md'>
-                <h4 className='font-medium text-sm mb-2'>Cálculo de Precios</h4>
-                <div className="grid grid-cols-3 gap-4">
+                 <div className='grid grid-cols-2 gap-4'>
                     <div className="space-y-2">
-                        <Label htmlFor="purchasePrice">P. Compra</Label>
-                        <Input id="purchasePrice" type="number" value={formData.purchasePrice} onChange={handleNumberChange} placeholder="$" />
+                        <Label htmlFor="stock">Existencia</Label>
+                        <Input id="stock" type="number" value={formData.stock} onChange={handleNumberChange} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="discount">Descuento</Label>
-                        <Input id="discount" type="number" value={formData.discount} onChange={handleNumberChange} placeholder="%" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="profitMargin">Ganancia</Label>
-                        <Input id="profitMargin" type="number" value={formData.profitMargin} onChange={handleNumberChange} placeholder="%" />
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <Label>Precio Sugerido (con 16% IVA)</Label>
-                    <div className="font-bold text-lg p-2 bg-muted/50 rounded-md">
-                        ${suggestedPrice.toFixed(2)}
+                        <Label htmlFor="status">Estado</Label>
+                        <Select value={formData.status} onValueChange={(value) => handleSelectChange('status', value)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecciona..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Activo">Activo</SelectItem>
+                                <SelectItem value="Borrador">Borrador</SelectItem>
+                                <SelectItem value="Archivado">Archivado</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
             </div>
 
-            {/* Section 3: Final Price & Stock */}
-            <div className='grid grid-cols-3 gap-4'>
-                <div className="space-y-2 col-span-1">
-                    <Label htmlFor="stock">Existencia</Label>
-                    <Input id="stock" type="number" value={formData.stock} onChange={handleNumberChange} />
+            {/* Right Column */}
+            <div className="space-y-4">
+                <div className='p-4 border rounded-md space-y-4'>
+                    <h4 className='font-medium text-sm text-muted-foreground'>Cálculo de Precios</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="purchasePrice">P. Compra</Label>
+                            <Input id="purchasePrice" type="number" value={formData.purchasePrice} onChange={handleNumberChange} placeholder="$" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="discount">Descuento</Label>
+                            <Input id="discount" type="number" value={formData.discount} onChange={handleNumberChange} placeholder="%" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="profitMargin">Ganancia</Label>
+                            <Input id="profitMargin" type="number" value={formData.profitMargin} onChange={handleNumberChange} placeholder="%" />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Precio Sugerido (con 16% IVA)</Label>
+                        <div className="font-bold text-lg p-2 bg-muted/50 rounded-md">
+                            ${suggestedPrice.toFixed(2)}
+                        </div>
+                    </div>
                 </div>
-                <div className="space-y-2 col-span-1">
-                    <Label htmlFor="status">Estado</Label>
-                    <Select value={formData.status} onValueChange={(value) => handleSelectChange('status', value)}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Selecciona..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Activo">Activo</SelectItem>
-                            <SelectItem value="Borrador">Borrador</SelectItem>
-                            <SelectItem value="Archivado">Archivado</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                 <div className="space-y-2 col-span-1">
-                    <Label htmlFor="finalPrice">P. Venta Final</Label>
-                    <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={handleNumberChange} className='border-primary border-2' />
+                <div className="space-y-2 pt-4">
+                    <Label htmlFor="finalPrice">Precio de Venta Final</Label>
+                    <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={handleNumberChange} className='border-primary border-2 text-lg font-bold' />
                 </div>
             </div>
         </div>
