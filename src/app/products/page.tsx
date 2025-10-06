@@ -2,6 +2,14 @@
 
 import { useState, useMemo } from "react";
 import {
+  collection,
+  addDoc,
+  doc,
+  deleteDoc,
+  setDoc
+} from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase';
+import {
   Card,
   CardContent,
   CardDescription,
@@ -30,85 +38,19 @@ import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { ProductDialog, Product } from "./components/product-dialog";
 
-const initialProducts: Product[] = [
-    {
-        id: "prod-001",
-        code: "41053",
-        name: "Balero 6203",
-        status: "Activo",
-        purchasePrice: 95,
-        discount: 10,
-        profitMargin: 30,
-        finalPrice: 130.00,
-        stock: 100,
-        category: "Baleros",
-        image: "https://picsum.photos/seed/1/64/64"
-    },
-    {
-        id: "prod-002",
-        code: "RT-54321",
-        name: "Retén 12345",
-        status: "Activo",
-        purchasePrice: 50,
-        discount: 0,
-        profitMargin: 40,
-        finalPrice: 80.50,
-        stock: 50,
-        category: "Retenes",
-        image: "https://picsum.photos/seed/2/64/64"
-    },
-    {
-        id: "prod-003",
-        code: "LUB-MULTI",
-        name: "Aceite Multigrado",
-        status: "Activo",
-        purchasePrice: 180,
-        discount: 5,
-        profitMargin: 35,
-        finalPrice: 250.00,
-        stock: 30,
-        category: "Lubricantes",
-        image: "https://picsum.photos/seed/3/64/64"
-    },
-    {
-        id: "prod-004",
-        code: "TORN-RD-01",
-        name: "Tornillo de Rueda",
-        status: "Borrador",
-        purchasePrice: 15,
-        discount: 0,
-        profitMargin: 50,
-        finalPrice: 25.00,
-        stock: 200,
-        category: "Tornillería",
-        image: "https://picsum.photos/seed/4/64/64"
-    },
-    {
-        id: "prod-005",
-        code: "GATO-2T",
-        name: "Gato Hidráulico 2 Ton",
-        status: "Archivado",
-        purchasePrice: 800,
-        discount: 10,
-        profitMargin: 40,
-        finalPrice: 1200.00,
-        stock: 5,
-        category: "Herramientas",
-        image: "https://picsum.photos/seed/5/64/64"
-    }
-];
-
 export default function ProductsPage() {
-  const [products, setProducts] = useState(initialProducts);
+  const firestore = useFirestore();
+  const { data: products, loading } = useCollection(collection(firestore, 'products'));
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const filteredProducts = useMemo(() => {
-    if (!searchTerm) return products;
-    return products.filter(product =>
+    const productList = (products as Product[]) || [];
+    if (!searchTerm) return productList;
+    return productList.filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.code.toLowerCase().includes(searchTerm.toLowerCase())
+      (product.code && product.code.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [products, searchTerm]);
 
@@ -122,25 +64,28 @@ export default function ProductsPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteProduct = (productId: string) => {
-    setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
+  const handleDeleteProduct = async (productId: string) => {
+    if (!productId) return;
+    try {
+        await deleteDoc(doc(firestore, "products", productId));
+    } catch(e) {
+        console.error("Error deleting document: ", e);
+    }
   };
   
-  const handleSaveProduct = (productData: Product) => {
-    if (editingProduct) {
-      // Update existing product
-      setProducts(prevProducts => prevProducts.map(p => p.id === productData.id ? productData : p));
-    } else {
-      // Add new product
-      const newProduct = {
-        ...productData,
-        id: `prod-${String(products.length + 1).padStart(3, '0')}`,
-        // The image is now a data URL from the dialog
-      };
-      setProducts(prevProducts => [...prevProducts, newProduct]);
+  const handleSaveProduct = async (productData: Omit<Product, 'id'>) => {
+    try {
+        if (editingProduct && editingProduct.id) {
+            const productRef = doc(firestore, "products", editingProduct.id);
+            await setDoc(productRef, productData, { merge: true });
+        } else {
+            await addDoc(collection(firestore, "products"), productData);
+        }
+        setIsDialogOpen(false);
+        setEditingProduct(null);
+    } catch(e) {
+        console.error("Error saving document: ", e);
     }
-    setIsDialogOpen(false);
-    setEditingProduct(null);
   };
 
   return (
@@ -194,12 +139,18 @@ export default function ProductsPage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {filteredProducts.length > 0 ? (
+                    {loading ? (
+                        <TableRow>
+                            <TableCell colSpan={8} className="h-24 text-center">
+                            Cargando productos...
+                            </TableCell>
+                        </TableRow>
+                    ) : filteredProducts.length > 0 ? (
                       filteredProducts.map((product) => (
                           <TableRow key={product.id}>
                               <TableCell className="hidden sm:table-cell">
                                   <Image
-                                      alt="Product image"
+                                      alt={product.name}
                                       className="aspect-square rounded-md object-cover"
                                       height="64"
                                       src={product.image || "https://picsum.photos/seed/placeholder/64/64"}
@@ -238,7 +189,7 @@ export default function ProductsPage() {
                                   <DropdownMenuContent align="end">
                                       <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                                       <DropdownMenuItem onClick={() => handleEditProduct(product)}>Editar</DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleDeleteProduct(product.id)}>Eliminar</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleDeleteProduct(product.id!)}>Eliminar</DropdownMenuItem>
                                   </DropdownMenuContent>
                                   </DropdownMenu>
                               </TableCell>
@@ -247,7 +198,7 @@ export default function ProductsPage() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={8} className="h-24 text-center">
-                          No se encontraron resultados.
+                          No se encontraron productos. Comienza agregando uno nuevo.
                         </TableCell>
                       </TableRow>
                     )}

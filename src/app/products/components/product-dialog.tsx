@@ -23,7 +23,7 @@ import {
 import { Upload } from 'lucide-react';
 
 export type Product = {
-  id: string;
+  id?: string;
   code: string;
   name: string;
   status: 'Activo' | 'Borrador' | 'Archivado';
@@ -39,7 +39,7 @@ export type Product = {
 interface ProductDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSave: (product: Product) => void;
+  onSave: (product: Omit<Product, 'id'>) => void;
   product: Product | null;
 }
 
@@ -108,7 +108,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
   };
 
   const handleSubmit = () => {
-    onSave({ ...product, ...formData, image: imagePreview || '' } as Product);
+    onSave({ ...formData, image: imagePreview || '' } as Product);
   };
 
   const title = product ? 'Editar Producto' : 'Agregar Producto';
