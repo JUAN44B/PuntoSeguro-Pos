@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/lib/types"
 import Receipt from "./receipt"
+import WhatsAppIcon from "./whatsapp-icon"
 
 type CartItem = {
     product: Product;
@@ -66,6 +67,34 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
     resetState()
   }
 
+  const handleSendWhatsApp = () => {
+    let message = `*Resumen de Compra - PuntoSeguro POS*\n\n`;
+    message += `*Fecha:* ${new Date().toLocaleString()}\n\n`;
+    message += "*Detalles:*\n";
+
+    Array.from(cart.values()).forEach(({ product, quantity, discount }) => {
+        const itemTotal = product.salePrice * quantity * (1 - discount / 100);
+        message += `${quantity}x ${product.name} - $${itemTotal.toFixed(2)}\n`;
+        if (discount > 0) {
+            message += `  (Descuento: ${discount}%)\n`;
+        }
+    });
+
+    message += "\n--------------------\n";
+    message += `*Subtotal:* $${subtotal.toFixed(2)}\n`;
+    message += `*Impuesto (16%):* $${tax.toFixed(2)}\n`;
+    message += `*Total:* *$${total.toFixed(2)}*\n\n`;
+    message += `*Método de pago:* ${paymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}\n`;
+    if (paymentMethod === 'cash') {
+        message += `*Recibido:* $${received.toFixed(2)}\n`;
+        message += `*Cambio:* $${change.toFixed(2)}\n`;
+    }
+    message += "\n¡Gracias por su compra!";
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  }
+
   const handlePrintReceipt = () => {
     const printContent = receiptRef.current;
     if (printContent) {
@@ -101,7 +130,7 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
         <AlertDialogHeader>
           <AlertDialogTitle>{paymentComplete ? "Pago Exitoso" : "Completar Pago"}</AlertDialogTitle>
           <AlertDialogDescription>
-            {paymentComplete ? "Gracias por su compra." : "Seleccione el método de pago e ingrese el monto recibido."}
+            {paymentComplete ? "Gracias por su compra. Seleccione una opción para el recibo." : "Seleccione el método de pago e ingrese el monto recibido."}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -179,10 +208,16 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
 
         <AlertDialogFooter>
           {paymentComplete ? (
-            <>
-                <Button variant="outline" onClick={handlePrintReceipt}>Imprimir Recibo</Button>
+            <div className="flex justify-between w-full">
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={handlePrintReceipt}>Imprimir Recibo</Button>
+                    <Button variant="outline" className="bg-green-500 hover:bg-green-600 text-white hover:text-white" onClick={handleSendWhatsApp}>
+                        <WhatsAppIcon className="h-5 w-5 mr-2"/>
+                        Enviar por WhatsApp
+                    </Button>
+                </div>
                 <Button onClick={handleNewSale}>Nueva Venta</Button>
-            </>
+            </div>
           ) : (
             <>
                 <AlertDialogCancel onClick={resetState}>Cancelar</AlertDialogCancel>
@@ -199,3 +234,5 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
     </AlertDialog>
   )
 }
+
+    
