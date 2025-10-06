@@ -1,4 +1,5 @@
-import type { Product, Customer, Supplier, SalesOrder, PurchaseOrder, User } from './types';
+
+import type { Product, Customer, Supplier, SalesOrder, PurchaseOrder, User, Category } from './types';
 
 export const products: Product[] = [
   {
@@ -130,4 +131,13 @@ export const users: User[] = [
     { id: 'USR001', name: 'Usuario Admin', email: 'admin@example.com', role: 'Admin', status: 'Activo' },
     { id: 'USR002', name: 'Usuario Gerente', email: 'gerente@example.com', role: 'Gerente', status: 'Activo' },
     { id: 'USR003', name: 'Usuario Cajero', email: 'cajero@example.com', role: 'Cajero', status: 'Invitado' },
+];
+
+export const categories: Category[] = [
+  { id: 'CAT001', name: 'Remolques', description: 'Partes y accesorios para remolques.' },
+  { id: 'CAT002', name: 'Motores', description: 'Componentes y refacciones para motores diésel.' },
+  { id: 'CAT003', name: 'Accesorios', description: 'Accesorios generales para camiones y vehículos.' },
+  { id: 'CAT004', name: 'Eléctrico', description: 'Sistema eléctrico, baterías y componentes.' },
+  { id: 'CAT005', name: 'Llantas', description: 'Llantas para todo tipo de vehículo pesado.' },
+  { id: 'CAT006', name: 'Frenos', description: 'Componentes del sistema de frenos.' },
 ];

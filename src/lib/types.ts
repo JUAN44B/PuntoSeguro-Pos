@@ -1,3 +1,4 @@
+
 export type Product = {
   id: string;
   name: string;
@@ -57,4 +58,10 @@ export type User = {
   email: string;
   role: 'Admin' | 'Gerente' | 'Cajero';
   status: 'Activo' | 'Invitado';
+};
+
+export type Category = {
+  id: string;
+  name: string;
+  description: string;
 };

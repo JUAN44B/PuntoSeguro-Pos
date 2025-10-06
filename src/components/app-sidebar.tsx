@@ -12,6 +12,7 @@ import {
   Settings,
   Warehouse,
   Receipt,
+  Shapes,
 } from "lucide-react"
 import {
   Tooltip,
@@ -26,6 +27,7 @@ const navItems = [
     { href: "/dashboard", icon: Home, label: "Panel", roles: ["Admin", "Gerente", "Cajero"] },
     { href: "/dashboard/pos", icon: ShoppingCart, label: "Punto de Venta", roles: ["Admin", "Gerente", "Cajero"] },
     { href: "/dashboard/products", icon: Package, label: "Productos", roles: ["Admin", "Gerente", "Cajero"] },
+    { href: "/dashboard/categories", icon: Shapes, label: "Categorías", roles: ["Admin", "Gerente"] },
     { href: "/dashboard/inventory", icon: Warehouse, label: "Inventario", roles: ["Admin", "Gerente"] },
     { href: "/dashboard/customers", icon: Users, label: "Clientes", roles: ["Admin", "Gerente"] },
     { href: "/dashboard/purchases", icon: Receipt, label: "Compras", roles: ["Admin", "Gerente"] },
