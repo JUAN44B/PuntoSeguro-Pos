@@ -1,3 +1,7 @@
+
+"use client"
+
+import * as React from "react"
 import {
   File,
   ListFilter,
@@ -38,9 +42,38 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { purchaseOrders } from "@/lib/data"
+import { purchaseOrders as initialPurchaseOrders } from "@/lib/data"
+import { useToast } from "@/hooks/use-toast"
+import type { PurchaseOrder } from "@/lib/types"
 
 export default function PurchasesPage() {
+  const [purchaseOrders, setPurchaseOrders] = React.useState(initialPurchaseOrders);
+  const { toast } = useToast();
+
+  const handleAddPurchaseOrder = () => {
+    const newPO: PurchaseOrder = {
+      id: `PO-${String(purchaseOrders.length + 1).padStart(3, '0')}`,
+      supplierName: 'New Supplier',
+      date: new Date().toISOString().split('T')[0],
+      total: 0,
+      status: 'Pending',
+    };
+    setPurchaseOrders(prev => [newPO, ...prev]);
+    toast({
+      title: "Purchase Order Added",
+      description: "A new purchase order has been created.",
+    });
+  };
+
+  const handleDeletePurchaseOrder = (orderId: string) => {
+    setPurchaseOrders(prev => prev.filter(order => order.id !== orderId));
+    toast({
+      variant: "destructive",
+      title: "Purchase Order Deleted",
+      description: "The purchase order has been removed.",
+    });
+  };
+
   return (
     <Tabs defaultValue="all">
       <div className="flex items-center">
@@ -80,7 +113,7 @@ export default function PurchasesPage() {
               Export
             </span>
           </Button>
-          <Button size="sm" className="h-7 gap-1">
+          <Button size="sm" className="h-7 gap-1" onClick={handleAddPurchaseOrder}>
             <PlusCircle className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
               New Purchase Order
@@ -120,7 +153,7 @@ export default function PurchasesPage() {
                         variant={
                           order.status === 'Received' ? 'default' : order.status === 'Pending' ? 'secondary' : 'destructive'
                         }
-                        className={order.status === 'Pending' ? 'bg-yellow-500/80 text-white' : ''}
+                        className={order.status === 'Pending' ? 'bg-yellow-500/80 text-white hover:bg-yellow-500' : ''}
                       >
                         {order.status}
                       </Badge>
@@ -145,7 +178,7 @@ export default function PurchasesPage() {
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem>View Details</DropdownMenuItem>
                           <DropdownMenuItem>Mark as Received</DropdownMenuItem>
-                          <DropdownMenuItem>Delete</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeletePurchaseOrder(order.id)}>Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -165,3 +198,5 @@ export default function PurchasesPage() {
     </Tabs>
   )
 }
+
+    

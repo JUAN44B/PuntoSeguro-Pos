@@ -1,3 +1,7 @@
+
+"use client"
+
+import * as React from "react"
 import {
   File,
   ListFilter,
@@ -31,9 +35,40 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { customers } from "@/lib/data"
+import { customers as initialCustomers } from "@/lib/data"
+import { useToast } from "@/hooks/use-toast"
+import type { Customer } from "@/lib/types"
 
 export default function CustomersPage() {
+  const [customers, setCustomers] = React.useState(initialCustomers);
+  const { toast } = useToast();
+
+  const handleAddCustomer = () => {
+    const newCustomer: Customer = {
+      id: `CUST${String(customers.length + 1).padStart(3, '0')}`,
+      name: 'New Customer',
+      rfc: 'XAXX010101000',
+      email: 'new.customer@email.com',
+      phone: '00-0000-0000',
+      address: 'New Address',
+      type: 'Retail',
+    };
+    setCustomers(prev => [...prev, newCustomer]);
+    toast({
+      title: "Customer Added",
+      description: "A new customer has been created. Please edit their details.",
+    });
+  };
+
+  const handleDeleteCustomer = (customerId: string) => {
+    setCustomers(prev => prev.filter(c => c.id !== customerId));
+    toast({
+      variant: "destructive",
+      title: "Customer Deleted",
+      description: "The customer has been removed.",
+    });
+  };
+
   return (
     <div>
         <div className="flex items-center mb-4">
@@ -45,7 +80,7 @@ export default function CustomersPage() {
                     Export
                     </span>
                 </Button>
-                <Button size="sm" className="h-7 gap-1">
+                <Button size="sm" className="h-7 gap-1" onClick={handleAddCustomer}>
                     <PlusCircle className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                     Add Customer
@@ -109,7 +144,7 @@ export default function CustomersPage() {
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem>View Details</DropdownMenuItem>
                           <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>Delete</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteCustomer(customer.id)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                       </DropdownMenu>
                   </TableCell>
@@ -128,3 +163,5 @@ export default function CustomersPage() {
     </div>
   )
 }
+
+    

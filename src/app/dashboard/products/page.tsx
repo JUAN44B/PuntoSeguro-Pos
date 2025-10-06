@@ -1,3 +1,6 @@
+
+"use client"
+import * as React from "react";
 import Image from "next/image"
 import {
   File,
@@ -39,9 +42,47 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { products } from "@/lib/data"
+import { products as initialProducts } from "@/lib/data"
+import { useToast } from "@/hooks/use-toast";
+import type { Product } from "@/lib/types";
+
 
 export default function ProductsPage() {
+    const [products, setProducts] = React.useState(initialProducts);
+    const { toast } = useToast();
+
+    const handleAddProduct = () => {
+        const newProduct: Product = {
+            id: `PROD${String(products.length + 1).padStart(3, '0')}`,
+            name: "New Product",
+            description: "A new product description.",
+            category: "General",
+            stock: 0,
+            purchasePrice: 0,
+            salePrice: 0,
+            tax: 16,
+            discount: 0,
+            profitMargin: 0,
+            supplier: "Default Supplier",
+            imageUrl: 'https://picsum.photos/seed/new_prod/400/300',
+            imageHint: 'new product'
+        };
+        setProducts(prev => [...prev, newProduct]);
+        toast({
+            title: "Product Added",
+            description: "A new product has been created. Please edit its details.",
+        });
+    };
+
+    const handleDeleteProduct = (productId: string) => {
+        setProducts(prev => prev.filter(p => p.id !== productId));
+        toast({
+            variant: "destructive",
+            title: "Product Deleted",
+            description: "The product has been removed.",
+        });
+    };
+  
   return (
     <Tabs defaultValue="all">
       <div className="flex items-center">
@@ -81,7 +122,7 @@ export default function ProductsPage() {
               Export
             </span>
           </Button>
-          <Button size="sm" className="h-7 gap-1">
+          <Button size="sm" className="h-7 gap-1" onClick={handleAddProduct}>
             <PlusCircle className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
               Add Product
@@ -162,7 +203,7 @@ export default function ProductsPage() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Delete</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteProduct(product.id)}>Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                         </DropdownMenu>
                     </TableCell>
@@ -182,3 +223,5 @@ export default function ProductsPage() {
     </Tabs>
   )
 }
+
+    

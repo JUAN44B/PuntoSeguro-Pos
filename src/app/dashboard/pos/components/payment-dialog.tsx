@@ -67,15 +67,20 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
   }
 
   const handlePrintReceipt = () => {
-     const printContent = receiptRef.current;
+    const printContent = receiptRef.current;
     if (printContent) {
-      const originalContents = document.body.innerHTML;
-      const printHtml = printContent.innerHTML;
-      document.body.innerHTML = printHtml;
-      window.print();
-      document.body.innerHTML = originalContents;
-      // Reload to restore styles and event handlers
-      window.location.reload();
+      const printWindow = window.open('', '', 'height=600,width=800');
+      if (printWindow) {
+        printWindow.document.write('<html><head><title>Print Receipt</title>');
+        printWindow.document.write('<style>body { font-family: monospace; } table { width: 100%; border-collapse: collapse; } td, th { padding: 4px; } .text-center { text-align: center; } .font-bold { font-weight: bold; } .text-lg { font-size: 1.125rem; } .mb-4 { margin-bottom: 1rem; } .my-2 { margin-top: 0.5rem; margin-bottom: 0.5rem; } .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; } .border-t { border-top: 1px dashed black; } .border-b { border-bottom: 1px dashed black; } .flex { display: flex; } .justify-between { justify-content: space-between; } .space-y-1 > * + * { margin-top: 0.25rem; } .mt-2 { margin-top: 0.5rem; } .pt-2 { padding-top: 0.5rem; } .mt-4 { margin-top: 1rem; } .pl-4 { padding-left: 1rem; } .text-xs { font-size: 0.75rem; } .text-base { font-size: 1rem; }</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(printContent.innerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      }
     }
   }
 
@@ -101,18 +106,23 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
         </AlertDialogHeader>
 
         {paymentComplete ? (
-          <div className="hidden">
-            <Receipt 
-              ref={receiptRef}
-              items={cart}
-              total={total}
-              subtotal={subtotal}
-              tax={tax}
-              paymentMethod={paymentMethod}
-              amountReceived={received}
-              change={change}
-            />
-          </div>
+            <div>
+                 <div className="hidden">
+                    <Receipt 
+                    ref={receiptRef}
+                    items={cart}
+                    total={total}
+                    subtotal={subtotal}
+                    tax={tax}
+                    paymentMethod={paymentMethod}
+                    amountReceived={received}
+                    change={change}
+                    />
+                </div>
+                <div className="p-4 bg-gray-100 rounded-md">
+                     <p className="text-center">Sale completed. Ready for the next sale.</p>
+                </div>
+            </div>
         ) : (
              <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-6">
@@ -189,3 +199,5 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
     </AlertDialog>
   )
 }
+
+    

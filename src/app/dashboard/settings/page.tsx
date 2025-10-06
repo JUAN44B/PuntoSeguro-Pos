@@ -1,3 +1,6 @@
+
+"use client"
+import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -9,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { users } from "@/lib/data"
+import { users as initialUsers, products as initialProducts } from "@/lib/data"
 import {
   Table,
   TableBody,
@@ -27,8 +30,60 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useToast } from "@/hooks/use-toast"
+import type { User } from "@/lib/types"
 
 export default function SettingsPage() {
+  const { toast } = useToast();
+  const [businessInfo, setBusinessInfo] = React.useState({
+    name: "PuntoSeguro POS",
+    email: "contacto@puntoseguro.com",
+    address: "Av. Principal 123, Ciudad, País",
+    phone: "+52 55 1234 5678",
+    taxId: "PSM120315ABC",
+  });
+
+  const [users, setUsers] = React.useState<User[]>(initialUsers);
+
+  const handleInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setBusinessInfo(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSaveChanges = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Here you would typically save to a backend
+    toast({
+      title: "Settings Saved",
+      description: "Your business information has been updated.",
+    });
+  };
+  
+  const handleAddUser = () => {
+    const newUser: User = {
+        id: `USR${String(users.length + 1).padStart(3, '0')}`,
+        name: 'New User',
+        email: 'new.user@example.com',
+        role: 'Cashier',
+        status: 'Invited'
+    };
+    setUsers(prev => [...prev, newUser]);
+     toast({
+      title: "User Added",
+      description: "A new user has been invited.",
+    });
+  }
+
+  const handleDeleteUser = (userId: string) => {
+    setUsers(prev => prev.filter(user => user.id !== userId));
+     toast({
+        variant: "destructive",
+      title: "User Deleted",
+      description: "The user has been removed from the system.",
+    });
+  }
+
+
   return (
     <div className="space-y-8">
       <div>
@@ -46,33 +101,33 @@ export default function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-6">
+          <form onSubmit={handleSaveChanges} className="grid gap-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Business Name</Label>
-                <Input id="name" defaultValue="PuntoSeguro POS" />
+                <Input id="name" value={businessInfo.name} onChange={handleInfoChange} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Contact Email</Label>
-                <Input id="email" type="email" defaultValue="contacto@puntoseguro.com" />
+                <Input id="email" type="email" value={businessInfo.email} onChange={handleInfoChange} />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
-              <Textarea id="address" defaultValue="Av. Principal 123, Ciudad, País" />
+              <Textarea id="address" value={businessInfo.address} onChange={handleInfoChange} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" defaultValue="+52 55 1234 5678" />
+                    <Input id="phone" type="tel" value={businessInfo.phone} onChange={handleInfoChange} />
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="tax-id">Tax ID (RFC)</Label>
-                    <Input id="tax-id" defaultValue="PSM120315ABC" />
+                    <Input id="tax-id" value={businessInfo.taxId} onChange={handleInfoChange} />
                 </div>
             </div>
              <div className="flex justify-end">
-                <Button>Save Changes</Button>
+                <Button type="submit">Save Changes</Button>
             </div>
           </form>
         </CardContent>
@@ -87,7 +142,7 @@ export default function SettingsPage() {
                     Manage who can access your store and what they can do.
                 </CardDescription>
             </div>
-            <Button size="sm" className="ml-auto h-7 gap-1">
+            <Button size="sm" className="ml-auto h-7 gap-1" onClick={handleAddUser}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span>Add User</span>
             </Button>
@@ -137,7 +192,7 @@ export default function SettingsPage() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem>Edit Role</DropdownMenuItem>
                         <DropdownMenuItem>Deactivate User</DropdownMenuItem>
-                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteUser(user.id)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -150,3 +205,5 @@ export default function SettingsPage() {
     </div>
   )
 }
+
+    

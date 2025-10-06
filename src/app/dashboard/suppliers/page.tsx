@@ -1,3 +1,6 @@
+
+"use client"
+import * as React from "react";
 import {
   File,
   MoreHorizontal,
@@ -28,9 +31,40 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { suppliers } from "@/lib/data"
+import { suppliers as initialSuppliers } from "@/lib/data"
+import { useToast } from "@/hooks/use-toast";
+import type { Supplier } from "@/lib/types";
 
 export default function SuppliersPage() {
+  const [suppliers, setSuppliers] = React.useState(initialSuppliers);
+  const { toast } = useToast();
+
+  const handleAddSupplier = () => {
+    const newSupplier: Supplier = {
+      id: `SUP${String(suppliers.length + 1).padStart(3, '0')}`,
+      name: 'New Supplier',
+      rfc: 'XAXX010101000',
+      contactName: 'Contact Name',
+      email: 'new.supplier@email.com',
+      phone: '00-0000-0000',
+      address: 'New Supplier Address',
+    };
+    setSuppliers(prev => [...prev, newSupplier]);
+    toast({
+      title: "Supplier Added",
+      description: "A new supplier has been created. Please edit their details.",
+    });
+  };
+
+  const handleDeleteSupplier = (supplierId: string) => {
+    setSuppliers(prev => prev.filter(s => s.id !== supplierId));
+    toast({
+      variant: "destructive",
+      title: "Supplier Deleted",
+      description: "The supplier has been removed.",
+    });
+  };
+
   return (
     <div>
         <div className="flex items-center mb-4">
@@ -42,7 +76,7 @@ export default function SuppliersPage() {
                     Export
                     </span>
                 </Button>
-                <Button size="sm" className="h-7 gap-1">
+                <Button size="sm" className="h-7 gap-1" onClick={handleAddSupplier}>
                     <PlusCircle className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                     Add Supplier
@@ -106,7 +140,7 @@ export default function SuppliersPage() {
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem>View Details</DropdownMenuItem>
                           <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>Delete</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteSupplier(supplier.id)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                       </DropdownMenu>
                   </TableCell>
@@ -125,3 +159,5 @@ export default function SuppliersPage() {
     </div>
   )
 }
+
+    
