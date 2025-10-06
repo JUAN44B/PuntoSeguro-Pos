@@ -115,7 +115,12 @@ export default function POSPage() {
     }
   };
   
-  const filteredProducts = (products as ProductFromDB[]).filter(p => p.status === 'Activo' && p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredProducts = (products as ProductFromDB[]).filter(p => 
+    p.status === 'Activo' && (
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.code && p.code.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+  );
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const subtotal = total / 1.16;

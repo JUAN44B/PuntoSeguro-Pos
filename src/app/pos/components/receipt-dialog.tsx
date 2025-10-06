@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import type { CartItem } from '../page';
 import { Printer, Share2 } from 'lucide-react';
+import Barcode from '@/components/barcode';
 
 interface ReceiptDialogProps {
   isOpen: boolean;
@@ -22,14 +23,6 @@ interface ReceiptDialogProps {
     paymentMethod: string;
   };
 }
-
-const Barcode = ({ text }: { text: string }) => {
-    const bars = text.split('').map((char, i) => {
-        const value = (char.charCodeAt(0) % 3) + 1;
-        return <rect key={i} x={i * 4} y="0" width={value * 1.5} height="40" fill="black" />;
-    });
-    return <svg height="40" className='w-full'>{bars}</svg>;
-};
 
 export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogProps) {
   const receiptRef = useRef<HTMLDivElement>(null);

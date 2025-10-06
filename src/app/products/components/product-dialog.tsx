@@ -23,6 +23,8 @@ import {
     SelectValue,
   } from "@/components/ui/select"
 import { Upload } from 'lucide-react';
+import Barcode from '@/components/barcode';
+
 
 export type Product = {
   id?: string;
@@ -153,8 +155,9 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
                     <Input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="code">Código</Label>
+                    <Label htmlFor="code">Código (para código de barras)</Label>
                     <Input id="code" value={formData.code} onChange={handleChange} />
+                    {formData.code && <div className="pt-2"><Barcode text={formData.code}/></div>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="name">Nombre del Producto</Label>
