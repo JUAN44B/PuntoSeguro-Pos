@@ -16,6 +16,7 @@ export type SaleItem = {
     name: string;
     price: number;
     quantity: number;
+    discount?: number;
 };
 
 export type Sale = {
@@ -123,6 +124,7 @@ export default function SalesHistoryPage() {
                                                 {sale.items.map(item => (
                                                     <li key={item.id}>
                                                         {item.quantity}x {item.name} - ${(item.price * item.quantity).toFixed(2)}
+                                                        {item.discount && item.discount > 0 && ` (-${item.discount}%)`}
                                                     </li>
                                                 ))}
                                             </ul>
@@ -149,7 +151,7 @@ export default function SalesHistoryPage() {
                     isOpen={isReceiptOpen}
                     onOpenChange={setIsReceiptOpen}
                     saleData={{
-                        cart: selectedSale.items.map(item => ({...item, image: ''})) as CartItem[],
+                        cart: selectedSale.items.map(item => ({...item, image: '', discount: item.discount || 0})) as CartItem[],
                         total: selectedSale.total,
                         paymentMethod: selectedSale.paymentMethod,
                     }}

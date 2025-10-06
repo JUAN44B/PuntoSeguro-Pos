@@ -17,10 +17,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Minus, X, Search, Save, Ban } from 'lucide-react';
+import { Plus, Minus, X, Search, Save, Ban, Tag } from 'lucide-react';
 import Image from 'next/image';
 import { PaymentDialog } from './components/payment-dialog';
 import { ReceiptDialog } from './components/receipt-dialog';
+import { DiscountDialog } from './components/discount-dialog';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from 'firebase/firestore';
 import type { Product } from '../products/components/product-dialog';
@@ -32,6 +33,7 @@ export type CartItem = {
   price: number;
   quantity: number;
   image: string;
+  discount: number; // Percentage discount
 };
 
 type ProductFromDB = Product & { id: string };
@@ -44,6 +46,8 @@ export default function POSPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [isDiscountOpen, setIsDiscountOpen] = useState(false);
+  const [selectedCartItem, setSelectedCartItem] = useState<CartItem | null>(null);
   const [lastSale, setLastSale] = useState<{ cart: CartItem[], total: number, paymentMethod: string } | null>(null);
 
   const addToCart = (product: ProductFromDB) => {
@@ -56,7 +60,7 @@ export default function POSPage() {
             : item
         );
       }
-      return [...prevCart, { id: product.id, name: product.name, price: product.finalPrice, image: product.image, quantity: 1 }];
+      return [...prevCart, { id: product.id, name: product.name, price: product.finalPrice, image: product.image, quantity: 1, discount: 0 }];
     });
   };
 
@@ -75,6 +79,21 @@ export default function POSPage() {
   const removeFromCart = (productId: string) => {
     setCart(prevCart => prevCart.filter(item => item.id !== productId));
   };
+  
+  const handleDiscountClick = (item: CartItem) => {
+    setSelectedCartItem(item);
+    setIsDiscountOpen(true);
+  };
+  
+  const handleSaveDiscount = (discount: number) => {
+    if (selectedCartItem) {
+        setCart(prevCart => prevCart.map(item => 
+            item.id === selectedCartItem.id ? { ...item, discount } : item
+        ));
+    }
+    setIsDiscountOpen(false);
+    setSelectedCartItem(null);
+  };
 
   const cancelSale = () => {
     setCart([]);
@@ -85,7 +104,10 @@ export default function POSPage() {
     const saleData = {
       saleId,
       createdAt: serverTimestamp(),
-      items: cart.map(({ image, ...item }) => item), // Don't store image in sale items
+      items: cart.map(({ image, ...item }) => ({
+        ...item,
+        price: item.price * (1 - item.discount / 100), // Final price with discount
+      })),
       total,
       subtotal,
       iva,
@@ -122,7 +144,10 @@ export default function POSPage() {
     )
   );
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = cart.reduce((sum, item) => {
+      const finalPrice = item.price * (1 - item.discount / 100);
+      return sum + finalPrice * item.quantity;
+  }, 0);
   const subtotal = total / 1.16;
   const iva = total - subtotal;
 
@@ -190,9 +215,17 @@ export default function POSPage() {
                           </TableCell>
                       </TableRow>
                   )}
-                  {cart.map(item => (
+                  {cart.map(item => {
+                      const finalPrice = item.price * (1 - item.discount / 100);
+                      const totalItemPrice = finalPrice * item.quantity;
+                      return (
                       <TableRow key={item.id}>
-                          <TableCell className='font-medium'>{item.name}</TableCell>
+                          <TableCell className='font-medium'>
+                            <div>{item.name}</div>
+                            {item.discount > 0 && (
+                                <div className='text-xs text-green-500'>-{item.discount}%</div>
+                            )}
+                          </TableCell>
                           <TableCell>
                           <div className="flex items-center gap-1">
                               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, -1)}><Minus className="h-3 w-3" /></Button>
@@ -200,12 +233,20 @@ export default function POSPage() {
                               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-3 w-3" /></Button>
                           </div>
                           </TableCell>
-                          <TableCell>${(item.price * item.quantity).toFixed(2)}</TableCell>
+                          <TableCell>
+                            <div className='flex flex-col items-end'>
+                                {item.discount > 0 && <span className='text-xs line-through text-muted-foreground'>${(item.price * item.quantity).toFixed(2)}</span>}
+                                <button onClick={() => handleDiscountClick(item)} className="font-bold flex items-center gap-1 hover:text-primary transition-colors">
+                                  ${totalItemPrice.toFixed(2)}
+                                  <Tag className='h-3 w-3' />
+                                </button>
+                            </div>
+                          </TableCell>
                           <TableCell>
                               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFromCart(item.id)}><X className="h-4 w-4 text-destructive" /></Button>
                           </TableCell>
                       </TableRow>
-                  ))}
+                  )})}
               </TableBody>
             </Table>
           </CardContent>
@@ -249,6 +290,14 @@ export default function POSPage() {
           saleData={lastSale}
         />
       )}
+
+      <DiscountDialog
+        isOpen={isDiscountOpen}
+        onOpenChange={setIsDiscountOpen}
+        onSave={handleSaveDiscount}
+        initialDiscount={selectedCartItem?.discount || 0}
+        productName={selectedCartItem?.name || ''}
+      />
     </>
   );
 }

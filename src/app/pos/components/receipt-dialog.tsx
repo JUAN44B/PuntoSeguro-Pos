@@ -158,17 +158,25 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
                 </div>
 
                 <div className="text-xs py-2 space-y-2">
-                    {cart.map(item => (
+                    {cart.map(item => {
+                        const finalPrice = item.price * (1 - (item.discount || 0) / 100);
+                        return (
                         <div key={item.id}>
                             <div className="flex justify-between">
                                 <span className='break-all'>{item.name}</span>
-                                <span className='pl-2'>${(item.price * item.quantity).toFixed(2)}</span>
+                                <span className='pl-2'>${(finalPrice * item.quantity).toFixed(2)}</span>
                             </div>
                             <div className='text-gray-600' style={{fontSize: '10px', paddingLeft: '4px'}}>
-                                {item.quantity} x ${item.price.toFixed(2)}
+                                {item.quantity} x ${finalPrice.toFixed(2)}
+                                {item.discount > 0 && <span className='ml-2'>(-{item.discount}%)</span>}
                             </div>
+                            {item.discount > 0 &&
+                                <div className='text-gray-600' style={{fontSize: '10px', paddingLeft: '4px', textDecoration: 'line-through'}}>
+                                    Precio original: ${item.price.toFixed(2)}
+                                </div>
+                            }
                         </div>
-                    ))}
+                    )})}
                 </div>
 
                 <div className="text-xs mt-2 border-t-2 border-dashed border-black pt-2">
