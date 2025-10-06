@@ -22,11 +22,12 @@ interface ReceiptDialogProps {
     total: number;
     paymentMethod: string;
   };
+  saleIdFromProps?: string;
 }
 
-export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogProps) {
+export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps }: ReceiptDialogProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
-  const saleId = `ALIRU-${Date.now().toString().slice(-6)}`;
+  const saleId = saleIdFromProps || `ALIRU-${Date.now().toString().slice(-6)}`;
 
   const handlePrint = () => {
     const printContent = receiptRef.current;
