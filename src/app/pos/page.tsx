@@ -21,6 +21,10 @@ import { Plus, Minus, X, Search, Save, Ban } from 'lucide-react';
 import Image from 'next/image';
 import { PaymentDialog } from './components/payment-dialog';
 import { ReceiptDialog } from './components/receipt-dialog';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { Product } from '../products/components/product-dialog';
+
 
 export type CartItem = {
   id: string;
@@ -30,26 +34,19 @@ export type CartItem = {
   image: string;
 };
 
-const initialProducts = [
-    { id: "prod-001", name: "Balero 6203", price: 130.00, image: "https://picsum.photos/seed/1/100/100", category: "Baleros" },
-    { id: "prod-002", name: "Retén 12345", price: 80.50, image: "https://picsum.photos/seed/2/100/100", category: "Retenes" },
-    { id: "prod-003", name: "Aceite Multigrado", price: 250.00, image: "https://picsum.photos/seed/3/100/100", category: "Lubricantes" },
-    { id: "prod-004", name: "Tornillo de Rueda", price: 25.00, image: "https://picsum.photos/seed/4/100/100", category: "Tornillería" },
-    { id: "prod-005", name: "Gato Hidráulico 2 Ton", price: 1200.00, image: "https://picsum.photos/seed/5/100/100", category: "Herramientas" },
-    { id: "prod-006", name: "Filtro de Aire", price: 150.00, image: "https://picsum.photos/seed/6/100/100", category: "Filtros" },
-    { id: "prod-007", name: "Bujía de Iridio", price: 220.00, image: "https://picsum.photos/seed/7/100/100", category: "Encendido" },
-    { id: "prod-008", name: "Balata Cerámica", price: 450.00, image: "https://picsum.photos/seed/8/100/100", category: "Frenos" },
-];
-
+type ProductFromDB = Product & { id: string };
 
 export default function POSPage() {
+  const firestore = useFirestore();
+  const { data: products, loading } = useCollection(collection(firestore, 'products'));
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [lastSale, setLastSale] = useState<{ cart: CartItem[], total: number, paymentMethod: string } | null>(null);
 
-  const addToCart = (product: Omit<CartItem, 'quantity'>) => {
+  const addToCart = (product: ProductFromDB) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
       if (existingItem) {
@@ -59,7 +56,7 @@ export default function POSPage() {
             : item
         );
       }
-      return [...prevCart, { ...product, quantity: 1 }];
+      return [...prevCart, { id: product.id, name: product.name, price: product.finalPrice, image: product.image, quantity: 1 }];
     });
   };
 
@@ -90,12 +87,11 @@ export default function POSPage() {
     setCart([]); // Clear cart after successful payment
   };
   
-  const filteredProducts = initialProducts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredProducts = (products as ProductFromDB[]).filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  // Assuming 16% IVA is applied over the subtotal
-  const iva = subtotal * 0.16;
-  const total = subtotal + iva;
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = total / 1.16;
+  const iva = total - subtotal;
 
 
   return (
@@ -113,6 +109,7 @@ export default function POSPage() {
               />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 overflow-y-auto pr-2">
+              {loading && <p>Cargando productos...</p>}
               {filteredProducts.map(product => (
                   <Card 
                       key={product.id} 
@@ -122,7 +119,7 @@ export default function POSPage() {
                       <CardContent className="p-0 flex flex-col items-center justify-center">
                           <div className="relative w-full aspect-square">
                               <Image 
-                                  src={product.image} 
+                                  src={product.image || "https://picsum.photos/seed/placeholder/100/100"} 
                                   alt={product.name}
                                   fill
                                   className="object-cover rounded-t-lg"
@@ -130,7 +127,7 @@ export default function POSPage() {
                               />
                           </div>
                           <p className="text-sm font-medium p-2 text-center h-12 flex items-center">{product.name}</p>
-                          <p className="text-xs font-bold p-2 bg-muted w-full text-center rounded-b-lg">${product.price.toFixed(2)}</p>
+                          <p className="text-xs font-bold p-2 bg-muted w-full text-center rounded-b-lg">${product.finalPrice.toFixed(2)}</p>
                       </CardContent>
                   </Card>
               ))}
