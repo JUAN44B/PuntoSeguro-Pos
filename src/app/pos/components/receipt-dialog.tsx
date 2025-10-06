@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import html2canvas from 'html2canvas';
 import {
   Dialog,
   DialogContent,
@@ -30,64 +31,80 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
     // This is a browser-native print functionality
     const printContent = receiptRef.current;
     if (printContent) {
-        const originalContents = document.body.innerHTML;
-        // Create a style element and append it to head
         const style = document.createElement('style');
         style.innerHTML = `
           @media print {
-            body > *:not(.printable-receipt) {
-              display: none;
-            }
             body {
               background-color: #fff;
             }
+            @page {
+              size: 80mm auto; /* Adjust width as needed for thermal printers */
+              margin: 0;
+            }
             .printable-receipt {
-              position: absolute;
-              left: 0;
-              top: 0;
               width: 100%;
-              padding: 20px;
-              font-size: 12px;
+              padding: 10px;
+              font-size: 10px; /* Smaller font for thermal printers */
+              line-height: 1.4;
+            }
+            .printable-receipt * {
+              color: #000 !important;
+              background: #fff !important;
+            }
+            .no-print {
+                display: none;
             }
           }
         `;
         document.head.appendChild(style);
 
-        // Add a temporary class for printing and append to body
-        const receiptClone = printContent.cloneNode(true) as HTMLElement;
-        receiptClone.classList.add('printable-receipt');
-        document.body.appendChild(receiptClone);
-        
-        window.print();
-
-        // Clean up after printing
+        const printWindow = window.open('', '', 'height=600,width=800');
+        printWindow?.document.write('<html><head><title>Ticket de Venta</title></head><body>');
+        printWindow?.document.write('<div class="printable-receipt">');
+        printWindow?.document.write(printContent.innerHTML);
+        printWindow?.document.write('</div></body></html>');
+        printWindow?.document.close();
+        printWindow?.focus();
+        setTimeout(() => { // Timeout to ensure content is loaded
+            printWindow?.print();
+            printWindow?.close();
+        }, 250);
         document.head.removeChild(style);
-        document.body.removeChild(receiptClone);
     }
   };
   
-  const handleSendWhatsApp = () => {
-    const { cart, total } = saleData;
-    let message = `*Resumen de Compra - Refacciones para Remolques ALIRU*\n\n`;
-    message += `Fecha: ${new Date().toLocaleDateString('es-MX')} ${new Date().toLocaleTimeString('es-MX')}\n`;
-    message += `-----------------------------------\n`;
+  const handleShareAsImage = async () => {
+    const receiptElement = receiptRef.current;
+    if (!receiptElement) return;
 
-    cart.forEach(item => {
-        message += `*${item.name}*\n`;
-        message += `  ${item.quantity} x $${item.price.toFixed(2)} = $${(item.quantity * item.price).toFixed(2)}\n`;
-    });
+    try {
+        const canvas = await html2canvas(receiptElement, {
+            scale: 2, // Higher scale for better quality
+            backgroundColor: '#ffffff',
+            useCORS: true,
+        });
+        const dataUrl = canvas.toDataURL('image/png');
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], 'ticket-aliru.png', { type: 'image/png' });
 
-    message += `-----------------------------------\n`;
-    const subtotal = total / 1.16;
-    const iva = total - subtotal;
-    message += `Subtotal: $${subtotal.toFixed(2)}\n`;
-    message += `IVA (16%): $${iva.toFixed(2)}\n`;
-    message += `*Total: $${total.toFixed(2)}*\n\n`;
-    message += `¡Gracias por su compra!`;
-
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Ticket de Venta - ALIRU',
+                text: 'Aquí está tu ticket de compra. ¡Gracias por tu preferencia!',
+            });
+        } else {
+           alert('La función de compartir no es compatible con este navegador.');
+           // Fallback: download the image
+           const link = document.createElement('a');
+           link.href = dataUrl;
+           link.download = 'ticket-aliru.png';
+           link.click();
+        }
+    } catch (error) {
+        console.error('Error al compartir la imagen:', error);
+        alert('Hubo un error al generar la imagen del ticket.');
+    }
   };
 
   const { cart, total } = saleData;
@@ -98,20 +115,20 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
         <DialogHeader>
           <DialogTitle>Venta Completada</DialogTitle>
         </DialogHeader>
-        <div ref={receiptRef} className="p-4 bg-white text-black font-mono text-sm">
-            <div className="text-center space-y-1 mb-6">
-                <div className='flex justify-center mb-4'>
+        <div ref={receiptRef} className="p-4 bg-white text-black font-mono text-xs">
+            <div className="text-center space-y-1 mb-4">
+                <div className='flex justify-center mb-2'>
                     <Logo />
                 </div>
-                <h2 className='font-bold text-base'>Refacciones para Remolques ALIRU</h2>
-                <p className='text-xs'>Av. Principal #123, Col. Centro</p>
-                <p className='text-xs'>Tel: 123-456-7890</p>
-                <p className="text-xs">Fecha: ${new Date().toLocaleDateString('es-MX')} ${new Date().toLocaleTimeString('es-MX')}</p>
+                <h2 className='font-bold text-sm'>Refacciones para Remolques ALIRU</h2>
+                <p>Av. Principal #123, Col. Centro</p>
+                <p>Tel: 123-456-7890</p>
+                <p>Fecha: {new Date().toLocaleDateString('es-MX')} {new Date().toLocaleTimeString('es-MX')}</p>
             </div>
             
-            <Separator className="my-3 border-dashed bg-black" />
+            <Separator className="my-2 border-dashed bg-black" />
 
-            <div className="space-y-2 text-xs">
+            <div className="space-y-1">
                 <div className="grid grid-cols-5 gap-2 font-bold">
                     <div className="col-span-2">PRODUCTO</div>
                     <div className='text-center'>CANT</div>
@@ -120,7 +137,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
                 </div>
                 {cart.map(item => (
                     <div key={item.id} className="grid grid-cols-5 gap-2 items-start">
-                        <div className="col-span-2">{item.name}</div>
+                        <div className="col-span-2 break-words">{item.name}</div>
                         <div className='text-center'>{item.quantity}</div>
                         <div className='text-right'>${item.price.toFixed(2)}</div>
                         <div className="text-right">${(item.price * item.quantity).toFixed(2)}</div>
@@ -128,9 +145,9 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
                 ))}
             </div>
 
-            <Separator className="my-3 border-dashed bg-black" />
+            <Separator className="my-2 border-dashed bg-black" />
 
-            <div className="space-y-1 text-xs">
+            <div className="space-y-1">
                 <div className="flex justify-between">
                     <span className="font-medium">Subtotal:</span>
                     <span>${(total / 1.16).toFixed(2)}</span>
@@ -139,22 +156,22 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
                     <span className="font-medium">IVA (16%):</span>
                     <span>${(total - (total / 1.16)).toFixed(2)}</span>
                 </div>
-                 <Separator className="my-2 border-dashed bg-black" />
-                <div className="flex justify-between font-bold text-base">
+                 <Separator className="my-1 border-dashed bg-black" />
+                <div className="flex justify-between font-bold text-base mt-1">
                     <span>Total:</span>
                     <span>${total.toFixed(2)}</span>
                 </div>
             </div>
             
-            <Separator className="my-3 border-dashed bg-black" />
+            <Separator className="my-2 border-dashed bg-black" />
             
-            <p className="text-center text-xs font-semibold">¡Gracias por su compra!</p>
+            <p className="text-center font-semibold">¡Gracias por su compra!</p>
         </div>
 
         <DialogFooter className='pt-4 grid grid-cols-1 sm:grid-cols-3 gap-2'>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className='sm:col-span-1'>Cerrar</Button>
             <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <Button type="button" variant="secondary" onClick={handleSendWhatsApp} className="gap-2">
+                <Button type="button" variant="secondary" onClick={handleShareAsImage} className="gap-2">
                     <Share2 className="h-4 w-4" />
                     Compartir
                 </Button>
