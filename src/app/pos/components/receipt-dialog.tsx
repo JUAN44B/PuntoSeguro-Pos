@@ -102,11 +102,9 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
 
     try {
         const canvas = await html2canvas(receiptElement, {
-            scale: 2.5,
+            scale: 2, // Higher scale for better resolution
             backgroundColor: '#ffffff',
             useCORS: true,
-            windowWidth: receiptElement.scrollWidth,
-            windowHeight: receiptElement.scrollHeight,
         });
         const dataUrl = canvas.toDataURL('image/png');
         const blob = await (await fetch(dataUrl)).blob();
@@ -142,11 +140,11 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
           <DialogTitle>Venta Completada</DialogTitle>
         </DialogHeader>
         
-        <div className='max-h-[60vh] overflow-y-auto pr-4'>
-            <div ref={receiptRef} className="bg-white p-4 mx-auto w-full text-black printable-receipt" style={{fontFamily: "'Courier New', Courier, monospace"}}>
+        <div className='max-h-[60vh] overflow-y-auto pr-4 flex justify-center'>
+            <div ref={receiptRef} className="bg-white p-4 text-black printable-receipt w-[300px]" style={{fontFamily: "'Courier New', Courier, monospace"}}>
                 <div className="text-center mb-4">
-                    <h1 className="text-2xl font-bold tracking-widest">PuntoSeguro</h1>
-                    <p className='text-xs'>Refacciones para Remolques ALIRU</p>
+                    <h1 className="text-xl font-bold tracking-widest">ALIRU</h1>
+                    <p className='text-xs'>Refacciones para Remolques</p>
                     <p className='text-xs'>Av. Principal #123, 00000, Ciudad, Estado</p>
                     <p className='text-xs'>TLF: 123 456 789</p>
                 </div>
