@@ -14,6 +14,7 @@ const navItems = [
   { href: '/inventory', label: 'Inventario', icon: Truck },
   { href: '/customers', label: 'Clientes', icon: Users },
   { href: '/sales', label: 'Ventas Históricas', icon: BarChart },
+  { href: '/reports', label: 'Reportes', icon: BarChart },
   { href: '/settings', label: 'Configuración', icon: Settings },
 ];
 
