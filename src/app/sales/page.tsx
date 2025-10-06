@@ -9,14 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Search, FileText, Undo } from 'lucide-react';
 
 // Define the shape of a sale item and a sale
-type SaleItem = {
+export type SaleItem = {
     id: string;
     name: string;
     price: number;
     quantity: number;
 };
 
-type Sale = {
+export type Sale = {
     id: string; // Document ID from Firestore
     saleId: string; // Human-readable sale ID
     createdAt: {
