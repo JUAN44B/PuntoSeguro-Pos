@@ -140,7 +140,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
           <DialogTitle>Venta Completada</DialogTitle>
         </DialogHeader>
         
-        <div className='max-h-[60vh] overflow-y-auto pr-4 flex justify-center'>
+        <div className='max-h-[80vh] overflow-y-auto pr-4 flex justify-center'>
             <div ref={receiptRef} className="bg-white p-4 text-black printable-receipt w-[300px]" style={{fontFamily: "'Courier New', Courier, monospace"}}>
                 <div className="text-center mb-4">
                     <h1 className="text-xl font-bold tracking-widest">ALIRU</h1>
