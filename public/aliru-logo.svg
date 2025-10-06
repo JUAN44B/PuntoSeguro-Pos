@@ -1,0 +1,20 @@
+<svg width="200" height="80" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+  <!-- ALIRU text background -->
+  <rect x="0" y="5" width="200" height="30" fill="#0284c7"/>
+  <!-- ALIRU text -->
+  <text x="25" y="27" font-family="serif" font-size="22" fill="white" letter-spacing="2">
+    A <tspan dx="-5">|</tspan> L <tspan dx="-5">|</tspan> I <tspan dx="-5">|</tspan> R <tspan dx="-5">|</tspan> U
+  </text>
+  <!-- Slogan -->
+  <text x="25" y="50" font-family="sans-serif" font-size="12">Refacciones para Remolques</text>
+  <!-- Trailer -->
+  <path d="M5,65 h190 v-5 h-2 v-5 h-180 v5 h-3 z" stroke="currentColor" fill="#f0f0f0"/>
+  <path d="M8,60 h184" stroke="currentColor" stroke-width="2"/>
+  <path d="M8,60 v-5 M22,60 v-5 M36,60 v-5 M50,60 v-5 M64,60 v-5 M78,60 v-5 M92,60 v-5 M106,60 v-5 M120,60 v-5 M134,60 v-5 M148,60 v-5 M162,60 v-5 M176,60 v-5 M190,60 v-5" stroke="currentColor" stroke-width="1.5"/>
+  <circle cx="120" cy="70" r="5" stroke="currentColor" fill="#f0f0f0"/>
+  <circle cx="120" cy="70" r="2" stroke="currentColor" fill="currentColor"/>
+  <circle cx="135" cy="70" r="5" stroke="currentColor" fill="#f0f0f0"/>
+  <circle cx="135" cy="70" r="2" stroke="currentColor" fill="currentColor"/>
+  <path d="M110,65 q5,-5 10,0" stroke="currentColor" fill="none"/>
+  <path d="M125,65 q5,-5 10,0" stroke="currentColor" fill="none"/>
+</svg>
