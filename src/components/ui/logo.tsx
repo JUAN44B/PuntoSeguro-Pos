@@ -29,30 +29,31 @@ const Logo = ({ className }: { className?: string }) => {
   return (
     <div className={cn("flex flex-col items-center justify-center", className)}>
       <svg
-        viewBox="0 0 300 120"
+        viewBox="0 0 400 120"
         xmlns="http://www.w3.org/2000/svg"
         className="w-full"
       >
-        <rect x="0" y="5" width="300" height="50" fill="hsl(var(--primary))" rx="4" />
+        <rect x="0" y="5" width="400" height="60" fill="hsl(var(--primary))" rx="8" />
         <text
-          x="150"
-          y="32"
+          x="200"
+          y="40"
           fontFamily="'PT Sans', sans-serif"
-          fontSize="28"
+          fontSize="40"
           fontWeight="bold"
           fill="white"
           textAnchor="middle"
-          letterSpacing="8"
+          letterSpacing="10"
         >
           A|L|I|R|U
         </text>
         <text
-          x="150"
-          y="80"
-          fontFamily="PT Sans, sans-serif"
-          fontSize="18"
+          x="200"
+          y="95"
+          fontFamily="'PT Sans', sans-serif"
+          fontSize="22"
           fill="hsl(var(--foreground))"
           textAnchor="middle"
+          letterSpacing="1"
         >
           Refacciones para Remolques
         </text>
