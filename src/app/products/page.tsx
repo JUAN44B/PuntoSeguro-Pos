@@ -33,45 +33,65 @@ import { ProductDialog, Product } from "./components/product-dialog";
 const initialProducts: Product[] = [
     {
         id: "prod-001",
+        code: "41053",
         name: "Balero 6203",
         status: "Activo",
-        price: 150.00,
+        purchasePrice: 95,
+        discount: 10,
+        profitMargin: 30,
+        finalPrice: 130.00,
         stock: 100,
         category: "Baleros",
         image: "https://picsum.photos/seed/1/64/64"
     },
     {
         id: "prod-002",
+        code: "RT-54321",
         name: "Retén 12345",
         status: "Activo",
-        price: 80.50,
+        purchasePrice: 50,
+        discount: 0,
+        profitMargin: 40,
+        finalPrice: 80.50,
         stock: 50,
         category: "Retenes",
         image: "https://picsum.photos/seed/2/64/64"
     },
     {
         id: "prod-003",
+        code: "LUB-MULTI",
         name: "Aceite Multigrado",
         status: "Activo",
-        price: 250.00,
+        purchasePrice: 180,
+        discount: 5,
+        profitMargin: 35,
+        finalPrice: 250.00,
         stock: 30,
         category: "Lubricantes",
         image: "https://picsum.photos/seed/3/64/64"
     },
     {
         id: "prod-004",
+        code: "TORN-RD-01",
         name: "Tornillo de Rueda",
         status: "Borrador",
-        price: 25.00,
+        purchasePrice: 15,
+        discount: 0,
+        profitMargin: 50,
+        finalPrice: 25.00,
         stock: 200,
         category: "Tornillería",
         image: "https://picsum.photos/seed/4/64/64"
     },
     {
         id: "prod-005",
+        code: "GATO-2T",
         name: "Gato Hidráulico 2 Ton",
         status: "Archivado",
-        price: 1200.00,
+        purchasePrice: 800,
+        discount: 10,
+        profitMargin: 40,
+        finalPrice: 1200.00,
         stock: 5,
         category: "Herramientas",
         image: "https://picsum.photos/seed/5/64/64"
@@ -87,7 +107,8 @@ export default function ProductsPage() {
   const filteredProducts = useMemo(() => {
     if (!searchTerm) return products;
     return products.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.code.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [products, searchTerm]);
 
@@ -114,7 +135,7 @@ export default function ProductsPage() {
       const newProduct = {
         ...productData,
         id: `prod-${String(products.length + 1).padStart(3, '0')}`,
-        image: `https://picsum.photos/seed/${products.length + 1}/64/64`,
+        // The image is now a data URL from the dialog
       };
       setProducts(prevProducts => [...prevProducts, newProduct]);
     }
@@ -157,9 +178,10 @@ export default function ProductsPage() {
                     <TableHead className="hidden w-[100px] sm:table-cell">
                         <span className="sr-only">Imagen</span>
                     </TableHead>
+                    <TableHead>Código</TableHead>
                     <TableHead>Nombre</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead>Precio</TableHead>
+                    <TableHead>P. Venta</TableHead>
                     <TableHead className="hidden md:table-cell">
                         Existencia
                     </TableHead>
@@ -180,10 +202,13 @@ export default function ProductsPage() {
                                       alt="Product image"
                                       className="aspect-square rounded-md object-cover"
                                       height="64"
-                                      src={product.image}
+                                      src={product.image || "https://picsum.photos/seed/placeholder/64/64"}
                                       width="64"
                                       data-ai-hint="product image"
                                   />
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                  {product.code}
                               </TableCell>
                               <TableCell className="font-medium">
                                   {product.name}
@@ -191,7 +216,7 @@ export default function ProductsPage() {
                               <TableCell>
                                   <Badge variant={product.status === 'Activo' ? 'default' : 'outline'}>{product.status}</Badge>
                               </TableCell>
-                              <TableCell>${product.price.toFixed(2)}</TableCell>
+                              <TableCell>${product.finalPrice.toFixed(2)}</TableCell>
                               <TableCell className="hidden md:table-cell">
                                   {product.stock}
                               </TableCell>
@@ -221,7 +246,7 @@ export default function ProductsPage() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center">
+                        <TableCell colSpan={8} className="h-24 text-center">
                           No se encontraron resultados.
                         </TableCell>
                       </TableRow>
