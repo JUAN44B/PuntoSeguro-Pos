@@ -2,6 +2,7 @@
 "use client"
 
 import * as React from "react"
+import { useReactToPrint } from "react-to-print"
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -17,6 +18,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/lib/types"
+import Receipt from "./receipt"
 
 type CartItem = {
     product: Product;
@@ -38,6 +40,7 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
   const [amountReceived, setAmountReceived] = React.useState("")
   const [paymentMethod, setPaymentMethod] = React.useState<"cash" | "card">("cash")
   const [paymentComplete, setPaymentComplete] = React.useState(false)
+  const receiptRef = React.useRef(null);
 
   const numpadKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "C"]
 
@@ -48,6 +51,10 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
       setAmountReceived((prev) => prev + key)
     }
   }
+
+  const handlePrint = useReactToPrint({
+    content: () => receiptRef.current,
+  });
 
   const received = parseFloat(amountReceived) || 0
   const change = paymentMethod === 'cash' && received > total ? received - total : 0
@@ -76,17 +83,26 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
       </AlertDialogTrigger>
       <AlertDialogContent className="max-w-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle>{paymentComplete ? "Pago Exitoso" : "Completar Pago"}</AlertDialogTitle>
+          <AlertDialogTitle>{paymentComplete ? "Venta Registrada" : "Completar Pago"}</AlertDialogTitle>
           <AlertDialogDescription>
-            {paymentComplete ? "Gracias por su compra. La venta ha sido registrada." : "Seleccione el método de pago e ingrese el monto recibido."}
+            {paymentComplete ? "La venta ha sido registrada. Puedes imprimir el ticket o iniciar una nueva venta." : "Seleccione el método de pago e ingrese el monto recibido."}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         {paymentComplete ? (
-            <div>
-                <div className="p-4 bg-gray-100 rounded-md">
-                     <p className="text-center">Venta completada. Listo para la siguiente venta.</p>
-                </div>
+            <div className="flex justify-center my-4">
+               <div className="p-2 border rounded-md bg-gray-50">
+                    <Receipt 
+                        ref={receiptRef}
+                        items={cart}
+                        total={total}
+                        subtotal={subtotal}
+                        tax={tax}
+                        paymentMethod={paymentMethod}
+                        amountReceived={received}
+                        change={change}
+                    />
+               </div>
             </div>
         ) : (
              <div className="grid grid-cols-2 gap-8">
@@ -144,7 +160,8 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
 
         <AlertDialogFooter>
           {paymentComplete ? (
-            <div className="flex justify-end w-full">
+            <div className="flex justify-between w-full">
+                <Button variant="outline" onClick={handlePrint}>Imprimir Ticket</Button>
                 <Button onClick={handleNewSale}>Nueva Venta</Button>
             </div>
           ) : (
