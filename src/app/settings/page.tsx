@@ -1,16 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { useFirestore, useCollection, useAuth } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, doc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { UserPlus, MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { UserDialog, UserProfileData } from './components/user-dialog';
 
+// NOTE: Creating a user in Firebase Auth from a frontend admin panel is not secure.
+// The standard practice is to use a backend function (like a Firebase Cloud Function)
+// that uses the Admin SDK to create the user. The client then calls this function.
+// This implementation simulates the UI/Firestore part of that flow. The admin would
+// add the user profile here, and then create the corresponding auth user in the Firebase Console.
 
 export type UserProfile = {
     id: string;
@@ -22,19 +26,9 @@ export type UserProfile = {
 
 export default function SettingsPage() {
     const firestore = useFirestore();
-    const auth = useAuth();
     const { data: users, loading } = useCollection(collection(firestore, 'users'));
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
-
-    const handleRoleChange = async (userId: string, newRole: string) => {
-        const userRef = doc(firestore, 'users', userId);
-        try {
-            await updateDoc(userRef, { role: newRole });
-        } catch (error) {
-            console.error("Error updating user role: ", error);
-        }
-    };
 
     const handleAddUser = () => {
         setEditingUser(null);
@@ -48,39 +42,39 @@ export default function SettingsPage() {
 
     const handleDeleteUser = async (userId: string) => {
         if (!userId) return;
+        // NOTE: This only deletes the Firestore document. Deleting the actual
+        // Firebase Auth user requires a backend function.
         try {
             await deleteDoc(doc(firestore, "users", userId));
         } catch(e) {
-            console.error("Error deleting user: ", e);
+            console.error("Error deleting user document: ", e);
         }
     };
 
     const handleSaveUser = async (userData: UserProfileData) => {
-        // NOTE: In a real app, creating a user would involve a backend function
-        // to securely create an auth user and then store their profile in Firestore.
-        // For this UI, we'll simulate by adding/updating the Firestore document.
         try {
             if (editingUser) {
-                // Update existing user
+                // Update existing user's Firestore document
                 const userRef = doc(firestore, 'users', editingUser.id);
                 await updateDoc(userRef, {
                     displayName: userData.displayName,
                     role: userData.role,
                 });
             } else {
-                // Add new user profile to Firestore
-                // This doesn't create an auth user, just the profile.
+                // Add new user profile to Firestore.
+                // This does NOT create a Firebase Auth user.
                 await addDoc(collection(firestore, 'users'), {
+                    // A placeholder UID is often used until the real one is known
+                    uid: `pending-${Date.now()}`, 
                     displayName: userData.displayName,
                     email: userData.email,
                     role: userData.role,
-                    uid: `placeholder-${Date.now()}` // Placeholder UID
                 });
             }
             setIsDialogOpen(false);
             setEditingUser(null);
         } catch (error) {
-            console.error("Error saving user: ", error);
+            console.error("Error saving user profile: ", error);
         }
     };
 
@@ -97,7 +91,9 @@ export default function SettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Gestión de Usuarios y Roles</CardTitle>
-                    <CardDescription>Asigna roles a los empleados para controlar su nivel de acceso al sistema.</CardDescription>
+                    <CardDescription>
+                        Agrega perfiles de usuario y asigna roles. Para que puedan iniciar sesión, deberás crear sus cuentas en la consola de Firebase Authentication.
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -132,18 +128,6 @@ export default function SettingsPage() {
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                                                 <DropdownMenuItem onClick={() => handleEditUser(user)}>Editar</DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                    onSelect={() => handleRoleChange(user.id, 'Administrador')}
-                                                    disabled={user.role === 'Administrador'}
-                                                >
-                                                    Hacer Administrador
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                    onSelect={() => handleRoleChange(user.id, 'Cajero')}
-                                                    disabled={user.role === 'Cajero'}
-                                                >
-                                                    Hacer Cajero
-                                                </DropdownMenuItem>
                                                 <DropdownMenuItem 
                                                     className="text-destructive"
                                                     onClick={() => handleDeleteUser(user.id)}

@@ -18,7 +18,6 @@ import type { UserProfile } from '../page';
 export type UserProfileData = {
     displayName: string;
     email: string;
-    password?: string;
     role: 'Administrador' | 'Cajero' | 'Supervisor';
 };
 
@@ -32,7 +31,6 @@ interface UserDialogProps {
 const emptyUser: UserProfileData = {
     displayName: '',
     email: '',
-    password: '',
     role: 'Cajero',
 };
 
@@ -68,7 +66,7 @@ export function UserDialog({ isOpen, onOpenChange, onSave, user }: UserDialogPro
   };
 
   const title = isEditing ? 'Editar Usuario' : 'Agregar Nuevo Usuario';
-  const description = isEditing ? 'Modifica los detalles del usuario.' : 'Crea una cuenta para un nuevo miembro del equipo.';
+  const description = isEditing ? 'Modifica los detalles del perfil del usuario.' : 'Crea un perfil para un nuevo miembro del equipo.';
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -93,13 +91,8 @@ export function UserDialog({ isOpen, onOpenChange, onSave, user }: UserDialogPro
                     placeholder="ej. juan.perez@correo.com"
                     disabled={isEditing}
                 />
+                 {isEditing && <p className="text-xs text-muted-foreground">El correo no se puede cambiar.</p>}
             </div>
-            {!isEditing && (
-                <div className="space-y-2">
-                    <Label htmlFor="password">Contraseña Temporal</Label>
-                    <Input id="password" type="password" value={formData.password} onChange={handleChange} placeholder="Mínimo 6 caracteres" />
-                </div>
-            )}
             <div className="space-y-2">
                 <Label htmlFor="role">Rol</Label>
                 <Select value={formData.role} onValueChange={handleRoleChange}>
