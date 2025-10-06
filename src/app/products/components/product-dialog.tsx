@@ -124,7 +124,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
             {/* Left Column */}
             <div className="space-y-4">
                 <div className="flex flex-col items-center gap-4">
@@ -176,7 +176,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
 
             {/* Right Column */}
             <div className="space-y-4">
-                <div className='p-4 border rounded-md space-y-4'>
+                <div className='p-4 border rounded-md space-y-4 bg-muted/20'>
                     <h4 className='font-medium text-sm text-muted-foreground'>Cálculo de Precios</h4>
                     <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
@@ -194,14 +194,14 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
                     </div>
                     <div className="space-y-2">
                         <Label>Precio Sugerido (con 16% IVA)</Label>
-                        <div className="font-bold text-lg p-2 bg-muted/50 rounded-md">
+                        <div className="font-bold text-lg p-2 bg-background rounded-md text-center">
                             ${suggestedPrice.toFixed(2)}
                         </div>
                     </div>
                 </div>
                 <div className="space-y-2 pt-4">
                     <Label htmlFor="finalPrice">Precio de Venta Final</Label>
-                    <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={handleNumberChange} className='border-primary border-2 text-lg font-bold' />
+                    <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={handleNumberChange} className='border-primary border-2 text-lg font-bold text-center' />
                 </div>
             </div>
         </div>
