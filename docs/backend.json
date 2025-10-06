@@ -60,7 +60,7 @@
             "properties": {
                 "saleId": { "type": "string" },
                 "createdAt": { "type": "string", "format": "date-time" },
-                "items": { 
+                "items": {
                     "type": "array",
                     "items": {
                         "type": "object",
