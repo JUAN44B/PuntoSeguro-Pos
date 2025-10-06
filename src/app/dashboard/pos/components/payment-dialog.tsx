@@ -2,8 +2,6 @@
 "use client"
 
 import * as React from "react"
-import jsPDF from "jspdf"
-import html2canvas from "html2canvas"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,9 +18,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/lib/types"
-import Receipt from "./receipt"
-import WhatsAppIcon from "./whatsapp-icon"
-import { useToast } from "@/hooks/use-toast"
 
 type CartItem = {
     product: Product;
@@ -44,9 +39,6 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
   const [amountReceived, setAmountReceived] = React.useState("")
   const [paymentMethod, setPaymentMethod] = React.useState<"cash" | "card">("cash")
   const [paymentComplete, setPaymentComplete] = React.useState(false)
-  const receiptRef = React.useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
-
 
   const numpadKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "C"]
 
@@ -69,70 +61,6 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
     onPaymentSuccess()
     resetState()
   }
-
-  const generatePdf = async () => {
-    const receiptElement = receiptRef.current;
-    if (!receiptElement) return null;
-    
-    // We need to temporarily make the receipt visible to capture it
-    receiptElement.style.display = 'block';
-    const canvas = await html2canvas(receiptElement, { scale: 2 });
-    receiptElement.style.display = 'none';
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    
-    // Standard receipt paper width is around 80mm
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: [canvas.height * 80 / canvas.width, 80]
-    });
-    
-    pdf.addImage(imgData, 'JPEG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
-    return pdf.output('blob');
-  };
-
-  const handleSendWhatsApp = async () => {
-    const pdfBlob = await generatePdf();
-    if (!pdfBlob) {
-        toast({ variant: 'destructive', title: "Error", description: "No se pudo generar el recibo PDF." });
-        return;
-    }
-
-    const pdfFile = new File([pdfBlob], `recibo-aliru-${new Date().getTime()}.pdf`, { type: 'application/pdf' });
-
-    if (navigator.share) {
-        try {
-            await navigator.share({
-                title: 'Recibo de Compra - ALIRU',
-                text: 'Aquí está tu recibo de compra de ALIRU Refacciones.',
-                files: [pdfFile]
-            });
-        } catch (error) {
-            console.error('Error al compartir:', error);
-            toast({ variant: 'destructive', title: "Error", description: "No se pudo compartir el recibo." });
-        }
-    } else {
-         toast({ variant: 'destructive', title: "No Soportado", description: "La función de compartir no está disponible en este navegador." });
-    }
-  }
-
-  const handlePrintReceipt = async () => {
-    const pdfBlob = await generatePdf();
-     if (!pdfBlob) {
-        toast({ variant: 'destructive', title: "Error", description: "No se pudo generar el recibo PDF." });
-        return;
-    }
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    const printWindow = window.open(pdfUrl);
-    if (printWindow) {
-        printWindow.onload = () => {
-            printWindow.print();
-        };
-    } else {
-        toast({ variant: 'destructive', title: "Error de Impresión", description: "No se pudo abrir la ventana de impresión. Revisa si tu navegador bloquea las ventanas emergentes." });
-    }
-  }
   
   const resetState = () => {
     setAmountReceived("")
@@ -151,24 +79,12 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
         <AlertDialogHeader>
           <AlertDialogTitle>{paymentComplete ? "Pago Exitoso" : "Completar Pago"}</AlertDialogTitle>
           <AlertDialogDescription>
-            {paymentComplete ? "Gracias por su compra. Seleccione una opción para el recibo." : "Seleccione el método de pago e ingrese el monto recibido."}
+            {paymentComplete ? "Gracias por su compra. La venta ha sido registrada." : "Seleccione el método de pago e ingrese el monto recibido."}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         {paymentComplete ? (
             <div>
-                 <div style={{ display: 'none' }}>
-                    <Receipt 
-                    ref={receiptRef}
-                    items={cart}
-                    total={total}
-                    subtotal={subtotal}
-                    tax={tax}
-                    paymentMethod={paymentMethod}
-                    amountReceived={received}
-                    change={change}
-                    />
-                </div>
                 <div className="p-4 bg-gray-100 rounded-md">
                      <p className="text-center">Venta completada. Listo para la siguiente venta.</p>
                 </div>
@@ -229,14 +145,7 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
 
         <AlertDialogFooter>
           {paymentComplete ? (
-            <div className="flex justify-between w-full">
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={handlePrintReceipt}>Imprimir Recibo</Button>
-                    <Button variant="outline" className="bg-green-500 hover:bg-green-600 text-white hover:text-white" onClick={handleSendWhatsApp}>
-                        <WhatsAppIcon className="h-5 w-5 mr-2"/>
-                        Compartir Recibo
-                    </Button>
-                </div>
+            <div className="flex justify-end w-full">
                 <Button onClick={handleNewSale}>Nueva Venta</Button>
             </div>
           ) : (
