@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, CreditCard, ShoppingBasket, PackageWarning } from 'lucide-react';
+import { DollarSign, CreditCard, ShoppingBasket, PackageSearch } from 'lucide-react';
 import type { Sale } from './sales/page';
 import type { Product } from './products/components/product-dialog';
 
@@ -97,7 +97,7 @@ export default function Home() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Productos con poca existencia</CardTitle>
-            <PackageWarning className="h-4 w-4 text-muted-foreground" />
+            <PackageSearch className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {isLoading ? <div className="h-8 w-12 bg-muted/50 rounded animate-pulse" /> : <div className="text-2xl font-bold">{lowStockCount}</div>}
