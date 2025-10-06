@@ -45,32 +45,18 @@ import {
 import { products as initialProducts } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@/lib/types";
+import AddProductDialog from "./components/add-product-dialog";
 
 
 export default function ProductsPage() {
     const [products, setProducts] = React.useState(initialProducts);
     const { toast } = useToast();
 
-    const handleAddProduct = () => {
-        const newProduct: Product = {
-            id: `PROD${String(products.length + 1).padStart(3, '0')}`,
-            name: "New Product",
-            description: "A new product description.",
-            category: "General",
-            stock: 0,
-            purchasePrice: 0,
-            salePrice: 0,
-            tax: 16,
-            discount: 0,
-            profitMargin: 0,
-            supplier: "Default Supplier",
-            imageUrl: 'https://picsum.photos/seed/new_prod/400/300',
-            imageHint: 'new product'
-        };
-        setProducts(prev => [...prev, newProduct]);
+    const handleAddProduct = (newProduct: Product) => {
+        setProducts(prev => [newProduct, ...prev]);
         toast({
             title: "Product Added",
-            description: "A new product has been created. Please edit its details.",
+            description: `"${newProduct.name}" has been added to your products.`,
         });
     };
 
@@ -122,12 +108,14 @@ export default function ProductsPage() {
               Export
             </span>
           </Button>
-          <Button size="sm" className="h-7 gap-1" onClick={handleAddProduct}>
-            <PlusCircle className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Add Product
-            </span>
-          </Button>
+          <AddProductDialog onProductAdd={handleAddProduct}>
+            <Button size="sm" className="h-7 gap-1">
+                <PlusCircle className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                Add Product
+                </span>
+            </Button>
+          </AddProductDialog>
         </div>
       </div>
       <TabsContent value="all">
@@ -223,5 +211,3 @@ export default function ProductsPage() {
     </Tabs>
   )
 }
-
-    
