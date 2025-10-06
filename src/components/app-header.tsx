@@ -1,5 +1,5 @@
+
 "use client"
-import type { User } from "lucide-react"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,6 +15,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu"
 import {
     CircleUser,
@@ -25,8 +27,11 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Input } from "./ui/input"
 import AppSidebar from "./app-sidebar"
+import { useUser } from "@/context/user-context"
 
 export default function AppHeader() {
+    const { user, setUserRole } = useUser();
+
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
       <Sheet>
@@ -70,7 +75,13 @@ export default function AppHeader() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+          <DropdownMenuLabel>Mi Cuenta ({user.role})</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+           <DropdownMenuRadioGroup value={user.role} onValueChange={(value) => setUserRole(value as 'Admin' | 'Gerente' | 'Cajero')}>
+            <DropdownMenuRadioItem value="Admin">Admin</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="Gerente">Gerente</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="Cajero">Cajero</DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem>Configuración</DropdownMenuItem>
           <DropdownMenuItem>Soporte</DropdownMenuItem>
