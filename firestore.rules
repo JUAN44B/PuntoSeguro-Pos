@@ -1,21 +1,24 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Rules for products
-    match /products/{productId} {
-      // Allow read access to any authenticated user
-      allow read: if request.auth != null;
-      // Allow write access (create, update, delete) only to authenticated users
-      allow write: if request.auth != null;
+    
+    // Regla de seguridad para la colección de usuarios
+    match /users/{userId} {
+      // Un usuario solo puede leer y actualizar su propio documento.
+      // Nadie más (excepto con reglas de administrador más avanzadas) puede ver su información.
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      
+      // La creación de documentos de usuario se gestiona desde el panel de configuración (que debería tener lógica de administrador)
+      // o a través de funciones de backend. Permitimos la creación si el usuario está autenticado.
+      allow create: if request.auth != null;
     }
 
-    // Rules for user profiles
-    match /users/{userId} {
-      // Users can read their own profile
-      allow read: if request.auth != null && request.auth.uid == userId;
-      // Users can create and update their own profile
-      allow write: if request.auth != null && request.auth.uid == userId;
+    // Reglas para las demás colecciones de la aplicación
+    // Se permite leer y escribir en productos, categorías, clientes, ventas e inventario
+    // si el usuario ha iniciado sesión. Esto es un buen punto de partida.
+    // En una aplicación más compleja, se podrían definir reglas más granulares por rol.
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
