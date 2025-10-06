@@ -30,6 +30,16 @@
                 "role": { "type": "string", "enum": ["Administrador", "Cajero", "Supervisor"] }
             },
             "required": ["uid", "email", "role"]
+        },
+        "category": {
+            "title": "Category",
+            "description": "Represents a product category.",
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "description": { "type": "string" }
+            },
+            "required": ["name"]
         }
     },
     "firestore": {
@@ -40,6 +50,10 @@
         "/users/{userId}": {
             "schema": { "$ref": "#/entities/userProfile" },
             "description": "Stores user profile information linked to their authentication UID."
+        },
+        "/categories/{categoryId}": {
+            "schema": { "$ref": "#/entities/category" },
+            "description": "Stores product categories."
         }
     },
     "auth": {
