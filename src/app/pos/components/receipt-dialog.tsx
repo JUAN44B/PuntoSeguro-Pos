@@ -52,7 +52,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
               margin: 0;
             }
             @page {
-              size: 80mm 297mm; /* Standard thermal receipt paper roll width */
+              size: 50mm auto; /* Standard thermal receipt paper roll width */
               margin: 0;
             }
             .printable-receipt-container {
@@ -65,7 +65,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
               padding: 2mm; /* Small padding */
               color: #000;
               background-color: #fff;
-              font-size: 10px; /* Typical receipt font size */
+              font-size: 8px; /* Typical receipt font size */
               line-height: 1.4;
             }
             .printable-receipt * {
