@@ -14,6 +14,9 @@ export type AppUser = {
   role: 'Administrador' | 'Cajero' | 'Supervisor' | null;
 };
 
+// Define the hardcoded super admin email
+const SUPER_ADMIN_EMAIL = 'admin@aliru.com';
+
 export function useUser() {
   const auth = useAuth();
   const firestore = useFirestore();
@@ -23,27 +26,36 @@ export function useUser() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseAuthUser | null) => {
       if (firebaseUser) {
-        // User is signed in, now get their profile from Firestore
-        const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
+        // Check if the logged-in user is the super admin
+        if (firebaseUser.email === SUPER_ADMIN_EMAIL) {
           setUser({
             uid: firebaseUser.uid,
             email: firebaseUser.email,
-            displayName: userData.displayName || null,
-            role: userData.role || null,
+            displayName: 'Admin Principal',
+            role: 'Administrador',
           });
         } else {
-          // No profile doc found, maybe a partially created user.
-          // For now, just set basic auth info.
-           setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            role: null, // No role found
-          });
+          // For regular users, get their profile from Firestore
+          const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: userData.displayName || null,
+              role: userData.role || null,
+            });
+          } else {
+            // No profile doc found, maybe a partially created user.
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              role: null, // No role found
+            });
+          }
         }
       } else {
         // User is signed out
