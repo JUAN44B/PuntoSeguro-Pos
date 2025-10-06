@@ -41,6 +41,18 @@
             },
             "required": ["name"]
         },
+        "client": {
+            "title": "Client",
+            "description": "Represents a customer.",
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "phone": { "type": "string" },
+                "email": { "type": "string" },
+                "address": { "type": "string" }
+            },
+            "required": ["name"]
+        },
         "sale": {
             "title": "Sale",
             "description": "Represents a completed sale transaction.",
@@ -81,6 +93,10 @@
         "/categories/{categoryId}": {
             "schema": { "$ref": "#/entities/category" },
             "description": "Stores product categories."
+        },
+        "/clients/{clientId}": {
+            "schema": { "$ref": "#/entities/client" },
+            "description": "Stores customer information."
         },
         "/sales/{saleId}": {
             "schema": { "$ref": "#/entities/sale" },
