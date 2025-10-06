@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { users as initialUsers, products as initialProducts } from "@/lib/data"
+import { users as initialUsers } from "@/lib/data"
 import {
   Table,
   TableBody,
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
 import type { User } from "@/lib/types"
+import AddUserDialog from "./components/add-user-dialog"
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -59,18 +60,11 @@ export default function SettingsPage() {
     });
   };
   
-  const handleAddUser = () => {
-    const newUser: User = {
-        id: `USR${String(users.length + 1).padStart(3, '0')}`,
-        name: 'Nuevo Usuario',
-        email: 'nuevo.usuario@example.com',
-        role: 'Cajero',
-        status: 'Invitado'
-    };
-    setUsers(prev => [...prev, newUser]);
+  const handleAddUser = (newUser: User) => {
+    setUsers(prev => [newUser, ...prev]);
      toast({
       title: "Usuario Agregado",
-      description: "Un nuevo usuario ha sido invitado.",
+      description: `El usuario ${newUser.name} ha sido invitado.`,
     });
   }
 
@@ -142,10 +136,12 @@ export default function SettingsPage() {
                     Administra quién puede acceder a tu tienda y qué pueden hacer.
                 </CardDescription>
             </div>
-            <Button size="sm" className="ml-auto h-7 gap-1" onClick={handleAddUser}>
-                <PlusCircle className="h-3.5 w-3.5" />
-                <span>Agregar Usuario</span>
-            </Button>
+            <AddUserDialog onUserAdd={handleAddUser}>
+              <Button size="sm" className="ml-auto h-7 gap-1">
+                  <PlusCircle className="h-3.5 w-3.5" />
+                  <span>Agregar Usuario</span>
+              </Button>
+            </AddUserDialog>
           </div>
         </CardHeader>
         <CardContent>
