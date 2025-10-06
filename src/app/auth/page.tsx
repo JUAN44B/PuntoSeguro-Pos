@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useAuth } from '@/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,11 +13,27 @@ import Logo from '@/components/logo';
 export default function AuthPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const auth = useAuth();
+    const router = useRouter();
     
-    // In a real app, you'd use Firebase Auth here
-    const handleLogin = () => {
-        console.log('Logging in with:', email, password);
-        alert('Funcionalidad de inicio de sesión en desarrollo.');
+    const handleLogin = async () => {
+        if (!email || !password) {
+            setError('Por favor, ingresa correo y contraseña.');
+            return;
+        }
+        setLoading(true);
+        setError(null);
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            router.push('/');
+        } catch (error: any) {
+            console.error("Error de autenticación:", error);
+            setError('Credenciales inválidas. Por favor, intenta de nuevo.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -38,6 +57,7 @@ export default function AuthPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-2">
@@ -48,11 +68,13 @@ export default function AuthPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required 
+                                disabled={loading}
                             />
                         </div>
                     </div>
-                    <Button onClick={handleLogin} className="w-full mt-6">
-                        Ingresar
+                    {error && <p className="text-sm text-destructive mt-4 text-center">{error}</p>}
+                    <Button onClick={handleLogin} className="w-full mt-6" disabled={loading}>
+                        {loading ? 'Ingresando...' : 'Ingresar'}
                     </Button>
                 </CardContent>
             </Card>
