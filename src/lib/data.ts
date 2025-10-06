@@ -2,7 +2,7 @@ import type { Product, Customer, Supplier, SalesOrder, PurchaseOrder, User } fro
 
 export const products: Product[] = [
   {
-    id: 'LI053',
+    id: '41053',
     name: 'Muelle',
     description: 'Muelle para remolques de alta resistencia.',
     category: 'Remolques',
@@ -13,7 +13,7 @@ export const products: Product[] = [
     discount: 10,
     profitMargin: 36.84, // (130 - 95) / 95
     supplier: 'Proveedor A',
-    imageUrl: 'https://picsum.photos/seed/LI053/400/300',
+    imageUrl: 'https://picsum.photos/seed/41053/400/300',
     imageHint: 'metal spring',
   },
   {
@@ -123,5 +123,5 @@ export const purchaseOrders: PurchaseOrder[] = [
 export const users: User[] = [
     { id: 'USR001', name: 'Usuario Admin', email: 'admin@example.com', role: 'Admin', status: 'Activo' },
     { id: 'USR002', name: 'Usuario Gerente', email: 'gerente@example.com', role: 'Gerente', status: 'Activo' },
-    { id: 'USR003', name: 'Usuario Cajero', email: 'cajero@example.com', role: 'Cajero', status: 'Invitado' },
+    { id: 'USR003', name: 'Usuario Cajero', email: 'cajero@example.com', role: 'Invitado' },
 ];
