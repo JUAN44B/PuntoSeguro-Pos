@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -63,12 +64,15 @@ export default function ReportGenerator() {
         endDate: format(data.dateRange.to, "yyyy-MM-dd"),
       })
       setReport(result.report)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Fallo al generar el reporte:", error)
+      const isServiceUnavailable = error.message?.includes('503');
       toast({
         variant: "destructive",
         title: "Error al Generar Reporte",
-        description: "Hubo un problema al generar el reporte de ventas. Por favor, intenta de nuevo.",
+        description: isServiceUnavailable 
+            ? "El servicio de IA está sobrecargado en este momento. Por favor, intenta de nuevo en unos minutos."
+            : "Hubo un problema al generar el reporte de ventas. Por favor, intenta de nuevo.",
       })
     } finally {
       setIsLoading(false)
