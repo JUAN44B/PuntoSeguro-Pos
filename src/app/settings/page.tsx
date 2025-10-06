@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useAuth } from '@/firebase';
 import { collection, doc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -22,6 +22,7 @@ export type UserProfile = {
 
 export default function SettingsPage() {
     const firestore = useFirestore();
+    const auth = useAuth();
     const { data: users, loading } = useCollection(collection(firestore, 'users'));
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
