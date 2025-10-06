@@ -34,25 +34,17 @@ import {
 import { suppliers as initialSuppliers } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast";
 import type { Supplier } from "@/lib/types";
+import AddSupplierDialog from "./components/add-supplier-dialog";
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = React.useState(initialSuppliers);
   const { toast } = useToast();
 
-  const handleAddSupplier = () => {
-    const newSupplier: Supplier = {
-      id: `SUP${String(suppliers.length + 1).padStart(3, '0')}`,
-      name: 'Nuevo Proveedor',
-      rfc: 'XAXX010101000',
-      contactName: 'Nombre de Contacto',
-      email: 'nuevo.proveedor@email.com',
-      phone: '00-0000-0000',
-      address: 'Nueva Dirección de Proveedor',
-    };
+  const handleAddSupplier = (newSupplier: Supplier) => {
     setSuppliers(prev => [...prev, newSupplier]);
     toast({
       title: "Proveedor Agregado",
-      description: "Se ha creado un nuevo proveedor. Por favor edita sus detalles.",
+      description: `El proveedor "${newSupplier.name}" ha sido agregado.`,
     });
   };
 
@@ -76,12 +68,14 @@ export default function SuppliersPage() {
                     Exportar
                     </span>
                 </Button>
-                <Button size="sm" className="h-7 gap-1" onClick={handleAddSupplier}>
-                    <PlusCircle className="h-3.5 w-3.5" />
-                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Agregar Proveedor
-                    </span>
-                </Button>
+                <AddSupplierDialog onSupplierAdd={handleAddSupplier}>
+                    <Button size="sm" className="h-7 gap-1">
+                        <PlusCircle className="h-3.5 w-3.5" />
+                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                        Agregar Proveedor
+                        </span>
+                    </Button>
+                </AddSupplierDialog>
             </div>
         </div>
         <Card>
