@@ -1,0 +1,48 @@
+{
+    "entities": {
+        "product": {
+            "title": "Product",
+            "description": "Represents a product in the inventory.",
+            "type": "object",
+            "properties": {
+                "id": { "type": "string" },
+                "code": { "type": "string" },
+                "name": { "type": "string" },
+                "status": { "type": "string", "enum": ["Activo", "Borrador", "Archivado"] },
+                "purchasePrice": { "type": "number" },
+                "discount": { "type": "number" },
+                "profitMargin": { "type": "number" },
+                "finalPrice": { "type": "number" },
+                "stock": { "type": "number" },
+                "category": { "type": "string" },
+                "image": { "type": "string" }
+            },
+            "required": ["name", "finalPrice", "stock"]
+        },
+        "userProfile": {
+            "title": "User Profile",
+            "description": "Represents a user's profile.",
+            "type": "object",
+            "properties": {
+                "uid": { "type": "string" },
+                "email": { "type": "string" },
+                "displayName": { "type": "string" },
+                "role": { "type": "string", "enum": ["Administrador", "Cajero", "Supervisor"] }
+            },
+            "required": ["uid", "email", "role"]
+        }
+    },
+    "firestore": {
+        "/products/{productId}": {
+            "schema": { "$ref": "#/entities/product" },
+            "description": "Stores individual product details."
+        },
+        "/users/{userId}": {
+            "schema": { "$ref": "#/entities/userProfile" },
+            "description": "Stores user profile information linked to their authentication UID."
+        }
+    },
+    "auth": {
+        "providers": ["password"]
+    }
+}

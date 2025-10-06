@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import Sidebar from '@/components/sidebar';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'ALIRU POS',
@@ -16,12 +17,14 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={cn('min-h-screen w-full bg-slate-50 font-sans antialiased')}>
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 p-8">
-            {children}
-          </main>
-        </div>
+        <FirebaseClientProvider>
+          <div className="flex">
+            <Sidebar />
+            <main className="flex-1 p-8">
+              {children}
+            </main>
+          </div>
+        </FirebaseClientProvider>
       </body>
     </html>
   );
