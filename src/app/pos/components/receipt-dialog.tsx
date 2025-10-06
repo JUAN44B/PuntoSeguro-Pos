@@ -87,9 +87,6 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
         const blob = await (await fetch(dataUrl)).blob();
         const file = new File([blob], 'ticket-aliru.png', { type: 'image/png' });
 
-        // The navigator.share API is the modern way to share content.
-        // On mobile, it will bring up the native share sheet, which includes WhatsApp.
-        // On desktop, it will share to apps that have registered as share targets, including WhatsApp if installed.
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
                 files: [file],
@@ -97,7 +94,6 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
                 text: 'Aquí está tu ticket de compra. ¡Gracias por tu preferencia!',
             });
         } else {
-           // Fallback for browsers that don't support sharing files.
            alert('La función de compartir no es compatible con este navegador. El ticket se descargará como imagen.');
            const link = document.createElement('a');
            link.href = dataUrl;

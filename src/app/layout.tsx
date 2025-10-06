@@ -15,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={cn('min-h-screen w-full bg-background font-sans antialiased')}>
+      <body className={cn('min-h-screen w-full bg-slate-50 font-sans antialiased')}>
         <div className="flex">
           <Sidebar />
           <main className="flex-1 p-8">

@@ -136,7 +136,7 @@ export default function POSPage() {
         </div>
 
         {/* Cart */}
-        <div className="lg:col-span-1 bg-card border rounded-lg flex flex-col h-full">
+        <div className="lg:col-span-1 bg-card border rounded-lg flex flex-col h-full shadow-lg">
           <CardHeader>
             <CardTitle>Venta Actual</CardTitle>
           </CardHeader>
