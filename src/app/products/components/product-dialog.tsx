@@ -116,82 +116,101 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             {description}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-            <div className='flex flex-col items-center gap-4'>
-                <div className="relative w-32 h-32 border rounded-md flex items-center justify-center bg-muted/40">
-                    {imagePreview ? (
-                        <Image src={imagePreview} alt="Vista previa" layout="fill" objectFit="cover" className="rounded-md" />
-                    ) : (
-                        <span className="text-xs text-muted-foreground">Imagen</span>
-                    )}
+
+        <div className="flex flex-col items-center gap-4 pt-4">
+            <div className="relative w-32 h-32 border rounded-md flex items-center justify-center bg-muted/40">
+                {imagePreview ? (
+                    <Image src={imagePreview} alt="Vista previa" layout="fill" objectFit="cover" className="rounded-md" />
+                ) : (
+                    <span className="text-xs text-muted-foreground">Imagen</span>
+                )}
+            </div>
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="h-4 w-4 mr-2" />
+                Seleccionar archivo
+            </Button>
+            <Input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
+        </div>
+
+        <div className="grid gap-6 py-4">
+            {/* Section 1: Product Info */}
+            <div className='space-y-4'>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="code">Código</Label>
+                        <Input id="code" value={formData.code} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="name">Nombre del Producto</Label>
+                        <Input id="name" value={formData.name} onChange={handleChange} />
+                    </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Seleccionar archivo
-                </Button>
-                <Input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
+                <div className="space-y-2">
+                    <Label htmlFor="category">Categoría</Label>
+                    <Input id="category" value={formData.category} onChange={handleChange} />
+                </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="code" className="text-right">Código</Label>
-                <Input id="code" value={formData.code} onChange={handleChange} className="col-span-3" />
+
+            {/* Section 2: Pricing */}
+            <div className='space-y-4 p-4 border rounded-md'>
+                <h4 className='font-medium text-sm mb-2'>Cálculo de Precios</h4>
+                <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="purchasePrice">P. Compra</Label>
+                        <Input id="purchasePrice" type="number" value={formData.purchasePrice} onChange={handleNumberChange} placeholder="$" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="discount">Descuento</Label>
+                        <Input id="discount" type="number" value={formData.discount} onChange={handleNumberChange} placeholder="%" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="profitMargin">Ganancia</Label>
+                        <Input id="profitMargin" type="number" value={formData.profitMargin} onChange={handleNumberChange} placeholder="%" />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <Label>Precio Sugerido (con 16% IVA)</Label>
+                    <div className="font-bold text-lg p-2 bg-muted/50 rounded-md">
+                        ${suggestedPrice.toFixed(2)}
+                    </div>
+                </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Nombre</Label>
-                <Input id="name" value={formData.name} onChange={handleChange} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="category" className="text-right">Categoría</Label>
-                <Input id="category" value={formData.category} onChange={handleChange} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="stock" className="text-right">Existencia</Label>
-                <Input id="stock" type="number" value={formData.stock} onChange={handleNumberChange} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="purchasePrice" className="text-right">P. Compra</Label>
-                <Input id="purchasePrice" type="number" value={formData.purchasePrice} onChange={handleNumberChange} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="discount" className="text-right">Descuento</Label>
-                <Input id="discount" type="number" value={formData.discount} onChange={handleNumberChange} className="col-span-3" placeholder="%" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="profitMargin" className="text-right">Ganancia</Label>
-                <Input id="profitMargin" type="number" value={formData.profitMargin} onChange={handleNumberChange} className="col-span-3" placeholder="%" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">P. Sugerido</Label>
-                <div className="col-span-3 font-bold text-lg">${suggestedPrice.toFixed(2)}</div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="finalPrice" className="text-right">P. Venta</Label>
-                <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={handleNumberChange} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="status" className="text-right">Estado</Label>
-                <Select
-                value={formData.status}
-                onValueChange={(value) => handleSelectChange('status', value)}
-                >
-                <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Selecciona un estado" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="Activo">Activo</SelectItem>
-                    <SelectItem value="Borrador">Borrador</SelectItem>
-                    <SelectItem value="Archivado">Archivado</SelectItem>
-                </SelectContent>
-                </Select>
+
+            {/* Section 3: Final Price & Stock */}
+            <div className='grid grid-cols-3 gap-4'>
+                <div className="space-y-2 col-span-1">
+                    <Label htmlFor="stock">Existencia</Label>
+                    <Input id="stock" type="number" value={formData.stock} onChange={handleNumberChange} />
+                </div>
+                <div className="space-y-2 col-span-1">
+                    <Label htmlFor="status">Estado</Label>
+                    <Select value={formData.status} onValueChange={(value) => handleSelectChange('status', value)}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Selecciona..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Activo">Activo</SelectItem>
+                            <SelectItem value="Borrador">Borrador</SelectItem>
+                            <SelectItem value="Archivado">Archivado</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="space-y-2 col-span-1">
+                    <Label htmlFor="finalPrice">P. Venta Final</Label>
+                    <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={handleNumberChange} className='border-primary border-2' />
+                </div>
             </div>
         </div>
+
         <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button type="submit" onClick={handleSubmit}>Guardar Cambios</Button>
         </DialogFooter>
       </DialogContent>
