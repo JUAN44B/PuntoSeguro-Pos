@@ -6,8 +6,9 @@ export type Product = {
   stock: number;
   purchasePrice: number;
   salePrice: number;
-  tax: number;
-  discount: number;
+  tax: number; // Corresponde al IVA
+  discount: number; // Descuento sobre el precio de compra
+  incrementPercentage: number; // Porcentaje de incremento para ganancia
   profitMargin: number;
   supplier: string;
   imageUrl: string;

@@ -23,23 +23,50 @@ interface AddProductDialogProps {
   onProductAdd: (product: Product) => void;
 }
 
+const initialFormData: Partial<Product> = {
+  id: '',
+  name: '',
+  description: '',
+  category: '',
+  stock: 0,
+  purchasePrice: 0,
+  salePrice: 0,
+  tax: 16, // IVA por defecto
+  discount: 0, // Descuento sobre precio de compra
+  incrementPercentage: 30, // Porcentaje de incremento por defecto
+  supplier: '',
+  imageUrl: '',
+  imageHint: '',
+};
+
 export default function AddProductDialog({ children, onProductAdd }: AddProductDialogProps) {
   const [open, setOpen] = React.useState(false)
-  const [formData, setFormData] = React.useState<Partial<Product>>({
-    id: '',
-    name: '',
-    description: '',
-    category: '',
-    stock: 0,
-    purchasePrice: 0,
-    salePrice: 0,
-    tax: 16,
-    discount: 0,
-    supplier: '',
-    imageUrl: '',
-    imageHint: '',
-  });
+  const [formData, setFormData] = React.useState<Partial<Product>>(initialFormData);
   const { toast } = useToast()
+
+  React.useEffect(() => {
+    if (formData.purchasePrice !== undefined && formData.discount !== undefined && formData.tax !== undefined && formData.incrementPercentage !== undefined) {
+      // 1. Aplicar descuento al precio de compra
+      const priceWithDiscount = formData.purchasePrice * (1 - (formData.discount / 100));
+      
+      // 2. Calcular el precio con IVA
+      const priceWithTax = priceWithDiscount * (1 + (formData.tax / 100));
+
+      // 3. Aplicar el porcentaje de incremento
+      const suggestedSalePrice = priceWithTax * (1 + (formData.incrementPercentage / 100));
+
+      // Calcular margen de ganancia
+      const profitMargin = (suggestedSalePrice > 0 && formData.purchasePrice > 0)
+        ? ((suggestedSalePrice - formData.purchasePrice) / formData.purchasePrice) * 100
+        : 0;
+
+      setFormData(prev => ({ 
+          ...prev, 
+          salePrice: parseFloat(suggestedSalePrice.toFixed(2)),
+          profitMargin: parseFloat(profitMargin.toFixed(2))
+        }));
+    }
+  }, [formData.purchasePrice, formData.discount, formData.tax, formData.incrementPercentage]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -63,10 +90,6 @@ export default function AddProductDialog({ children, onProductAdd }: AddProductD
         return;
     }
     
-    const profitMargin = formData.salePrice && formData.purchasePrice 
-      ? ((formData.salePrice - formData.purchasePrice) / formData.purchasePrice) * 100
-      : 0;
-
     const newProduct: Product = {
       id: formData.id || `PROD${Math.floor(Math.random() * 1000)}`,
       name: formData.name || "Producto Sin Nombre",
@@ -77,7 +100,8 @@ export default function AddProductDialog({ children, onProductAdd }: AddProductD
       salePrice: formData.salePrice || 0,
       tax: formData.tax || 16,
       discount: formData.discount || 0,
-      profitMargin: profitMargin,
+      incrementPercentage: formData.incrementPercentage || 0,
+      profitMargin: formData.profitMargin || 0,
       supplier: formData.supplier || "",
       imageUrl: formData.imageUrl || `https://picsum.photos/seed/${formData.id}/400/300`,
       imageHint: formData.imageHint || formData.name?.toLowerCase() || 'product',
@@ -85,12 +109,7 @@ export default function AddProductDialog({ children, onProductAdd }: AddProductD
 
     onProductAdd(newProduct);
     setOpen(false); // Close the dialog
-    // Reset form
-    setFormData({
-        id: '', name: '', description: '', category: '', stock: 0,
-        purchasePrice: 0, salePrice: 0, tax: 16, discount: 0,
-        supplier: '', imageUrl: '', imageHint: ''
-    });
+    setFormData(initialFormData); // Reset form
   };
 
   return (
@@ -131,16 +150,24 @@ export default function AddProductDialog({ children, onProductAdd }: AddProductD
             <Input id="purchasePrice" type="number" value={formData.purchasePrice} onChange={handleNumberChange} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="salePrice" className="text-right">Precio de Venta</Label>
-            <Input id="salePrice" type="number" value={formData.salePrice} onChange={handleNumberChange} className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="discount" className="text-right">Descuento (%)</Label>
+            <Label htmlFor="discount" className="text-right">Descuento Compra (%)</Label>
             <Input id="discount" type="number" value={formData.discount} onChange={handleNumberChange} className="col-span-3" />
           </div>
            <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="tax" className="text-right">Impuesto (%)</Label>
+            <Label htmlFor="tax" className="text-right">IVA (%)</Label>
             <Input id="tax" type="number" value={formData.tax} onChange={handleNumberChange} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="incrementPercentage" className="text-right">Incremento (%)</Label>
+            <Input id="incrementPercentage" type="number" value={formData.incrementPercentage} onChange={handleNumberChange} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="salePrice" className="text-right font-bold">Precio de Venta</Label>
+            <Input id="salePrice" type="number" value={formData.salePrice} className="col-span-3 font-bold bg-muted" readOnly />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="profitMargin" className="text-right">Margen (%)</Label>
+            <Input id="profitMargin" type="number" value={formData.profitMargin} className="col-span-3 bg-muted" readOnly />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="supplier" className="text-right">Proveedor</Label>
