@@ -1,6 +1,7 @@
 
 import * as React from 'react';
 import type { Product } from '@/lib/types';
+import Logo from '@/components/ui/logo';
 
 type CartItem = {
     product: Product;
@@ -21,22 +22,25 @@ interface ReceiptProps {
 const Receipt = React.forwardRef<HTMLDivElement, ReceiptProps>(
     ({ items, total, subtotal, tax, paymentMethod, amountReceived, change }, ref) => {
   return (
-    <div ref={ref} className="p-4 bg-white text-black text-sm font-mono">
+    <div ref={ref} className="p-4 bg-white text-black text-sm font-mono w-[302px]">
       <div className="text-center mb-4">
-        <h2 className="text-lg font-bold">PuntoSeguro POS</h2>
-        <p>Av. Principal 123, Ciudad, País</p>
-        <p>{new Date().toLocaleString()}</p>
+        <div className='w-40 mx-auto'>
+            <Logo.Icon />
+        </div>
+        <p className="text-xs">ALIRU Refacciones para Remolques</p>
+        <p className="text-xs">Av. Principal 123, Ciudad, País</p>
+        <p className="text-xs">{new Date().toLocaleString()}</p>
       </div>
       <div className="border-t border-b border-dashed border-black my-2 py-2">
         {Array.from(items.values()).map(({ product, quantity, discount }) => {
             const itemTotal = product.salePrice * quantity * (1 - discount / 100);
             return (
               <div key={product.id} className="flex justify-between">
-                <div>
-                    <div>{quantity}x {product.name}</div>
-                    {discount > 0 && <div className="text-xs pl-4">(-{discount}%)</div>}
+                <div className='max-w-[75%]'>
+                    <div className='font-semibold'>{product.name}</div>
+                    <div className='text-xs pl-2'>{quantity} x ${product.salePrice.toFixed(2)} {discount > 0 && `(-${discount}%)`}</div>
                 </div>
-                <span>${itemTotal.toFixed(2)}</span>
+                <span className='min-w-fit'>${itemTotal.toFixed(2)}</span>
               </div>
             )
         })}

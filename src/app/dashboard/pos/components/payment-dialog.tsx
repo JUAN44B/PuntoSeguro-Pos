@@ -2,6 +2,8 @@
 "use client"
 
 import * as React from "react"
+import jsPDF from "jspdf"
+import html2canvas from "html2canvas"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,13 +15,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/lib/types"
 import Receipt from "./receipt"
 import WhatsAppIcon from "./whatsapp-icon"
+import { useToast } from "@/hooks/use-toast"
 
 type CartItem = {
     product: Product;
@@ -42,6 +45,7 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
   const [paymentMethod, setPaymentMethod] = React.useState<"cash" | "card">("cash")
   const [paymentComplete, setPaymentComplete] = React.useState(false)
   const receiptRef = React.useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
 
   const numpadKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "C"]
@@ -58,7 +62,6 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
   const change = paymentMethod === 'cash' && received > total ? received - total : 0
 
   const handleConfirmPayment = () => {
-    // In a real app, you would process the payment here
     setPaymentComplete(true)
   }
 
@@ -67,52 +70,70 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
     resetState()
   }
 
-  const handleSendWhatsApp = () => {
-    let message = `*Resumen de Compra - PuntoSeguro POS*\n\n`;
-    message += `*Fecha:* ${new Date().toLocaleString()}\n\n`;
-    message += "*Detalles:*\n";
+  const generatePdf = async () => {
+    const receiptElement = receiptRef.current;
+    if (!receiptElement) return null;
+    
+    // We need to temporarily make the receipt visible to capture it
+    receiptElement.style.display = 'block';
+    const canvas = await html2canvas(receiptElement, { scale: 2 });
+    receiptElement.style.display = 'none';
 
-    Array.from(cart.values()).forEach(({ product, quantity, discount }) => {
-        const itemTotal = product.salePrice * quantity * (1 - discount / 100);
-        message += `${quantity}x ${product.name} - $${itemTotal.toFixed(2)}\n`;
-        if (discount > 0) {
-            message += `  (Descuento: ${discount}%)\n`;
-        }
+    const imgData = canvas.toDataURL('image/png');
+    
+    // Standard receipt paper width is around 80mm
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [canvas.height * 80 / canvas.width, 80]
     });
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
+    return pdf.output('blob');
+  };
 
-    message += "\n--------------------\n";
-    message += `*Subtotal:* $${subtotal.toFixed(2)}\n`;
-    message += `*Impuesto (16%):* $${tax.toFixed(2)}\n`;
-    message += `*Total:* *$${total.toFixed(2)}*\n\n`;
-    message += `*Método de pago:* ${paymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}\n`;
-    if (paymentMethod === 'cash') {
-        message += `*Recibido:* $${received.toFixed(2)}\n`;
-        message += `*Cambio:* $${change.toFixed(2)}\n`;
+  const handleSendWhatsApp = async () => {
+    const pdfBlob = await generatePdf();
+    if (!pdfBlob) {
+        toast({ variant: 'destructive', title: "Error", description: "No se pudo generar el recibo PDF." });
+        return;
     }
-    message += "\n¡Gracias por su compra!";
 
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    const pdfFile = new File([pdfBlob], `recibo-aliru-${new Date().getTime()}.pdf`, { type: 'application/pdf' });
+
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Recibo de Compra - ALIRU',
+                text: 'Aquí está tu recibo de compra de ALIRU Refacciones.',
+                files: [pdfFile]
+            });
+        } catch (error) {
+            console.error('Error al compartir:', error);
+            toast({ variant: 'destructive', title: "Error", description: "No se pudo compartir el recibo." });
+        }
+    } else {
+         toast({ variant: 'destructive', title: "No Soportado", description: "La función de compartir no está disponible en este navegador." });
+    }
   }
 
-  const handlePrintReceipt = () => {
-    const printContent = receiptRef.current;
-    if (printContent) {
-      const printWindow = window.open('', '', 'height=600,width=800');
-      if (printWindow) {
-        printWindow.document.write('<html><head><title>Imprimir Recibo</title>');
-        printWindow.document.write('<style>body { font-family: monospace; } table { width: 100%; border-collapse: collapse; } td, th { padding: 4px; } .text-center { text-align: center; } .font-bold { font-weight: bold; } .text-lg { font-size: 1.125rem; } .mb-4 { margin-bottom: 1rem; } .my-2 { margin-top: 0.5rem; margin-bottom: 0.5rem; } .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; } .border-t { border-top: 1px dashed black; } .border-b { border-bottom: 1px dashed black; } .flex { display: flex; } .justify-between { justify-content: space-between; } .space-y-1 > * + * { margin-top: 0.25rem; } .mt-2 { margin-top: 0.5rem; } .pt-2 { padding-top: 0.5rem; } .mt-4 { margin-top: 1rem; } .pl-4 { padding-left: 1rem; } .text-xs { font-size: 0.75rem; } .text-base { font-size: 1rem; }</style>');
-        printWindow.document.write('</head><body>');
-        printWindow.document.write(printContent.innerHTML);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        printWindow.focus();
+  const handlePrintReceipt = async () => {
+    const pdfBlob = await generatePdf();
+     if (!pdfBlob) {
+        toast({ variant: 'destructive', title: "Error", description: "No se pudo generar el recibo PDF." });
+        return;
+    }
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    const printWindow = window.open(pdfUrl);
+    if (printWindow) {
+      printWindow.onload = () => {
         printWindow.print();
-        printWindow.close();
-      }
+      };
+    } else {
+        toast({ variant: 'destructive', title: "Error de Impresión", description: "No se pudo abrir la ventana de impresión. Revisa si tu navegador bloquea las ventanas emergentes." });
     }
   }
-
+  
   const resetState = () => {
     setAmountReceived("")
     setPaymentMethod("cash")
@@ -136,7 +157,7 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
 
         {paymentComplete ? (
             <div>
-                 <div className="hidden">
+                 <div style={{ display: 'none' }}>
                     <Receipt 
                     ref={receiptRef}
                     items={cart}
@@ -213,7 +234,7 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
                     <Button variant="outline" onClick={handlePrintReceipt}>Imprimir Recibo</Button>
                     <Button variant="outline" className="bg-green-500 hover:bg-green-600 text-white hover:text-white" onClick={handleSendWhatsApp}>
                         <WhatsAppIcon className="h-5 w-5 mr-2"/>
-                        Enviar por WhatsApp
+                        Compartir Recibo
                     </Button>
                 </div>
                 <Button onClick={handleNewSale}>Nueva Venta</Button>
@@ -234,5 +255,3 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
     </AlertDialog>
   )
 }
-
-    
