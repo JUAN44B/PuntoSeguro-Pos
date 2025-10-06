@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CreditCard, DollarSign, MonitorSmartphone } from 'lucide-react';
+import { CreditCard, DollarSign, MonitorSmartphone, Banknote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PaymentDialogProps {
@@ -30,23 +30,26 @@ const terminals = [
 ];
 
 export function PaymentDialog({ isOpen, onOpenChange, totalAmount, onPaymentSuccess }: PaymentDialogProps) {
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
+  const [activeTab, setActiveTab] = useState('cash');
   const [amountReceived, setAmountReceived] = useState<number | string>('');
   const [selectedTerminal, setSelectedTerminal] = useState<string>(terminals[0].id);
 
   const change = Number(amountReceived) - totalAmount;
-  const isCashPaymentValid = paymentMethod === 'cash' && change >= 0;
+  const isCashPaymentValid = activeTab === 'cash' && change >= 0;
+  const isCardPaymentValid = activeTab === 'card';
+  const isTransferPaymentValid = activeTab === 'transfer';
+
 
   useEffect(() => {
     if (isOpen) {
       setAmountReceived('');
-      setPaymentMethod('cash');
+      setActiveTab('cash');
       setSelectedTerminal(terminals[0].id);
     }
   }, [isOpen]);
 
   const handleConfirmPayment = () => {
-    onPaymentSuccess(paymentMethod);
+    onPaymentSuccess(activeTab);
   };
 
   return (
@@ -60,10 +63,11 @@ export function PaymentDialog({ isOpen, onOpenChange, totalAmount, onPaymentSucc
             <p className="text-4xl font-bold">${totalAmount.toFixed(2)}</p>
         </div>
 
-        <Tabs defaultValue="cash" onValueChange={(value) => setPaymentMethod(value as 'cash' | 'card')} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="cash" onValueChange={(value) => setActiveTab(value)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="cash"><DollarSign className='h-4 w-4 mr-2'/>Efectivo</TabsTrigger>
                 <TabsTrigger value="card"><CreditCard className='h-4 w-4 mr-2'/>Tarjeta</TabsTrigger>
+                <TabsTrigger value="transfer"><Banknote className='h-4 w-4 mr-2'/>Transferencia</TabsTrigger>
             </TabsList>
             <TabsContent value="cash" className="mt-4 space-y-4">
                 <div className="space-y-2">
@@ -98,6 +102,13 @@ export function PaymentDialog({ isOpen, onOpenChange, totalAmount, onPaymentSucc
                     </div>
                 </RadioGroup>
             </TabsContent>
+            <TabsContent value="transfer" className="mt-4 text-center">
+                <p className='text-sm text-muted-foreground'>Confirme que la transferencia ha sido recibida antes de finalizar la venta.</p>
+                <div className='mt-4 p-4 bg-muted/40 rounded-lg'>
+                    <p className='font-bold text-lg'>CLABE: 1234 5678 9012 3456 78</p>
+                    <p>Banco: Mi Banco SA de CV</p>
+                </div>
+            </TabsContent>
         </Tabs>
         
         <DialogFooter className='mt-6'>
@@ -105,7 +116,7 @@ export function PaymentDialog({ isOpen, onOpenChange, totalAmount, onPaymentSucc
           <Button 
             type="submit" 
             onClick={handleConfirmPayment}
-            disabled={paymentMethod === 'cash' ? !isCashPaymentValid : false}
+            disabled={!isCashPaymentValid && !isCardPaymentValid && !isTransferPaymentValid}
           >
             Confirmar Pago
           </Button>

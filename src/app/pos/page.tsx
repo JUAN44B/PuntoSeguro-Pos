@@ -93,9 +93,9 @@ export default function POSPage() {
   const filteredProducts = initialProducts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  // Assuming total includes 16% IVA
-  const total = subtotal * 1.16;
-  const iva = total - subtotal;
+  // Assuming 16% IVA is applied over the subtotal
+  const iva = subtotal * 0.16;
+  const total = subtotal + iva;
 
 
   return (

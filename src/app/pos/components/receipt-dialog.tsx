@@ -23,18 +23,13 @@ interface ReceiptDialogProps {
   };
 }
 
-// Function to generate a simple barcode SVG (Code 128 is complex, this is a visual representation)
 const Barcode = ({ text }: { text: string }) => {
-    // A simple visual representation, not a real scannable barcode
     const bars = text.split('').map((char, i) => {
-        const value = (char.charCodeAt(0) % 3) + 1; // Simple transformation to get 1, 2, or 3
+        const value = (char.charCodeAt(0) % 3) + 1;
         return <rect key={i} x={i * 4} y="0" width={value * 1.5} height="40" fill="black" />;
     });
-    return (
-        <svg height="40" className='w-full'>{bars}</svg>
-    );
+    return <svg height="40" className='w-full'>{bars}</svg>;
 };
-
 
 export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -52,20 +47,16 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
               margin: 0;
             }
             @page {
-              size: 50mm auto; /* Standard thermal receipt paper roll width */
+              size: 50mm auto;
               margin: 0;
-            }
-            .printable-receipt-container {
-                padding: 0;
-                margin: 0;
             }
             .printable-receipt {
               font-family: 'monospace', 'Menlo', 'Consolas', 'Courier New', monospace;
               width: 100%;
-              padding: 2mm; /* Small padding */
+              padding: 2mm;
               color: #000;
               background-color: #fff;
-              font-size: 8px; /* Typical receipt font size */
+              font-size: 8px;
               line-height: 1.4;
             }
             .printable-receipt * {
@@ -83,9 +74,9 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
         if (printWindow) {
             printWindow.document.write('<html><head><title>Ticket de Venta</title>');
             printWindow.document.head.appendChild(style);
-            printWindow.document.write('</head><body><div class="printable-receipt-container">');
+            printWindow.document.write('</head><body>');
             printWindow.document.write(printContent.innerHTML);
-            printWindow.document.write('</div></body></html>');
+            printWindow.document.write('</body></html>');
             printWindow.document.close();
             printWindow.focus();
             setTimeout(() => {
@@ -102,7 +93,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
 
     try {
         const canvas = await html2canvas(receiptElement, {
-            scale: 2, // Higher scale for better resolution
+            scale: 2,
             backgroundColor: '#ffffff',
             useCORS: true,
         });
@@ -128,8 +119,17 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
         alert('Hubo un error al generar la imagen del ticket.');
     }
   };
+  
+  const getPaymentMethodName = (method: string) => {
+    switch(method) {
+      case 'cash': return 'Efectivo';
+      case 'card': return 'Tarjeta';
+      case 'transfer': return 'Transferencia';
+      default: return 'Desconocido';
+    }
+  }
 
-  const { cart, total, paymentMethod } = saleData;
+  const { cart, total } = saleData;
   const subtotal = total / 1.16;
   const iva = total - subtotal;
 
@@ -140,7 +140,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
           <DialogTitle>Venta Completada</DialogTitle>
         </DialogHeader>
         
-        <div className="flex justify-center">
+        <div className="flex justify-center overflow-y-auto">
             <div ref={receiptRef} className="bg-white p-4 text-black printable-receipt w-[300px]" style={{fontFamily: "'Courier New', Courier, monospace"}}>
                 <div className="text-center mb-4">
                     <h1 className="text-xl font-bold tracking-widest">ALIRU</h1>
@@ -153,10 +153,10 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
                     <p>Factura simplificada</p>
                     <p>Nº: {saleId}</p>
                     <p>Fecha: {new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })}</p>
-                    <p>Forma de pago: {paymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}</p>
+                    <p>Forma de pago: {getPaymentMethodName(saleData.paymentMethod)}</p>
                 </div>
 
-                <div className="text-xs border-t border-b border-black py-1">
+                <div className="text-xs border-t-2 border-b-2 border-black border-dashed py-1">
                     <div className="flex justify-between font-bold">
                         <span>PRODUCTO</span>
                         <span>SUBTOTAL</span>
@@ -167,8 +167,8 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
                     {cart.map(item => (
                         <div key={item.id}>
                             <div className="flex justify-between">
-                                <span>{item.name}</span>
-                                <span>${(item.price * item.quantity).toFixed(2)}</span>
+                                <span className='break-all'>{item.name}</span>
+                                <span className='pl-2'>${(item.price * item.quantity).toFixed(2)}</span>
                             </div>
                             <div className='text-gray-600' style={{fontSize: '10px', paddingLeft: '4px'}}>
                                 {item.quantity} x ${item.price.toFixed(2)}
@@ -177,7 +177,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
                     ))}
                 </div>
 
-                <div className="text-xs mt-2 border-t border-black pt-2">
+                <div className="text-xs mt-2 border-t-2 border-dashed border-black pt-2">
                     <div className="space-y-1">
                         <div className="flex justify-between">
                             <span>Subtotal:</span>
