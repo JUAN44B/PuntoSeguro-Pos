@@ -22,7 +22,7 @@ import Image from 'next/image';
 import { PaymentDialog } from './components/payment-dialog';
 import { ReceiptDialog } from './components/receipt-dialog';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from 'firebase/firestore';
 import type { Product } from '../products/components/product-dialog';
 
 
@@ -93,13 +93,24 @@ export default function POSPage() {
     };
     
     try {
+      // 1. Save the sale record
       await addDoc(collection(firestore, 'sales'), saleData);
+      
+      // 2. Update stock for each product sold
+      for (const item of cart) {
+        const productRef = doc(firestore, 'products', item.id);
+        await updateDoc(productRef, {
+          stock: increment(-item.quantity)
+        });
+      }
+      
+      // 3. Prepare for receipt
       setLastSale({ cart, total, paymentMethod });
       setIsPaymentOpen(false);
       setIsReceiptOpen(true);
       setCart([]); // Clear cart after successful payment
     } catch (error) {
-      console.error("Error saving sale: ", error);
+      console.error("Error processing sale: ", error);
       // Here you could add a toast or alert to inform the user
     }
   };
