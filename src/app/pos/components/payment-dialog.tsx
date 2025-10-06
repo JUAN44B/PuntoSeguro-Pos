@@ -20,7 +20,7 @@ interface PaymentDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   totalAmount: number;
-  onPaymentSuccess: () => void;
+  onPaymentSuccess: (paymentMethod: string) => void;
 }
 
 const terminals = [
@@ -46,7 +46,7 @@ export function PaymentDialog({ isOpen, onOpenChange, totalAmount, onPaymentSucc
   }, [isOpen]);
 
   const handleConfirmPayment = () => {
-    onPaymentSuccess();
+    onPaymentSuccess(paymentMethod);
   };
 
   return (
@@ -77,7 +77,7 @@ export function PaymentDialog({ isOpen, onOpenChange, totalAmount, onPaymentSucc
                         className="text-lg text-center font-bold"
                     />
                 </div>
-                {change >= 0 && (
+                {Number(amountReceived) > 0 && change >= 0 && (
                      <div className="flex flex-col items-center justify-center p-3 border bg-background rounded-lg">
                         <p className="text-sm text-muted-foreground">Cambio</p>
                         <p className="text-2xl font-bold text-primary">${change.toFixed(2)}</p>

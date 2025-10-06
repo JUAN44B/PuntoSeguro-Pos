@@ -10,9 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import Logo from '@/components/logo';
 import type { CartItem } from '../page';
-import { Separator } from '@/components/ui/separator';
 import { Printer, Share2 } from 'lucide-react';
 
 interface ReceiptDialogProps {
@@ -21,8 +19,22 @@ interface ReceiptDialogProps {
   saleData: {
     cart: CartItem[];
     total: number;
+    paymentMethod: string;
   };
 }
+
+// Function to generate a simple barcode SVG (Code 128 is complex, this is a visual representation)
+const Barcode = ({ text }: { text: string }) => {
+    // A simple visual representation, not a real scannable barcode
+    const bars = text.split('').map((char, i) => {
+        const value = char.charCodeAt(0) % 3 + 1; // Simple transformation to get 1, 2, or 3
+        return <rect key={i} x={i * 4} y="0" width={value} height="50" fill="black" />;
+    });
+    return (
+        <svg height="50" className='w-full'>{bars}</svg>
+    );
+};
+
 
 export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -37,16 +49,24 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
             body {
               background-color: #fff;
               -webkit-print-color-adjust: exact;
-            }
-            @page {
-              size: 80mm auto;
               margin: 0;
             }
+            @page {
+              size: 80mm 297mm; /* Standard thermal receipt paper roll width */
+              margin: 0;
+            }
+            .printable-receipt-container {
+                padding: 0;
+                margin: 0;
+            }
             .printable-receipt {
+              font-family: 'monospace', 'Menlo', 'Consolas', 'Courier New', monospace;
               width: 100%;
-              padding: 10px;
+              padding: 2mm; /* Small padding */
               color: #000;
               background-color: #fff;
+              font-size: 10px; /* Typical receipt font size */
+              line-height: 1.4;
             }
             .printable-receipt * {
               color: #000 !important;
@@ -58,27 +78,14 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
           }
         `;
         
-        const printWindow = window.open('', '', 'height=600,width=800');
+        const printWindow = window.open('', '', 'height=600,width=400');
         
         if (printWindow) {
             printWindow.document.write('<html><head><title>Ticket de Venta</title>');
-            // A trick to make Tailwind classes work in the new window
-            Array.from(document.styleSheets).forEach(sheet => {
-                try {
-                    if (sheet.cssRules) {
-                        const css = Array.from(sheet.cssRules).map(rule => rule.cssText).join('');
-                        const styleElement = printWindow.document.createElement('style');
-                        styleElement.appendChild(document.createTextNode(css));
-                        printWindow.document.head.appendChild(styleElement);
-                    }
-                } catch (e) {
-                    console.log('Could not read stylesheet', e);
-                }
-            });
             printWindow.document.head.appendChild(style);
-            printWindow.document.write('</head><body>');
+            printWindow.document.write('</head><body><div class="printable-receipt-container">');
             printWindow.document.write(printContent.innerHTML);
-            printWindow.document.write('</body></html>');
+            printWindow.document.write('</div></body></html>');
             printWindow.document.close();
             printWindow.focus();
             setTimeout(() => {
@@ -124,77 +131,74 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData }: ReceiptDialogP
     }
   };
 
-  const { cart, total } = saleData;
+  const { cart, total, paymentMethod } = saleData;
+  const subtotal = total / 1.16;
+  const iva = total - subtotal;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-slate-50">
+      <DialogContent className="sm:max-w-xs bg-slate-50">
         <DialogHeader>
           <DialogTitle>Venta Completada</DialogTitle>
         </DialogHeader>
         
         {/* Receipt Body */}
-        <div ref={receiptRef} className="bg-white p-6 rounded-lg shadow-sm text-gray-800 printable-receipt">
-            <header className="text-center mb-6">
-                <div className='flex justify-center'>
-                    <Logo />
-                </div>
-                <h1 className="text-xl font-bold uppercase tracking-wider mt-2">Ticket de Venta</h1>
-            </header>
-
-            <div className="grid grid-cols-2 gap-x-4 text-sm mb-6">
-                <div>
-                    <p className="font-bold">Folio:</p>
-                    <p>{saleId}</p>
-                </div>
-                <div className='text-right'>
-                    <p className="font-bold">Fecha:</p>
-                    <p>{new Date().toLocaleDateString('es-MX')} {new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</p>
-                </div>
-                <div className='col-span-2 mt-2'>
-                    <p className='font-bold'>Empresa:</p>
-                    <p>Refacciones para Remolques ALIRU</p>
-                    <p>Av. Principal #123, Col. Centro</p>
-                </div>
+        <div ref={receiptRef} className="bg-white p-4 mx-auto w-full text-black printable-receipt" style={{fontFamily: "'Courier New', Courier, monospace"}}>
+            <div className="text-center mb-4">
+                <h1 className="text-3xl font-bold tracking-widest">PRESTAPOS</h1>
+                <p className='text-xs'>Refacciones para Remolques ALIRU</p>
+                <p className='text-xs'>Av. Principal #123</p>
+                <p className='text-xs'>00000, Ciudad, Estado</p>
+                <p className='text-xs'>TLF: 123 456 789</p>
             </div>
 
-            <div className="text-sm">
-                <div className="grid grid-cols-12 gap-2 font-bold border-b-2 border-dashed pb-2 mb-2">
-                    <div className="col-span-6">Descripción</div>
-                    <div className="col-span-2 text-center">Cant.</div>
-                    <div className="col-span-4 text-right">Importe</div>
+            <div className="mb-4 text-xs">
+                <p>Factura simplificada</p>
+                <p>Nº: {saleId}</p>
+                <p>Fecha: {new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })}</p>
+                <p>Forma de pago: {paymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}</p>
+            </div>
+
+            <div className="text-xs">
+                <div className="flex justify-between font-bold border-t border-b border-black py-1">
+                    <span>PRODUCTO</span>
+                    <span>SUBTOTAL</span>
                 </div>
-                <div className="space-y-2">
+                <div className="py-2 space-y-2">
                     {cart.map(item => (
-                        <div key={item.id} className="grid grid-cols-12 gap-2 items-start">
-                            <div className="col-span-6 break-words">{item.name}</div>
-                            <div className="col-span-2 text-center">{item.quantity}</div>
-                            <div className="col-span-4 text-right">${(item.price * item.quantity).toFixed(2)}</div>
+                        <div key={item.id}>
+                             <div className="flex justify-between">
+                                <span>{item.name}</span>
+                                <span>${(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                            <div className='text-gray-600' style={{fontSize: '9px'}}>
+                                {item.quantity} x ${item.price.toFixed(2)}
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            <Separator className="my-4 bg-gray-300" />
-
-            <div className="text-sm space-y-2">
-                <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal:</span>
-                    <span>${(total / 1.16).toFixed(2)}</span>
+            <div className="text-xs mt-2 border-t border-black pt-2">
+                <div className="flex justify-end">
+                    <div className='text-right'>
+                        <p>BI: ${subtotal.toFixed(2)}</p>
+                        <p>IVA (16%): ${iva.toFixed(2)}</p>
+                    </div>
                 </div>
-                <div className="flex justify-between">
-                    <span className="text-gray-600">IVA (16%):</span>
-                    <span>${(total - (total / 1.16)).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between font-bold text-lg mt-2 p-3 bg-primary text-primary-foreground rounded-md">
-                    <span>Total:</span>
-                    <span>${total.toFixed(2)}</span>
+                <div className="flex justify-end font-bold text-sm mt-2">
+                    <p>TOTAL: ${total.toFixed(2)}</p>
                 </div>
             </div>
             
-            <footer className="text-center mt-8">
-                <p className="font-semibold text-base">¡Gracias por su compra!</p>
-                <p className="text-xs text-gray-500 mt-1">Refacciones para Remolques ALIRU</p>
+            <div className="my-4">
+                <Barcode text={saleId} />
+            </div>
+
+            <footer className="text-center text-xs space-y-2">
+                <p>Fue atendido por: 1</p>
+                <p>Este ticket es imprescindible para cualquier cambio o devolución.</p>
+                <p>Dispone de 30 días para realizar cualquier cambio o devolución siempre y cuando el producto esté sin usar y con los precintos de garantía.</p>
             </footer>
         </div>
 

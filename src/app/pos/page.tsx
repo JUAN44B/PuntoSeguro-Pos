@@ -47,7 +47,7 @@ export default function POSPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
-  const [lastSale, setLastSale] = useState<{ cart: CartItem[], total: number } | null>(null);
+  const [lastSale, setLastSale] = useState<{ cart: CartItem[], total: number, paymentMethod: string } | null>(null);
 
   const addToCart = (product: Omit<CartItem, 'quantity'>) => {
     setCart(prevCart => {
@@ -83,8 +83,8 @@ export default function POSPage() {
     setCart([]);
   }
 
-  const handlePaymentSuccess = () => {
-    setLastSale({ cart, total });
+  const handlePaymentSuccess = (paymentMethod: string) => {
+    setLastSale({ cart, total, paymentMethod });
     setIsPaymentOpen(false);
     setIsReceiptOpen(true);
     setCart([]); // Clear cart after successful payment
@@ -93,8 +93,10 @@ export default function POSPage() {
   const filteredProducts = initialProducts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const iva = subtotal * 0.16;
-  const total = subtotal + iva;
+  // Assuming total includes 16% IVA
+  const total = subtotal * 1.16;
+  const iva = total - subtotal;
+
 
   return (
     <>
