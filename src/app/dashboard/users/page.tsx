@@ -30,33 +30,33 @@ export default function UsersPage() {
   return (
     <div>
       <div className="flex items-center mb-4">
-        <h1 className="text-2xl font-semibold">Users & Roles</h1>
+        <h1 className="text-2xl font-semibold">Usuarios y Roles</h1>
         <div className="ml-auto">
           <Button size="sm" className="h-7 gap-1">
             <PlusCircle className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Add User
+              Agregar Usuario
             </span>
           </Button>
         </div>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>User Management</CardTitle>
+          <CardTitle>Gestión de Usuarios</CardTitle>
           <CardDescription>
-            Control user access and permissions for your store.
+            Controla el acceso de usuarios y los permisos para tu tienda.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>Nombre</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Estado</TableHead>
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">Acciones</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -70,7 +70,7 @@ export default function UsersPage() {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={user.status === 'Active' ? 'default' : 'secondary'}
+                      variant={user.status === 'Activo' ? 'default' : 'secondary'}
                     >
                       {user.status}
                     </Badge>
@@ -88,10 +88,10 @@ export default function UsersPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit Role</DropdownMenuItem>
-                        <DropdownMenuItem>Deactivate User</DropdownMenuItem>
-                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                        <DropdownMenuItem>Editar Rol</DropdownMenuItem>
+                        <DropdownMenuItem>Desactivar Usuario</DropdownMenuItem>
+                        <DropdownMenuItem>Eliminar</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

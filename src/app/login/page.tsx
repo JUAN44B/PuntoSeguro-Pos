@@ -13,9 +13,9 @@ export default function LoginPage() {
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
        <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Ingresa tu correo electrónico para acceder a tu cuenta
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -21,7 +21,7 @@ export type Customer = {
   email: string;
   phone: string;
   address: string;
-  type: 'Frequent' | 'Wholesale' | 'Retail';
+  type: 'Frecuente' | 'Mayoreo' | 'Menudeo';
 };
 
 export type Supplier = {
@@ -39,7 +39,7 @@ export type SalesOrder = {
     date: string;
     customerName: string;
     total: number;
-    status: 'Completed' | 'Pending' | 'Cancelled';
+    status: 'Completado' | 'Pendiente' | 'Cancelado';
 };
 
 export type PurchaseOrder = {
@@ -47,13 +47,13 @@ export type PurchaseOrder = {
   supplierName: string;
   date: string;
   total: number;
-  status: 'Received' | 'Pending' | 'Cancelled';
+  status: 'Recibido' | 'Pendiente' | 'Cancelado';
 };
 
 export type User = {
   id: string;
   name: string;
   email: string;
-  role: 'Admin' | 'Manager' | 'Cashier';
-  status: 'Active' | 'Invited';
+  role: 'Admin' | 'Gerente' | 'Cajero';
+  status: 'Activo' | 'Invitado';
 };

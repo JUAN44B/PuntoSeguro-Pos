@@ -81,8 +81,8 @@ export default function POSPage() {
   const handlePaymentSuccess = () => {
     setCart(new Map());
     toast({
-      title: "Sale Completed",
-      description: "The transaction was successful.",
+      title: "Venta Completada",
+      description: "La transacción fue exitosa.",
     });
   };
 
@@ -108,11 +108,11 @@ export default function POSPage() {
       <div className="md:col-span-2">
         <Card>
             <CardHeader>
-                <CardTitle>Products</CardTitle>
+                <CardTitle>Productos</CardTitle>
                 <div className="relative mt-2">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input 
-                        placeholder="Search products by name or code..." 
+                        placeholder="Buscar productos por nombre o código..." 
                         className="pl-8"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -140,7 +140,7 @@ export default function POSPage() {
                 <CardFooter className="p-2 border-t">
                   <Button variant="outline" size="sm" className="w-full gap-1" onClick={() => addToCart(product)}>
                     <PlusCircle className="h-3.5 w-3.5" />
-                    Add
+                    Agregar
                   </Button>
                 </CardFooter>
               </Card>
@@ -151,19 +151,19 @@ export default function POSPage() {
       <div>
         <Card className="sticky top-20">
           <CardHeader>
-            <CardTitle>Current Sale</CardTitle>
-            <CardDescription>Manage items for this transaction.</CardDescription>
+            <CardTitle>Venta Actual</CardTitle>
+            <CardDescription>Gestiona los artículos de esta transacción.</CardDescription>
           </CardHeader>
           <CardContent className="max-h-[50vh] overflow-y-auto">
             {cart.size === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Cart is empty</p>
+                <p className="text-center text-muted-foreground py-8">El carrito está vacío</p>
             ) : (
                 <Table>
                 <TableHeader>
                     <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Qty</TableHead>
-                    <TableHead>Disc %</TableHead>
+                    <TableHead>Producto</TableHead>
+                    <TableHead>Cant</TableHead>
+                    <TableHead>Desc %</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -207,7 +207,7 @@ export default function POSPage() {
                     <span>${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                    <span>Tax (16%)</span>
+                    <span>Impuesto (16%)</span>
                     <span>${tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
@@ -223,7 +223,7 @@ export default function POSPage() {
                 onPaymentSuccess={handlePaymentSuccess}
              >
                 <Button className="w-full bg-primary hover:bg-primary/90" size="lg" disabled={cart.size === 0}>
-                  Proceed to Payment
+                  Proceder al Pago
                 </Button>
             </PaymentDialog>
           </CardFooter>

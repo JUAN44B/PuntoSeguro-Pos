@@ -37,10 +37,10 @@ import {
 const FormSchema = z.object({
   dateRange: z.object({
     from: z.date({
-      required_error: "A start date is required.",
+      required_error: "Se requiere una fecha de inicio.",
     }),
     to: z.date({
-      required_error: "An end date is required.",
+      required_error: "Se requiere una fecha de fin.",
     }),
   }),
 })
@@ -64,11 +64,11 @@ export default function ReportGenerator() {
       })
       setReport(result.report)
     } catch (error) {
-      console.error("Failed to generate report:", error)
+      console.error("Fallo al generar el reporte:", error)
       toast({
         variant: "destructive",
-        title: "Error Generating Report",
-        description: "There was a problem generating the sales report. Please try again.",
+        title: "Error al Generar Reporte",
+        description: "Hubo un problema al generar el reporte de ventas. Por favor, intenta de nuevo.",
       })
     } finally {
       setIsLoading(false)
@@ -85,7 +85,7 @@ export default function ReportGenerator() {
                 name="dateRange"
                 render={({ field }) => (
                     <FormItem className="flex flex-col">
-                    <FormLabel>Date range</FormLabel>
+                    <FormLabel>Rango de Fechas</FormLabel>
                     <Popover>
                         <PopoverTrigger asChild>
                         <FormControl>
@@ -107,7 +107,7 @@ export default function ReportGenerator() {
                                 format(field.value.from, "LLL dd, y")
                                 )
                             ) : (
-                                <span>Pick a date range</span>
+                                <span>Selecciona un rango de fechas</span>
                             )}
                             </Button>
                         </FormControl>
@@ -129,7 +129,7 @@ export default function ReportGenerator() {
                 />
                 <Button type="submit" disabled={isLoading} className="w-full bg-primary hover:bg-primary/90">
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Generate Report
+                    Generar Reporte
                 </Button>
             </form>
             </Form>
@@ -137,7 +137,7 @@ export default function ReportGenerator() {
         <div className="md:col-span-2">
             <Card className="min-h-[300px]">
                 <CardHeader>
-                    <CardTitle>Generated Report</CardTitle>
+                    <CardTitle>Reporte Generado</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {isLoading && (
@@ -154,7 +154,7 @@ export default function ReportGenerator() {
                         </div>
                     )}
                     {!isLoading && !report && (
-                        <p className="text-center text-muted-foreground pt-10">Your generated report will appear here.</p>
+                        <p className="text-center text-muted-foreground pt-10">Tu reporte generado aparecerá aquí.</p>
                     )}
                 </CardContent>
             </Card>

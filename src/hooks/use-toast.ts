@@ -19,10 +19,10 @@ type ToasterToast = ToastProps & {
 }
 
 const actionTypes = {
-  ADD_TOAST: "ADD_TOAST",
-  UPDATE_TOAST: "UPDATE_TOAST",
-  DISMISS_TOAST: "DISMISS_TOAST",
-  REMOVE_TOAST: "REMOVE_TOAST",
+  ADD_TOAST: "AGREGAR_TOAST",
+  UPDATE_TOAST: "ACTUALIZAR_TOAST",
+  DISMISS_TOAST: "DESCARTAR_TOAST",
+  REMOVE_TOAST: "ELIMINAR_TOAST",
 } as const
 
 let count = 0
@@ -66,7 +66,7 @@ const addToRemoveQueue = (toastId: string) => {
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId)
     dispatch({
-      type: "REMOVE_TOAST",
+      type: "ELIMINAR_TOAST",
       toastId: toastId,
     })
   }, TOAST_REMOVE_DELAY)
@@ -76,13 +76,13 @@ const addToRemoveQueue = (toastId: string) => {
 
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case "ADD_TOAST":
+    case "AGREGAR_TOAST":
       return {
         ...state,
         toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
       }
 
-    case "UPDATE_TOAST":
+    case "ACTUALIZAR_TOAST":
       return {
         ...state,
         toasts: state.toasts.map((t) =>
@@ -90,7 +90,7 @@ export const reducer = (state: State, action: Action): State => {
         ),
       }
 
-    case "DISMISS_TOAST": {
+    case "DESCARTAR_TOAST": {
       const { toastId } = action
 
       // ! Side effects ! - This could be extracted into a dismissToast() action,
@@ -115,7 +115,7 @@ export const reducer = (state: State, action: Action): State => {
         ),
       }
     }
-    case "REMOVE_TOAST":
+    case "ELIMINAR_TOAST":
       if (action.toastId === undefined) {
         return {
           ...state,
@@ -147,13 +147,13 @@ function toast({ ...props }: Toast) {
 
   const update = (props: ToasterToast) =>
     dispatch({
-      type: "UPDATE_TOAST",
+      type: "ACTUALIZAR_TOAST",
       toast: { ...props, id },
     })
-  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+  const dismiss = () => dispatch({ type: "DESCARTAR_TOAST", toastId: id })
 
   dispatch({
-    type: "ADD_TOAST",
+    type: "AGREGAR_TOAST",
     toast: {
       ...props,
       id,
@@ -187,7 +187,7 @@ function useToast() {
   return {
     ...state,
     toast,
-    dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    dismiss: (toastId?: string) => dispatch({ type: "DESCARTAR_TOAST", toastId }),
   }
 }
 

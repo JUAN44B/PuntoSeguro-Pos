@@ -53,15 +53,15 @@ export default function PurchasesPage() {
   const handleAddPurchaseOrder = () => {
     const newPO: PurchaseOrder = {
       id: `PO-${String(purchaseOrders.length + 1).padStart(3, '0')}`,
-      supplierName: 'New Supplier',
+      supplierName: 'Nuevo Proveedor',
       date: new Date().toISOString().split('T')[0],
       total: 0,
-      status: 'Pending',
+      status: 'Pendiente',
     };
     setPurchaseOrders(prev => [newPO, ...prev]);
     toast({
-      title: "Purchase Order Added",
-      description: "A new purchase order has been created.",
+      title: "Orden de Compra Agregada",
+      description: "Se ha creado una nueva orden de compra.",
     });
   };
 
@@ -69,8 +69,8 @@ export default function PurchasesPage() {
     setPurchaseOrders(prev => prev.filter(order => order.id !== orderId));
     toast({
       variant: "destructive",
-      title: "Purchase Order Deleted",
-      description: "The purchase order has been removed.",
+      title: "Orden de Compra Eliminada",
+      description: "La orden de compra ha sido eliminada.",
     });
   };
 
@@ -78,11 +78,11 @@ export default function PurchasesPage() {
     <Tabs defaultValue="all">
       <div className="flex items-center">
         <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="received">Received</TabsTrigger>
-          <TabsTrigger value="pending">Pending</TabsTrigger>
+          <TabsTrigger value="all">Todas</TabsTrigger>
+          <TabsTrigger value="received">Recibidas</TabsTrigger>
+          <TabsTrigger value="pending">Pendientes</TabsTrigger>
           <TabsTrigger value="cancelled" className="hidden sm:flex">
-            Cancelled
+            Canceladas
           </TabsTrigger>
         </TabsList>
         <div className="ml-auto flex items-center gap-2">
@@ -91,32 +91,32 @@ export default function PurchasesPage() {
               <Button variant="outline" size="sm" className="h-7 gap-1">
                 <ListFilter className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                  Filter
+                  Filtrar
                 </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+              <DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem checked>
-                Received
+                Recibido
               </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Pending</DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem>Pendiente</DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem>
-                Cancelled
+                Cancelado
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button size="sm" variant="outline" className="h-7 gap-1">
             <File className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Export
+              Exportar
             </span>
           </Button>
           <Button size="sm" className="h-7 gap-1" onClick={handleAddPurchaseOrder}>
             <PlusCircle className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              New Purchase Order
+              Nueva Orden de Compra
             </span>
           </Button>
         </div>
@@ -124,22 +124,22 @@ export default function PurchasesPage() {
       <TabsContent value="all">
         <Card>
           <CardHeader>
-            <CardTitle>Purchase Orders</CardTitle>
+            <CardTitle>Órdenes de Compra</CardTitle>
             <CardDescription>
-              Track and manage your purchase orders to suppliers.
+              Rastrea y gestiona tus órdenes de compra a proveedores.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>ID Orden</TableHead>
+                  <TableHead>Proveedor</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="hidden md:table-cell">Fecha</TableHead>
+                  <TableHead className="text-right">Monto</TableHead>
                   <TableHead>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">Acciones</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -151,9 +151,9 @@ export default function PurchasesPage() {
                     <TableCell>
                       <Badge 
                         variant={
-                          order.status === 'Received' ? 'default' : order.status === 'Pending' ? 'secondary' : 'destructive'
+                          order.status === 'Recibido' ? 'default' : order.status === 'Pendiente' ? 'secondary' : 'destructive'
                         }
-                        className={order.status === 'Pending' ? 'bg-yellow-500/80 text-white hover:bg-yellow-500' : ''}
+                        className={order.status === 'Pendiente' ? 'bg-yellow-500/80 text-white hover:bg-yellow-500' : ''}
                       >
                         {order.status}
                       </Badge>
@@ -175,10 +175,10 @@ export default function PurchasesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Mark as Received</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeletePurchaseOrder(order.id)}>Delete</DropdownMenuItem>
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                          <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
+                          <DropdownMenuItem>Marcar como Recibido</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeletePurchaseOrder(order.id)}>Eliminar</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -189,8 +189,8 @@ export default function PurchasesPage() {
           </CardContent>
           <CardFooter>
             <div className="text-xs text-muted-foreground">
-              Showing <strong>1-{purchaseOrders.length}</strong> of <strong>{purchaseOrders.length}</strong>{" "}
-              purchase orders
+              Mostrando <strong>1-{purchaseOrders.length}</strong> de <strong>{purchaseOrders.length}</strong>{" "}
+              órdenes de compra
             </div>
           </CardFooter>
         </Card>
@@ -198,5 +198,3 @@ export default function PurchasesPage() {
     </Tabs>
   )
 }
-
-    

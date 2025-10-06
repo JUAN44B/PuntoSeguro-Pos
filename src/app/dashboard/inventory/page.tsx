@@ -26,18 +26,18 @@ export default function InventoryPage() {
   return (
     <div className="grid auto-rows-max items-start gap-4 md:gap-8 lg:col-span-2">
         <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">Inventory</h1>
+            <h1 className="text-2xl font-semibold">Inventario</h1>
              <div className="ml-auto flex items-center gap-2">
                 <Button size="sm" variant="outline" className="h-7 gap-1">
                     <File className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Export Report
+                    Exportar Reporte
                     </span>
                 </Button>
                 <Button size="sm" className="h-7 gap-1">
                     <PlusCircle className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    New Adjustment
+                    Nuevo Ajuste
                     </span>
                 </Button>
             </div>
@@ -45,34 +45,34 @@ export default function InventoryPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
                 <CardHeader className="pb-2">
-                    <CardDescription>Total Stock Value</CardDescription>
+                    <CardDescription>Valor Total del Inventario</CardDescription>
                     <CardTitle className="text-4xl">$125,430</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="text-xs text-muted-foreground">
-                    Based on purchase price
+                    Basado en precio de compra
                     </div>
                 </CardContent>
             </Card>
             <Card>
                 <CardHeader className="pb-2">
-                    <CardDescription>Items with Low Stock</CardDescription>
+                    <CardDescription>Artículos con Bajo Inventario</CardDescription>
                     <CardTitle className="text-4xl">{lowStockProducts.length}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="text-xs text-muted-foreground">
-                    Items with 10 or fewer units
+                    Artículos con 10 o menos unidades
                     </div>
                 </CardContent>
             </Card>
             <Card>
                 <CardHeader className="pb-2">
-                    <CardDescription>Total Product Variants</CardDescription>
+                    <CardDescription>Total de Variantes de Productos</CardDescription>
                     <CardTitle className="text-4xl">{products.length}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="text-xs text-muted-foreground">
-                    Across all categories
+                    En todas las categorías
                     </div>
                 </CardContent>
             </Card>
@@ -80,18 +80,18 @@ export default function InventoryPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
             <CardHeader>
-                <CardTitle>Low Stock Products</CardTitle>
+                <CardTitle>Productos con Bajo Inventario</CardTitle>
                 <CardDescription>
-                    These products need to be reordered soon.
+                    Estos productos necesitan ser reordenados pronto.
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow>
-                        <TableHead>Product</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead className="text-right">Stock</TableHead>
+                        <TableHead>Producto</TableHead>
+                        <TableHead>Categoría</TableHead>
+                        <TableHead className="text-right">Existencia</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -110,18 +110,18 @@ export default function InventoryPage() {
         </Card>
         <Card>
             <CardHeader>
-                <CardTitle>Best Selling Products</CardTitle>
+                <CardTitle>Productos Más Vendidos</CardTitle>
                 <CardDescription>
-                    Your top performing products by units sold.
+                    Tus productos con mejor rendimiento por unidades vendidas.
                 </CardDescription>
             </CardHeader>
             <CardContent>
                  <Table>
                     <TableHeader>
                         <TableRow>
-                        <TableHead>Product</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead className="text-right">Stock</TableHead>
+                        <TableHead>Producto</TableHead>
+                        <TableHead>Categoría</TableHead>
+                        <TableHead className="text-right">Existencia</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

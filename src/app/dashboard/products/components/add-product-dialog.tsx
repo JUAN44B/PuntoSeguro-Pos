@@ -57,8 +57,8 @@ export default function AddProductDialog({ children, onProductAdd }: AddProductD
     if (!formData.name || !formData.id) {
         toast({
             variant: "destructive",
-            title: "Missing Information",
-            description: "Product Name and Code are required.",
+            title: "Información Faltante",
+            description: "El Nombre y Código del producto son requeridos.",
         });
         return;
     }
@@ -69,7 +69,7 @@ export default function AddProductDialog({ children, onProductAdd }: AddProductD
 
     const newProduct: Product = {
       id: formData.id || `PROD${Math.floor(Math.random() * 1000)}`,
-      name: formData.name || "Unnamed Product",
+      name: formData.name || "Producto Sin Nombre",
       description: formData.description || "",
       category: formData.category || "General",
       stock: formData.stock || 0,
@@ -100,58 +100,58 @@ export default function AddProductDialog({ children, onProductAdd }: AddProductD
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
+          <DialogTitle>Agregar Nuevo Producto</DialogTitle>
           <DialogDescription>
-            Fill in the details below to add a new product to your inventory.
+            Completa los detalles a continuación para agregar un nuevo producto a tu inventario.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto pr-6">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">Name</Label>
+            <Label htmlFor="name" className="text-right">Nombre</Label>
             <Input id="name" value={formData.name} onChange={handleChange} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="id" className="text-right">Code</Label>
+            <Label htmlFor="id" className="text-right">Código</Label>
             <Input id="id" value={formData.id} onChange={handleChange} className="col-span-3" />
           </div>
            <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">Description</Label>
+            <Label htmlFor="description" className="text-right">Descripción</Label>
             <Textarea id="description" value={formData.description} onChange={handleChange} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="category" className="text-right">Category</Label>
+            <Label htmlFor="category" className="text-right">Categoría</Label>
             <Input id="category" value={formData.category} onChange={handleChange} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="stock" className="text-right">Stock</Label>
+            <Label htmlFor="stock" className="text-right">Existencia</Label>
             <Input id="stock" type="number" value={formData.stock} onChange={handleNumberChange} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="purchasePrice" className="text-right">Purchase Price</Label>
+            <Label htmlFor="purchasePrice" className="text-right">Precio de Compra</Label>
             <Input id="purchasePrice" type="number" value={formData.purchasePrice} onChange={handleNumberChange} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="salePrice" className="text-right">Sale Price</Label>
+            <Label htmlFor="salePrice" className="text-right">Precio de Venta</Label>
             <Input id="salePrice" type="number" value={formData.salePrice} onChange={handleNumberChange} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="discount" className="text-right">Discount (%)</Label>
+            <Label htmlFor="discount" className="text-right">Descuento (%)</Label>
             <Input id="discount" type="number" value={formData.discount} onChange={handleNumberChange} className="col-span-3" />
           </div>
            <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="tax" className="text-right">Tax (%)</Label>
+            <Label htmlFor="tax" className="text-right">Impuesto (%)</Label>
             <Input id="tax" type="number" value={formData.tax} onChange={handleNumberChange} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="supplier" className="text-right">Supplier</Label>
+            <Label htmlFor="supplier" className="text-right">Proveedor</Label>
             <Input id="supplier" value={formData.supplier} onChange={handleChange} className="col-span-3" />
           </div>
            <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="imageUrl" className="text-right">Image URL</Label>
+            <Label htmlFor="imageUrl" className="text-right">URL de Imagen</Label>
             <Input id="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://picsum.photos/seed/..." className="col-span-3" />
           </div>
           <DialogFooter>
-            <Button type="submit">Save Product</Button>
+            <Button type="submit">Guardar Producto</Button>
           </DialogFooter>
         </form>
       </DialogContent>

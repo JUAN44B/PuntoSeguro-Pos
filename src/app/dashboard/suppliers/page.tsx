@@ -42,17 +42,17 @@ export default function SuppliersPage() {
   const handleAddSupplier = () => {
     const newSupplier: Supplier = {
       id: `SUP${String(suppliers.length + 1).padStart(3, '0')}`,
-      name: 'New Supplier',
+      name: 'Nuevo Proveedor',
       rfc: 'XAXX010101000',
-      contactName: 'Contact Name',
-      email: 'new.supplier@email.com',
+      contactName: 'Nombre de Contacto',
+      email: 'nuevo.proveedor@email.com',
       phone: '00-0000-0000',
-      address: 'New Supplier Address',
+      address: 'Nueva Dirección de Proveedor',
     };
     setSuppliers(prev => [...prev, newSupplier]);
     toast({
-      title: "Supplier Added",
-      description: "A new supplier has been created. Please edit their details.",
+      title: "Proveedor Agregado",
+      description: "Se ha creado un nuevo proveedor. Por favor edita sus detalles.",
     });
   };
 
@@ -60,51 +60,51 @@ export default function SuppliersPage() {
     setSuppliers(prev => prev.filter(s => s.id !== supplierId));
     toast({
       variant: "destructive",
-      title: "Supplier Deleted",
-      description: "The supplier has been removed.",
+      title: "Proveedor Eliminado",
+      description: "El proveedor ha sido eliminado.",
     });
   };
 
   return (
     <div>
         <div className="flex items-center mb-4">
-            <h1 className="text-2xl font-semibold">Suppliers</h1>
+            <h1 className="text-2xl font-semibold">Proveedores</h1>
             <div className="ml-auto flex items-center gap-2">
                 <Button size="sm" variant="outline" className="h-7 gap-1">
                     <File className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Export
+                    Exportar
                     </span>
                 </Button>
                 <Button size="sm" className="h-7 gap-1" onClick={handleAddSupplier}>
                     <PlusCircle className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Add Supplier
+                    Agregar Proveedor
                     </span>
                 </Button>
             </div>
         </div>
         <Card>
         <CardHeader>
-          <CardTitle>Supplier Information</CardTitle>
+          <CardTitle>Información de Proveedores</CardTitle>
           <CardDescription>
-            Manage your suppliers and their contact information.
+            Administra tus proveedores y su información de contacto.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Contact</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Contacto</TableHead>
                 <TableHead className="hidden md:table-cell">
                   Email
                 </TableHead>
                 <TableHead className="hidden md:table-cell">
-                  Phone
+                  Teléfono
                 </TableHead>
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">Acciones</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -137,10 +137,10 @@ export default function SuppliersPage() {
                           </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteSupplier(supplier.id)}>Delete</DropdownMenuItem>
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                          <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
+                          <DropdownMenuItem>Editar</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteSupplier(supplier.id)}>Eliminar</DropdownMenuItem>
                       </DropdownMenuContent>
                       </DropdownMenu>
                   </TableCell>
@@ -151,13 +151,11 @@ export default function SuppliersPage() {
         </CardContent>
         <CardFooter>
           <div className="text-xs text-muted-foreground">
-            Showing <strong>1-{suppliers.length}</strong> of <strong>{suppliers.length}</strong>{" "}
-            suppliers
+            Mostrando <strong>1-{suppliers.length}</strong> de <strong>{suppliers.length}</strong>{" "}
+            proveedores
           </div>
         </CardFooter>
       </Card>
     </div>
   )
 }
-
-    

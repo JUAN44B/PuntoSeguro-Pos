@@ -46,17 +46,17 @@ export default function CustomersPage() {
   const handleAddCustomer = () => {
     const newCustomer: Customer = {
       id: `CUST${String(customers.length + 1).padStart(3, '0')}`,
-      name: 'New Customer',
+      name: 'Nuevo Cliente',
       rfc: 'XAXX010101000',
-      email: 'new.customer@email.com',
+      email: 'nuevo.cliente@email.com',
       phone: '00-0000-0000',
-      address: 'New Address',
+      address: 'Nueva Dirección',
       type: 'Retail',
     };
     setCustomers(prev => [...prev, newCustomer]);
     toast({
-      title: "Customer Added",
-      description: "A new customer has been created. Please edit their details.",
+      title: "Cliente Agregado",
+      description: "Se ha creado un nuevo cliente. Por favor edita sus detalles.",
     });
   };
 
@@ -64,51 +64,51 @@ export default function CustomersPage() {
     setCustomers(prev => prev.filter(c => c.id !== customerId));
     toast({
       variant: "destructive",
-      title: "Customer Deleted",
-      description: "The customer has been removed.",
+      title: "Cliente Eliminado",
+      description: "El cliente ha sido eliminado.",
     });
   };
 
   return (
     <div>
         <div className="flex items-center mb-4">
-            <h1 className="text-2xl font-semibold">Customers</h1>
+            <h1 className="text-2xl font-semibold">Clientes</h1>
             <div className="ml-auto flex items-center gap-2">
                 <Button size="sm" variant="outline" className="h-7 gap-1">
                     <File className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Export
+                    Exportar
                     </span>
                 </Button>
                 <Button size="sm" className="h-7 gap-1" onClick={handleAddCustomer}>
                     <PlusCircle className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Add Customer
+                    Agregar Cliente
                     </span>
                 </Button>
             </div>
         </div>
         <Card>
         <CardHeader>
-          <CardTitle>Customer Overview</CardTitle>
+          <CardTitle>Resumen de Clientes</CardTitle>
           <CardDescription>
-            Manage your customers and view their purchase history.
+            Administra tus clientes y mira su historial de compras.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Tipo</TableHead>
                 <TableHead className="hidden md:table-cell">
                   Email
                 </TableHead>
                 <TableHead className="hidden md:table-cell">
-                  Phone
+                  Teléfono
                 </TableHead>
                 <TableHead>
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">Acciones</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -141,10 +141,10 @@ export default function CustomersPage() {
                           </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteCustomer(customer.id)}>Delete</DropdownMenuItem>
+                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                          <DropdownMenuItem>Ver Detalles</DropdownMenuItem>
+                          <DropdownMenuItem>Editar</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteCustomer(customer.id)}>Eliminar</DropdownMenuItem>
                       </DropdownMenuContent>
                       </DropdownMenu>
                   </TableCell>
@@ -155,13 +155,11 @@ export default function CustomersPage() {
         </CardContent>
         <CardFooter>
           <div className="text-xs text-muted-foreground">
-            Showing <strong>1-{customers.length}</strong> of <strong>{customers.length}</strong>{" "}
-            customers
+            Mostrando <strong>1-{customers.length}</strong> de <strong>{customers.length}</strong>{" "}
+            clientes
           </div>
         </CardFooter>
       </Card>
     </div>
   )
 }
-
-    

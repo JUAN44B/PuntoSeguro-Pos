@@ -11,7 +11,7 @@ export const products: Product[] = [
     salePrice: 130.00,
     tax: 16,
     discount: 10,
-    profitMargin: 51.46,
+    profitMargin: 36.84, // (130 - 95) / 95
     supplier: 'Proveedor A',
     imageUrl: 'https://picsum.photos/seed/LI053/400/300',
     imageHint: 'metal spring',
@@ -94,9 +94,9 @@ export const products: Product[] = [
 ];
 
 export const customers: Customer[] = [
-    { id: 'CUST001', name: 'Juan Perez', rfc: 'PEPJ800101', email: 'juan.perez@email.com', phone: '55-1234-5678', address: 'Calle Falsa 123, CDMX', type: 'Frequent' },
-    { id: 'CUST002', name: 'Maria Garcia', rfc: 'GAMM900202', email: 'maria.garcia@email.com', phone: '55-8765-4321', address: 'Av. Siempre Viva 742, GDL', type: 'Wholesale' },
-    { id: 'CUST003', name: 'Carlos Sanchez', rfc: 'SACC750303', email: 'carlos.sanchez@email.com', phone: '55-5555-5555', address: 'Privada del Roble 45, MTY', type: 'Retail' },
+    { id: 'CUST001', name: 'Juan Perez', rfc: 'PEPJ800101', email: 'juan.perez@email.com', phone: '55-1234-5678', address: 'Calle Falsa 123, CDMX', type: 'Frecuente' },
+    { id: 'CUST002', name: 'Maria Garcia', rfc: 'GAMM900202', email: 'maria.garcia@email.com', phone: '55-8765-4321', address: 'Av. Siempre Viva 742, GDL', type: 'Mayoreo' },
+    { id: 'CUST003', name: 'Carlos Sanchez', rfc: 'SACC750303', email: 'carlos.sanchez@email.com', phone: '55-5555-5555', address: 'Privada del Roble 45, MTY', type: 'Menudeo' },
 ];
 
 export const suppliers: Supplier[] = [
@@ -106,22 +106,22 @@ export const suppliers: Supplier[] = [
 ];
 
 export const recentSales: SalesOrder[] = [
-    { id: 'SALE001', date: '2024-07-23', customerName: 'Juan Perez', total: 450.50, status: 'Completed' },
-    { id: 'SALE002', date: '2024-07-23', customerName: 'Publico General', total: 120.00, status: 'Completed' },
-    { id: 'SALE003', date: '2024-07-22', customerName: 'Maria Garcia', total: 3500.00, status: 'Pending' },
-    { id: 'SALE004', date: '2024-07-22', customerName: 'Carlos Sanchez', total: 85.50, status: 'Completed' },
-    { id: 'SALE005', date: '2024-07-21', customerName: 'Publico General', total: 99.18, status: 'Cancelled' },
+    { id: 'SALE001', date: '2024-07-23', customerName: 'Juan Perez', total: 450.50, status: 'Completado' },
+    { id: 'SALE002', date: '2024-07-23', customerName: 'Publico General', total: 120.00, status: 'Completado' },
+    { id: 'SALE003', date: '2024-07-22', customerName: 'Maria Garcia', total: 3500.00, status: 'Pendiente' },
+    { id: 'SALE004', date: '2024-07-22', customerName: 'Carlos Sanchez', total: 85.50, status: 'Completado' },
+    { id: 'SALE005', date: '2024-07-21', customerName: 'Publico General', total: 99.18, status: 'Cancelado' },
 ];
 
 export const purchaseOrders: PurchaseOrder[] = [
-    { id: 'PO-001', supplierName: 'Proveedor A', date: '2024-07-20', total: 5500.00, status: 'Received' },
-    { id: 'PO-002', supplierName: 'Proveedor B', date: '2024-07-21', total: 12000.50, status: 'Pending' },
-    { id: 'PO-003', supplierName: 'Proveedor C', date: '2024-07-22', total: 350.00, status: 'Received' },
-    { id: 'PO-004', supplierName: 'Proveedor A', date: '2024-07-23', total: 890.00, status: 'Cancelled' },
+    { id: 'PO-001', supplierName: 'Proveedor A', date: '2024-07-20', total: 5500.00, status: 'Recibido' },
+    { id: 'PO-002', supplierName: 'Proveedor B', date: '2024-07-21', total: 12000.50, status: 'Pendiente' },
+    { id: 'PO-003', supplierName: 'Proveedor C', date: '2024-07-22', total: 350.00, status: 'Recibido' },
+    { id: 'PO-004', supplierName: 'Proveedor A', date: '2024-07-23', total: 890.00, status: 'Cancelado' },
 ];
 
 export const users: User[] = [
-    { id: 'USR001', name: 'Admin User', email: 'admin@example.com', role: 'Admin', status: 'Active' },
-    { id: 'USR002', name: 'Manager User', email: 'manager@example.com', role: 'Manager', status: 'Active' },
-    { id: 'USR003', name: 'Cashier User', email: 'cashier@example.com', role: 'Cashier', status: 'Invited' },
+    { id: 'USR001', name: 'Usuario Admin', email: 'admin@example.com', role: 'Admin', status: 'Activo' },
+    { id: 'USR002', name: 'Usuario Gerente', email: 'gerente@example.com', role: 'Gerente', status: 'Activo' },
+    { id: 'USR003', name: 'Usuario Cajero', email: 'cajero@example.com', role: 'Cajero', status: 'Invitado' },
 ];

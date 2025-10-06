@@ -11,17 +11,17 @@ export default function ReportsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold">Sales Reports</h1>
+        <h1 className="text-2xl font-semibold">Reportes de Ventas</h1>
         <p className="text-muted-foreground">
-            Generate and view detailed sales reports.
+            Genera y visualiza reportes de ventas detallados.
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>AI-Powered Report Generator</CardTitle>
+          <CardTitle>Generador de Reportes con IA</CardTitle>
           <CardDescription>
-            Select a date range to generate an intelligent sales report broken down by category.
+            Selecciona un rango de fechas para generar un reporte de ventas inteligente desglosado por categoría.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -71,7 +71,7 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
     if (printContent) {
       const printWindow = window.open('', '', 'height=600,width=800');
       if (printWindow) {
-        printWindow.document.write('<html><head><title>Print Receipt</title>');
+        printWindow.document.write('<html><head><title>Imprimir Recibo</title>');
         printWindow.document.write('<style>body { font-family: monospace; } table { width: 100%; border-collapse: collapse; } td, th { padding: 4px; } .text-center { text-align: center; } .font-bold { font-weight: bold; } .text-lg { font-size: 1.125rem; } .mb-4 { margin-bottom: 1rem; } .my-2 { margin-top: 0.5rem; margin-bottom: 0.5rem; } .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; } .border-t { border-top: 1px dashed black; } .border-b { border-bottom: 1px dashed black; } .flex { display: flex; } .justify-between { justify-content: space-between; } .space-y-1 > * + * { margin-top: 0.25rem; } .mt-2 { margin-top: 0.5rem; } .pt-2 { padding-top: 0.5rem; } .mt-4 { margin-top: 1rem; } .pl-4 { padding-left: 1rem; } .text-xs { font-size: 0.75rem; } .text-base { font-size: 1rem; }</style>');
         printWindow.document.write('</head><body>');
         printWindow.document.write(printContent.innerHTML);
@@ -99,9 +99,9 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
       </AlertDialogTrigger>
       <AlertDialogContent className="max-w-2xl">
         <AlertDialogHeader>
-          <AlertDialogTitle>{paymentComplete ? "Payment Successful" : "Complete Payment"}</AlertDialogTitle>
+          <AlertDialogTitle>{paymentComplete ? "Pago Exitoso" : "Completar Pago"}</AlertDialogTitle>
           <AlertDialogDescription>
-            {paymentComplete ? "Thank you for your purchase." : "Select payment method and enter amount received."}
+            {paymentComplete ? "Gracias por su compra." : "Seleccione el método de pago e ingrese el monto recibido."}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -120,7 +120,7 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
                     />
                 </div>
                 <div className="p-4 bg-gray-100 rounded-md">
-                     <p className="text-center">Sale completed. Ready for the next sale.</p>
+                     <p className="text-center">Venta completada. Listo para la siguiente venta.</p>
                 </div>
             </div>
         ) : (
@@ -134,28 +134,28 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
                         {paymentMethod === 'cash' && (
                             <>
                                 <div className="flex justify-between mt-4 text-lg">
-                                    <span>Amount Received</span>
+                                    <span>Monto Recibido</span>
                                     <span>${received.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between mt-2 font-semibold text-lg text-green-600">
-                                    <span>Change</span>
+                                    <span>Cambio</span>
                                     <span>${change.toFixed(2)}</span>
                                 </div>
                             </>
                         )}
                     </div>
                      <div className="space-y-2">
-                        <Label>Payment Method</Label>
+                        <Label>Método de Pago</Label>
                         <div className="grid grid-cols-2 gap-2">
-                            <Button variant={paymentMethod === 'cash' ? 'default' : 'outline'} onClick={() => setPaymentMethod('cash')}>Cash</Button>
-                            <Button variant={paymentMethod === 'card' ? 'default' : 'outline'} onClick={() => setPaymentMethod('card')}>Card</Button>
+                            <Button variant={paymentMethod === 'cash' ? 'default' : 'outline'} onClick={() => setPaymentMethod('cash')}>Efectivo</Button>
+                            <Button variant={paymentMethod === 'card' ? 'default' : 'outline'} onClick={() => setPaymentMethod('card')}>Tarjeta</Button>
                         </div>
                     </div>
                 </div>
                 <div className="space-y-4">
                     <Input 
                         type="text"
-                        placeholder="Enter amount received"
+                        placeholder="Ingresar monto recibido"
                         value={amountReceived}
                         onChange={(e) => setAmountReceived(e.target.value)}
                         className="text-right text-lg h-12"
@@ -180,17 +180,17 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
         <AlertDialogFooter>
           {paymentComplete ? (
             <>
-                <Button variant="outline" onClick={handlePrintReceipt}>Print Receipt</Button>
-                <Button onClick={handleNewSale}>New Sale</Button>
+                <Button variant="outline" onClick={handlePrintReceipt}>Imprimir Recibo</Button>
+                <Button onClick={handleNewSale}>Nueva Venta</Button>
             </>
           ) : (
             <>
-                <AlertDialogCancel onClick={resetState}>Cancel</AlertDialogCancel>
+                <AlertDialogCancel onClick={resetState}>Cancelar</AlertDialogCancel>
                 <Button 
                     onClick={handleConfirmPayment} 
                     disabled={paymentMethod === 'cash' && received < total}
                 >
-                    Confirm Payment
+                    Confirmar Pago
                 </Button>
             </>
           )}
@@ -199,5 +199,3 @@ export default function PaymentDialog({ total, subtotal, tax, cart, onPaymentSuc
     </AlertDialog>
   )
 }
-
-    

@@ -40,10 +40,10 @@ export default function AppSidebar() {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <Home className="h-5 w-5" />
-                <span className="sr-only">Dashboard</span>
+                <span className="sr-only">Panel</span>
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right">Dashboard</TooltipContent>
+            <TooltipContent side="right">Panel</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -52,10 +52,10 @@ export default function AppSidebar() {
                 className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <ShoppingCart className="h-5 w-5" />
-                <span className="sr-only">Point of Sale</span>
+                <span className="sr-only">Punto de Venta</span>
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right">Point of Sale</TooltipContent>
+            <TooltipContent side="right">Punto de Venta</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -64,10 +64,10 @@ export default function AppSidebar() {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <Package className="h-5 w-5" />
-                <span className="sr-only">Products</span>
+                <span className="sr-only">Productos</span>
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right">Products</TooltipContent>
+            <TooltipContent side="right">Productos</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -76,10 +76,10 @@ export default function AppSidebar() {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <Warehouse className="h-5 w-5" />
-                <span className="sr-only">Inventory</span>
+                <span className="sr-only">Inventario</span>
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right">Inventory</TooltipContent>
+            <TooltipContent side="right">Inventario</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -88,10 +88,10 @@ export default function AppSidebar() {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <Users className="h-5 w-5" />
-                <span className="sr-only">Customers</span>
+                <span className="sr-only">Clientes</span>
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right">Customers</TooltipContent>
+            <TooltipContent side="right">Clientes</TooltipContent>
           </Tooltip>
            <Tooltip>
             <TooltipTrigger asChild>
@@ -100,10 +100,10 @@ export default function AppSidebar() {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <Receipt className="h-5 w-5" />
-                <span className="sr-only">Purchases</span>
+                <span className="sr-only">Compras</span>
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right">Purchases</TooltipContent>
+            <TooltipContent side="right">Compras</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -112,10 +112,10 @@ export default function AppSidebar() {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <Truck className="h-5 w-5" />
-                <span className="sr-only">Suppliers</span>
+                <span className="sr-only">Proveedores</span>
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right">Suppliers</TooltipContent>
+            <TooltipContent side="right">Proveedores</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -124,10 +124,10 @@ export default function AppSidebar() {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <LineChart className="h-5 w-5" />
-                <span className="sr-only">Reports</span>
+                <span className="sr-only">Reportes</span>
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right">Reports</TooltipContent>
+            <TooltipContent side="right">Reportes</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </nav>
@@ -140,10 +140,10 @@ export default function AppSidebar() {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <Settings className="h-5 w-5" />
-                <span className="sr-only">Settings</span>
+                <span className="sr-only">Configuración</span>
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right">Settings</TooltipContent>
+            <TooltipContent side="right">Configuración</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </nav>

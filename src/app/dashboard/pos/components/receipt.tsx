@@ -47,7 +47,7 @@ const Receipt = React.forwardRef<HTMLDivElement, ReceiptProps>(
             <span>${subtotal.toFixed(2)}</span>
         </div>
         <div className="flex justify-between">
-            <span>Tax (16%):</span>
+            <span>Impuesto (16%):</span>
             <span>${tax.toFixed(2)}</span>
         </div>
         <div className="flex justify-between font-bold text-base">
@@ -57,11 +57,11 @@ const Receipt = React.forwardRef<HTMLDivElement, ReceiptProps>(
       </div>
        <div className="border-t border-dashed border-black pt-2 mt-2 space-y-1">
          <div className="flex justify-between">
-            <span>{paymentMethod === 'cash' ? 'Cash' : 'Card'}:</span>
+            <span>{paymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}:</span>
             <span>${amountReceived.toFixed(2)}</span>
         </div>
         <div className="flex justify-between">
-            <span>Change:</span>
+            <span>Cambio:</span>
             <span>${change.toFixed(2)}</span>
         </div>
       </div>

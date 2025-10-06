@@ -8,17 +8,17 @@ import {
   } from "@/components/ui/chart"
 
 const chartData = [
-  { month: "January", sales: 186 },
-  { month: "February", sales: 305 },
-  { month: "March", sales: 237 },
-  { month: "April", sales: 173 },
-  { month: "May", sales: 209 },
-  { month: "June", sales: 214 },
+  { month: "Enero", sales: 186 },
+  { month: "Febrero", sales: 305 },
+  { month: "Marzo", sales: 237 },
+  { month: "Abril", sales: 173 },
+  { month: "Mayo", sales: 209 },
+  { month: "Junio", sales: 214 },
 ]
 
 const chartConfig = {
   sales: {
-    label: "Sales",
+    label: "Ventas",
     color: "hsl(var(--primary))",
   },
 }

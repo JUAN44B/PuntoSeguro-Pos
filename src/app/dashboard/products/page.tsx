@@ -55,8 +55,8 @@ export default function ProductsPage() {
     const handleAddProduct = (newProduct: Product) => {
         setProducts(prev => [newProduct, ...prev]);
         toast({
-            title: "Product Added",
-            description: `"${newProduct.name}" has been added to your products.`,
+            title: "Producto Agregado",
+            description: `"${newProduct.name}" ha sido agregado a tus productos.`,
         });
     };
 
@@ -64,8 +64,8 @@ export default function ProductsPage() {
         setProducts(prev => prev.filter(p => p.id !== productId));
         toast({
             variant: "destructive",
-            title: "Product Deleted",
-            description: "The product has been removed.",
+            title: "Producto Eliminado",
+            description: "El producto ha sido eliminado.",
         });
     };
   
@@ -73,11 +73,11 @@ export default function ProductsPage() {
     <Tabs defaultValue="all">
       <div className="flex items-center">
         <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="draft">Draft</TabsTrigger>
+          <TabsTrigger value="all">Todos</TabsTrigger>
+          <TabsTrigger value="active">Activos</TabsTrigger>
+          <TabsTrigger value="draft">Borrador</TabsTrigger>
           <TabsTrigger value="archived" className="hidden sm:flex">
-            Archived
+            Archivados
           </TabsTrigger>
         </TabsList>
         <div className="ml-auto flex items-center gap-2">
@@ -86,33 +86,33 @@ export default function ProductsPage() {
               <Button variant="outline" size="sm" className="h-7 gap-1">
                 <ListFilter className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                  Filter
+                  Filtrar
                 </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+              <DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuCheckboxItem checked>
-                Active
+                Activo
               </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Draft</DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem>Borrador</DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem>
-                Archived
+                Archivado
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button size="sm" variant="outline" className="h-7 gap-1">
             <File className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Export
+              Exportar
             </span>
           </Button>
           <AddProductDialog onProductAdd={handleAddProduct}>
             <Button size="sm" className="h-7 gap-1">
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                Add Product
+                Agregar Producto
                 </span>
             </Button>
           </AddProductDialog>
@@ -121,9 +121,9 @@ export default function ProductsPage() {
       <TabsContent value="all">
         <Card>
           <CardHeader>
-            <CardTitle>Products</CardTitle>
+            <CardTitle>Productos</CardTitle>
             <CardDescription>
-              Manage your products and view their sales performance.
+              Administra tus productos y visualiza su rendimiento de ventas.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -131,18 +131,18 @@ export default function ProductsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="hidden w-[100px] sm:table-cell">
-                    <span className="sr-only">Image</span>
+                    <span className="sr-only">Imagen</span>
                   </TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Category</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Categoría</TableHead>
                   <TableHead className="hidden md:table-cell">
-                    Stock
+                    Existencia
                   </TableHead>
                   <TableHead className="hidden md:table-cell">
-                    Price
+                    Precio
                   </TableHead>
                   <TableHead>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">Acciones</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -170,7 +170,7 @@ export default function ProductsPage() {
                         {product.stock > 10 ? (
                             <span>{product.stock}</span>
                         ) : (
-                            <Badge variant="destructive">Low Stock ({product.stock})</Badge>
+                            <Badge variant="destructive">Bajo Stock ({product.stock})</Badge>
                         )}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
@@ -185,13 +185,13 @@ export default function ProductsPage() {
                             variant="ghost"
                             >
                             <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
+                            <span className="sr-only">Menú</span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteProduct(product.id)}>Delete</DropdownMenuItem>
+                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                            <DropdownMenuItem>Editar</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteProduct(product.id)}>Eliminar</DropdownMenuItem>
                         </DropdownMenuContent>
                         </DropdownMenu>
                     </TableCell>
@@ -202,8 +202,8 @@ export default function ProductsPage() {
           </CardContent>
           <CardFooter>
             <div className="text-xs text-muted-foreground">
-              Showing <strong>1-{products.length}</strong> of <strong>{products.length}</strong>{" "}
-              products
+              Mostrando <strong>1-{products.length}</strong> de <strong>{products.length}</strong>{" "}
+              productos
             </div>
           </CardFooter>
         </Card>
