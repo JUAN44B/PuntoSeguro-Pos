@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={cn('min-h-screen w-full bg-slate-50 font-sans antialiased')}>
+      <body className={cn('min-h-screen w-full bg-background font-sans antialiased')}>
         <FirebaseClientProvider>
           <div className="flex">
             <Sidebar />

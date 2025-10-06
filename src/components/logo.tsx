@@ -1,9 +1,11 @@
+'use client';
+
 import Link from 'next/link';
 
 export default function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2">
-      <span className="font-bold text-xl text-primary">PuntoSeguro</span>
+      <span className="font-bold text-xl text-primary">ALIRU</span>
     </Link>
   );
 }
