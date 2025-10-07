@@ -2,13 +2,14 @@
 
 import { useState, useMemo } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, increment } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, FileText, Undo } from 'lucide-react';
 import { ReceiptDialog } from '../pos/components/receipt-dialog';
 import type { CartItem } from '../pos/page';
+import { ReturnDialog } from './components/return-dialog';
 
 // Define the shape of a sale item and a sale
 export type SaleItem = {
@@ -29,6 +30,7 @@ export type Sale = {
     items: SaleItem[];
     total: number;
     paymentMethod: string;
+    returned?: boolean; // To track if the sale has been returned
 };
 
 
@@ -40,16 +42,54 @@ export default function SalesHistoryPage() {
     const firestore = useFirestore();
     // Query sales and order them by creation date, descending
     const salesQuery = query(collection(firestore, 'sales'), orderBy('createdAt', 'desc'));
-    const { data: sales, loading } = useCollection(salesQuery);
+    const { data: sales, loading, error } = useCollection(salesQuery);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+    const [isReturnOpen, setIsReturnOpen] = useState(false);
     const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
     const handleViewReceipt = (sale: Sale) => {
         setSelectedSale(sale);
         setIsReceiptOpen(true);
     }
+    
+    const handleReturnClick = (sale: Sale) => {
+        setSelectedSale(sale);
+        setIsReturnOpen(true);
+    }
+
+    const handleProcessReturn = async (returnedItems: { id: string; quantity: number }[]) => {
+        if (!selectedSale) return;
+
+        try {
+            // 1. Update stock for each returned item
+            for (const item of returnedItems) {
+                if (item.quantity > 0) {
+                    const productRef = doc(firestore, 'products', item.id);
+                    await updateDoc(productRef, {
+                        stock: increment(item.quantity)
+                    });
+                }
+            }
+            
+            // 2. Mark the sale as returned in Firestore
+            const saleRef = doc(firestore, 'sales', selectedSale.id);
+            await updateDoc(saleRef, {
+                returned: true
+            });
+
+            // Here you could also create a 'returns' document in a new collection for detailed tracking
+
+            console.log('Return processed successfully!');
+        } catch (error) {
+            console.error("Error processing return: ", error);
+        } finally {
+            setIsReturnOpen(false);
+            setSelectedSale(null);
+        }
+    };
+
 
     const filteredSales = useMemo(() => {
         if (!sales) return [];
@@ -90,6 +130,7 @@ export default function SalesHistoryPage() {
                     <CardContent>
                         <div className="space-y-4">
                             {loading && <p className="text-muted-foreground text-center">Cargando ventas...</p>}
+                            {!loading && error && <p className="text-destructive text-center">Error al cargar las ventas.</p>}
                             {!loading && filteredSales.length === 0 && (
                                 <p className="text-muted-foreground text-center py-10">No se encontraron ventas.</p>
                             )}
@@ -108,7 +149,10 @@ export default function SalesHistoryPage() {
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-2xl font-bold">${sale.total.toFixed(2)}</p>
-                                                <p className="text-sm text-muted-foreground">{getPaymentMethodName(sale.paymentMethod)}</p>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {sale.returned && <span className="text-xs font-semibold text-destructive">(Devolución)</span>}
+                                                    <p className="text-sm text-muted-foreground">{getPaymentMethodName(sale.paymentMethod)}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </CardHeader>
@@ -129,9 +173,9 @@ export default function SalesHistoryPage() {
                                                 <FileText className='h-4 w-4'/>
                                                 Ver Ticket
                                             </Button>
-                                            <Button variant="secondary" size="sm" className='gap-2'>
+                                            <Button variant="secondary" size="sm" className='gap-2' onClick={() => handleReturnClick(sale)} disabled={sale.returned}>
                                                 <Undo className='h-4 w-4'/>
-                                                Realizar Devolución
+                                                {sale.returned ? 'Devolución Procesada' : 'Realizar Devolución'}
                                             </Button>
                                         </div>
                                     </CardContent>
@@ -151,6 +195,14 @@ export default function SalesHistoryPage() {
                         paymentMethod: selectedSale.paymentMethod,
                     }}
                     saleIdFromProps={selectedSale.saleId}
+                />
+            )}
+             {selectedSale && (
+                <ReturnDialog
+                    isOpen={isReturnOpen}
+                    onOpenChange={setIsReturnOpen}
+                    sale={selectedSale}
+                    onProcessReturn={handleProcessReturn}
                 />
             )}
         </>

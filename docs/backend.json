@@ -76,7 +76,8 @@
                 "total": { "type": "number" },
                 "subtotal": { "type": "number" },
                 "iva": { "type": "number" },
-                "paymentMethod": { "type": "string" }
+                "paymentMethod": { "type": "string" },
+                "returned": { "type": "boolean", "description": "Indicates if the sale has been fully or partially returned." }
             },
             "required": ["saleId", "createdAt", "items", "total"]
         }
