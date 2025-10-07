@@ -214,15 +214,16 @@ export default function POSPage() {
       returned: false,
     };
     
-    // 1. Save the sale record
-    addDoc(collection(firestore, 'sales'), saleData)
-      .then(async () => {
+    try {
+        // 1. Save the sale record
+        await addDoc(collection(firestore, 'sales'), saleData);
+        
         // 2. Update stock for each product sold
         for (const item of cart) {
-          const productRef = doc(firestore, 'products', item.id);
-          await updateDoc(productRef, {
+            const productRef = doc(firestore, 'products', item.id);
+            await updateDoc(productRef, {
             stock: increment(-item.quantity)
-          });
+            });
         }
 
         // 3. If payment is cash, update the active cash session
@@ -238,8 +239,7 @@ export default function POSPage() {
         setIsPaymentOpen(false);
         setIsReceiptOpen(true);
         setCart([]); // Clear cart after successful payment
-      })
-      .catch(async (serverError) => {
+    } catch(serverError) {
         // This is where we emit the contextual error
         const permissionError = new FirestorePermissionError({
           path: `sales/${saleId}`,
@@ -251,7 +251,7 @@ export default function POSPage() {
 
         // Also, show a user-friendly error in the UI
         setPosError('Hubo un error al procesar la venta. Revisa los permisos.');
-      });
+    }
   };
   
   const filteredProducts = (products as ProductFromDB[] || []).filter(p => 
