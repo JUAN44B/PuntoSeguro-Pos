@@ -49,7 +49,10 @@ export function PaymentDialog({ isOpen, onOpenChange, totalAmount, onPaymentSucc
   }, [isOpen]);
 
   const handleConfirmPayment = () => {
-    onPaymentSuccess(activeTab);
+    let paymentMethodName = 'Efectivo';
+    if (activeTab === 'card') paymentMethodName = 'Tarjeta';
+    if (activeTab === 'transfer') paymentMethodName = 'Transferencia';
+    onPaymentSuccess(paymentMethodName);
   };
 
   return (

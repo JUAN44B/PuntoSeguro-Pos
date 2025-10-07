@@ -137,7 +137,7 @@ export default function POSPage() {
     }
   };
   
-  const filteredProducts = (products as ProductFromDB[]).filter(p => 
+  const filteredProducts = (products as ProductFromDB[] || []).filter(p => 
     p.status === 'Activo' && (
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.code && p.code.toLowerCase().includes(searchTerm.toLowerCase()))

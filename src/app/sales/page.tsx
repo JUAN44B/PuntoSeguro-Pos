@@ -33,12 +33,7 @@ export type Sale = {
 
 
 const getPaymentMethodName = (method: string) => {
-    switch(method) {
-      case 'cash': return 'Efectivo';
-      case 'card': return 'Tarjeta';
-      case 'transfer': return 'Transferencia';
-      default: return 'Desconocido';
-    }
+    return method;
 }
 
 export default function SalesHistoryPage() {

@@ -116,12 +116,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
   };
   
   const getPaymentMethodName = (method: string) => {
-    switch(method) {
-      case 'cash': return 'Efectivo';
-      case 'card': return 'Tarjeta';
-      case 'transfer': return 'Transferencia';
-      default: return 'Desconocido';
-    }
+    return method;
   }
 
   const { cart, total } = saleData;
