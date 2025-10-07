@@ -21,7 +21,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, ArrowUp, ArrowDown, Package, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
+import { Download, ArrowUp, ArrowDown, Package, TrendingUp, TrendingDown, Loader2, Trophy } from 'lucide-react';
 import type { Sale } from '../sales/page';
 import type { Product } from '../products/components/product-dialog';
 
@@ -100,6 +100,31 @@ export default function ReportsPage() {
     const worstDay = validDays.length > 0 ? validDays.reduce((min, day) => day.value < min.value ? day : min) : null;
 
     return { daily: dailySales, total, bestDay, worstDay };
+  }, [sales]);
+
+  const employeeOfTheMonth = useMemo(() => {
+    if (!sales) return null;
+    
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const salesByEmployee: { [key: string]: { name: string, total: number } } = {};
+
+    (sales as Sale[]).forEach(sale => {
+        const saleDate = new Date(sale.createdAt.seconds * 1000);
+        if (sale.userName && saleDate >= monthStart) {
+            if (salesByEmployee[sale.userId]) {
+                salesByEmployee[sale.userId].total += sale.total;
+            } else {
+                salesByEmployee[sale.userId] = { name: sale.userName, total: sale.total };
+            }
+        }
+    });
+
+    const employees = Object.values(salesByEmployee);
+    if(employees.length === 0) return null;
+
+    return employees.reduce((best, current) => current.total > best.total ? current : best);
+
   }, [sales]);
 
   const productSalesData = useMemo(() => {
@@ -208,6 +233,20 @@ export default function ReportsPage() {
           </Card>
 
           <div className="col-span-1 lg:col-span-2 space-y-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Empleado del Mes</CardTitle>
+                <Trophy className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {employeeOfTheMonth ? (
+                  <>
+                    <div className="text-2xl font-bold text-amber-500">{employeeOfTheMonth.name}</div>
+                    <p className="text-xs text-muted-foreground">Con {formatCurrency(employeeOfTheMonth.total)} en ventas.</p>
+                  </>
+                ) : <p className="text-sm text-muted-foreground">Aún no hay datos de ventas este mes.</p>}
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader className='pb-2'>
                 <CardTitle className="text-sm font-medium">Mejor Día de Ventas (Mes)</CardTitle>

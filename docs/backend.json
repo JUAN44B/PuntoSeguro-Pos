@@ -77,9 +77,11 @@
                 "subtotal": { "type": "number" },
                 "iva": { "type": "number" },
                 "paymentMethod": { "type": "string" },
-                "returned": { "type": "boolean", "description": "Indicates if the sale has been fully or partially returned." }
+                "returned": { "type": "boolean", "description": "Indicates if the sale has been fully or partially returned." },
+                "userId": { "type": "string" },
+                "userName": { "type": "string" }
             },
-            "required": ["saleId", "createdAt", "items", "total"]
+            "required": ["saleId", "createdAt", "items", "total", "userId", "userName"]
         },
         "pendingSale": {
             "title": "Pending Sale",

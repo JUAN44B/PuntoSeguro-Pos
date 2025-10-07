@@ -23,7 +23,7 @@ import Image from 'next/image';
 import { PaymentDialog } from './components/payment-dialog';
 import { ReceiptDialog } from './components/receipt-dialog';
 import { DiscountDialog } from './components/discount-dialog';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useUser } from '@/firebase';
 import { collection, addDoc, serverTimestamp, doc, updateDoc, increment, query, orderBy, limit, deleteDoc } from 'firebase/firestore';
 import type { Product } from '../products/components/product-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -50,6 +50,7 @@ type ProductFromDB = Product & { id: string };
 export default function POSPage() {
   const firestore = useFirestore();
   const { data: products, loading } = useCollection(collection(firestore, 'products'));
+  const { user } = useUser();
 
   // Get active cash session
   const sessionsQuery = query(
@@ -70,7 +71,7 @@ export default function POSPage() {
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [isDiscountOpen, setIsDiscountOpen] = useState(false);
   const [selectedCartItem, setSelectedCartItem] = useState<CartItem | null>(null);
-  const [lastSale, setLastSale] = useState<{ cart: CartItem[], total: number, paymentMethod: string } | null>(null);
+  const [lastSale, setLastSale] = useState<{ cart: CartItem[], total: number, paymentMethod: string, userName: string } | null>(null);
   const [posError, setPosError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -189,6 +190,11 @@ export default function POSPage() {
 
 
   const handlePaymentSuccess = async (paymentMethod: string) => {
+    if (!user) {
+        setPosError('Error: No se ha podido identificar al usuario. Por favor, recarga la página.');
+        return;
+    }
+
     const saleId = `ALIRU-${Date.now().toString().slice(-6)}`;
     const saleData = {
       saleId,
@@ -201,6 +207,8 @@ export default function POSPage() {
       subtotal,
       iva,
       paymentMethod,
+      userId: user.uid,
+      userName: user.displayName,
     };
     
     try {
@@ -224,7 +232,7 @@ export default function POSPage() {
       }
       
       // 4. Prepare for receipt
-      setLastSale({ cart, total, paymentMethod });
+      setLastSale({ cart, total, paymentMethod, userName: user.displayName || 'Vendedor' });
       setIsPaymentOpen(false);
       setIsReceiptOpen(true);
       setCart([]); // Clear cart after successful payment

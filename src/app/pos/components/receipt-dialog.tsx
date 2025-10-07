@@ -24,6 +24,7 @@ interface ReceiptDialogProps {
     cart: CartItem[];
     total: number;
     paymentMethod: string;
+    userName: string;
   };
   saleIdFromProps?: string;
 }
@@ -156,7 +157,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
     return method;
   }
 
-  const { cart, total } = saleData;
+  const { cart, total, userName } = saleData;
   const subtotal = total / 1.16;
   const iva = total - subtotal;
 
@@ -241,7 +242,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
                   </div>
 
                   <footer className="text-center text-xs space-y-2">
-                      <p>Fue atendido por: Vendedor 1</p>
+                      <p>Fue atendido por: {userName}</p>
                       <p className='font-semibold'>{companyProfile?.receiptFooterMessage || '¡Gracias por su compra!'}</p>
                       <p>Este ticket es imprescindible para cualquier cambio o devolución.</p>
                   </footer>

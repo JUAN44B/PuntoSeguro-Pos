@@ -31,6 +31,8 @@ export type Sale = {
     total: number;
     paymentMethod: string;
     returned?: boolean; // To track if the sale has been returned
+    userId: string;
+    userName: string;
 };
 
 
@@ -193,6 +195,7 @@ export default function SalesHistoryPage() {
                         cart: selectedSale.items.map(item => ({...item, image: '', discount: item.discount || 0})) as CartItem[],
                         total: selectedSale.total,
                         paymentMethod: selectedSale.paymentMethod,
+                        userName: selectedSale.userName,
                     }}
                     saleIdFromProps={selectedSale.saleId}
                 />
