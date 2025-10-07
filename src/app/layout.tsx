@@ -17,8 +17,14 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !user && pathname !== '/auth') {
-      router.replace('/auth');
+    // This effect now correctly handles the local auth mode
+    if (!loading) {
+      if (!user && pathname !== '/auth') {
+        router.replace('/auth');
+      }
+      if (user && pathname === '/auth') {
+        router.replace('/');
+      }
     }
   }, [user, loading, router, pathname]);
 
@@ -33,16 +39,16 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // While redirecting, don't render children
   if (!user && pathname !== '/auth') {
-    return null; // Don't render anything while redirecting
-  }
-  
-  // If user is logged in and tries to go to /auth, redirect to home
-  if (user && pathname === '/auth') {
-    router.replace('/');
     return null;
   }
 
+  if (user && pathname === '/auth') {
+    return null;
+  }
+  
+  // Render auth page without sidebar, or main content with sidebar
   if (pathname === '/auth') {
     return <>{children}</>;
   }
