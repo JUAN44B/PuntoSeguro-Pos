@@ -14,11 +14,9 @@ import { UserDialog, UserProfileData } from './components/user-dialog';
 // NOTE: This implementation uses the client-side SDK to create users.
 // For enhanced security in a production environment, this operation should ideally
 // be handled by a backend service (e.g., a Firebase Cloud Function) using the Admin SDK.
-// This client-side approach is functional but means the admin creating the user
-// might be temporarily authenticated as the new user before being signed out.
 
 export type UserProfile = {
-    id: string; // This is the Firestore document ID
+    id: string; // This is the Firestore document ID which is the same as UID
     uid: string; // This is the Firebase Auth UID
     displayName: string;
     email: string;
@@ -87,9 +85,8 @@ export default function SettingsPage() {
                 });
 
                 // Note: createUserWithEmailAndPassword also signs in the new user.
-                // In a real admin panel, you'd likely want to sign them out immediately
+                // In a real admin panel, you would likely want to sign them out immediately
                 // and sign the admin back in, but that requires more complex state management.
-                // For now, we'll just close the dialog.
             }
             setIsDialogOpen(false);
             setEditingUser(null);
