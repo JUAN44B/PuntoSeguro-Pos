@@ -2,6 +2,7 @@
 
 import { createContext, useContext, ReactNode } from 'react';
 import { initializeFirebase } from './index';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 type FirebaseContextValue = ReturnType<typeof initializeFirebase>;
 
@@ -12,7 +13,9 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
   return (
     <FirebaseContext.Provider value={value}>
-      {children}
+      <FirebaseErrorListener>
+        {children}
+      </FirebaseErrorListener>
     </FirebaseContext.Provider>
   );
 }

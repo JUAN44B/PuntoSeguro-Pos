@@ -28,6 +28,8 @@ import { collection, addDoc, serverTimestamp, doc, updateDoc, increment, query, 
 import type { Product } from '../products/components/product-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CashSession } from '../cash-management/page';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 
 export type CartItem = {
@@ -209,37 +211,47 @@ export default function POSPage() {
       paymentMethod,
       userId: user.uid,
       userName: user.displayName,
+      returned: false,
     };
     
-    try {
-      // 1. Save the sale record
-      await addDoc(collection(firestore, 'sales'), saleData);
-      
-      // 2. Update stock for each product sold
-      for (const item of cart) {
-        const productRef = doc(firestore, 'products', item.id);
-        await updateDoc(productRef, {
-          stock: increment(-item.quantity)
-        });
-      }
-
-      // 3. If payment is cash, update the active cash session
-      if (paymentMethod === 'Efectivo' && activeSession) {
-          const sessionRef = doc(firestore, 'cashSessions', activeSession.id);
-          await updateDoc(sessionRef, {
-              cashSales: increment(total)
+    // 1. Save the sale record
+    addDoc(collection(firestore, 'sales'), saleData)
+      .then(async () => {
+        // 2. Update stock for each product sold
+        for (const item of cart) {
+          const productRef = doc(firestore, 'products', item.id);
+          await updateDoc(productRef, {
+            stock: increment(-item.quantity)
           });
-      }
-      
-      // 4. Prepare for receipt
-      setLastSale({ cart, total, paymentMethod, userName: user.displayName || 'Vendedor' });
-      setIsPaymentOpen(false);
-      setIsReceiptOpen(true);
-      setCart([]); // Clear cart after successful payment
-    } catch (error) {
-      console.error("Error processing sale: ", error);
-      setPosError('Hubo un error al procesar la venta. Inténtalo de nuevo.');
-    }
+        }
+
+        // 3. If payment is cash, update the active cash session
+        if (paymentMethod === 'Efectivo' && activeSession) {
+            const sessionRef = doc(firestore, 'cashSessions', activeSession.id);
+            await updateDoc(sessionRef, {
+                cashSales: increment(total)
+            });
+        }
+        
+        // 4. Prepare for receipt
+        setLastSale({ cart, total, paymentMethod, userName: user.displayName || 'Vendedor' });
+        setIsPaymentOpen(false);
+        setIsReceiptOpen(true);
+        setCart([]); // Clear cart after successful payment
+      })
+      .catch(async (serverError) => {
+        // This is where we emit the contextual error
+        const permissionError = new FirestorePermissionError({
+          path: `sales/${saleId}`,
+          operation: 'create',
+          requestResourceData: saleData,
+        });
+
+        errorEmitter.emit('permission-error', permissionError);
+
+        // Also, show a user-friendly error in the UI
+        setPosError('Hubo un error al procesar la venta. Revisa los permisos.');
+      });
   };
   
   const filteredProducts = (products as ProductFromDB[] || []).filter(p => 
