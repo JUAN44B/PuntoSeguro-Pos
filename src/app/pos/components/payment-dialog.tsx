@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CreditCard, DollarSign, MonitorSmartphone, Banknote } from 'lucide-react';
+import { CreditCard, DollarSign, Banknote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PaymentDialogProps {
@@ -35,10 +35,10 @@ export function PaymentDialog({ isOpen, onOpenChange, totalAmount, onPaymentSucc
   const [selectedTerminal, setSelectedTerminal] = useState<string>(terminals[0].id);
 
   const change = Number(amountReceived) - totalAmount;
+
   const isCashPaymentValid = activeTab === 'cash' && change >= 0;
   const isCardPaymentValid = activeTab === 'card';
   const isTransferPaymentValid = activeTab === 'transfer';
-
 
   useEffect(() => {
     if (isOpen) {
@@ -81,7 +81,7 @@ export function PaymentDialog({ isOpen, onOpenChange, totalAmount, onPaymentSucc
                         placeholder="$0.00" 
                         value={amountReceived}
                         onChange={(e) => setAmountReceived(e.target.value)}
-                        className="text-lg text-center font-bold"
+                        className="text-lg text-center font-bold h-12"
                     />
                 </div>
                 {Number(amountReceived) > 0 && change >= 0 && (
@@ -93,23 +93,25 @@ export function PaymentDialog({ isOpen, onOpenChange, totalAmount, onPaymentSucc
             </TabsContent>
             <TabsContent value="card" className="mt-4">
                 <RadioGroup defaultValue={selectedTerminal} onValueChange={setSelectedTerminal}>
-                    <p className="mb-2 text-sm font-medium text-muted-foreground">Seleccionar Terminal</p>
+                    <p className="mb-2 text-sm font-medium text-muted-foreground">Seleccionar Terminal Externa</p>
                     <div className="space-y-2">
                         {terminals.map((terminal) => (
-                             <Label key={terminal.id} htmlFor={terminal.id} className={cn("flex items-center gap-4 border p-4 rounded-lg cursor-pointer hover:bg-accent", { "border-primary bg-accent": selectedTerminal === terminal.id })}>
+                             <Label key={terminal.id} htmlFor={terminal.id} className={cn("flex items-center gap-4 border p-4 rounded-lg cursor-pointer hover:bg-accent", { "border-primary bg-accent/50": selectedTerminal === terminal.id })}>
                                 <RadioGroupItem value={terminal.id} id={terminal.id} />
-                                <MonitorSmartphone className="h-6 w-6 text-muted-foreground"/>
                                 <span className='font-semibold'>{terminal.name}</span>
                             </Label>
                         ))}
                     </div>
                 </RadioGroup>
+                 <p className="text-xs text-muted-foreground mt-4 text-center">
+                    Realiza el cobro en la terminal física y luego confirma el pago.
+                </p>
             </TabsContent>
             <TabsContent value="transfer" className="mt-4 text-center">
-                <p className='text-sm text-muted-foreground'>Confirme que la transferencia ha sido recibida antes de finalizar la venta.</p>
+                <p className='text-sm text-muted-foreground'>Confirme que la transferencia ha sido recibida en su cuenta antes de finalizar la venta.</p>
                 <div className='mt-4 p-4 bg-muted/40 rounded-lg'>
                     <p className='font-bold text-lg'>CLABE: 1234 5678 9012 3456 78</p>
-                    <p>Banco: Mi Banco SA de CV</p>
+                    <p className='text-sm'>Banco: Mi Banco SA de CV</p>
                 </div>
             </TabsContent>
         </Tabs>
