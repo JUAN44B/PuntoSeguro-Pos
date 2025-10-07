@@ -1,24 +1,150 @@
+/**
+ * @fileoverview Firestore Security Rules for Prototyping.
+ *
+ * Core Philosophy:
+ * This ruleset prioritizes security by enforcing strict user-based authorization.
+ * It is configured for a prototyping environment that allows for flexible data shapes for rapid iteration.
+ *
+ * Data Structure:
+ * - `/products/{productId}`: Stores product information. Publicly readable, only the product creator can modify.
+ * - `/users/{userId}`: Stores user profile data. Only the user themselves can read or write their own profile.
+ * - `/categories/{categoryId}`: Stores product categories. Publicly readable, only the category creator can modify.
+ * - `/clients/{clientId}`: Stores client data. Publicly readable, only the client creator can modify.
+ * - `/sales/{saleId}`: Stores completed sales data. Publicly readable, only the sale creator can modify.
+ * - `/cashSessions/{sessionId}`: Stores cash register session information. Publicly readable, only the session creator can modify.
+ *
+ * Key Security Decisions:
+ * - No user listing is allowed.
+ * - Public read access is granted to several collections.
+ * - The rules do NOT validate data types or enforce required fields, except for ownership and relational integrity.
+ *
+ * Denormalization for Authorization:
+ * The rules assume an ownership field (e.g., `ownerId`) exists on documents in top-level collections (`products`, `categories`, `clients`, `sales`, `cashSessions`).
+ * The `create` rule validates that this ownership field matches the user's UID.
+ * The `update` and `delete` rules validate ownership against the existing document's ownership field.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Regla de seguridad para la colección de usuarios
-    match /users/{userId} {
-      // Un usuario solo puede leer y actualizar su propio documento.
-      // Nadie más (excepto con reglas de administrador más avanzadas) puede ver su información.
-      allow read, update: if request.auth != null && request.auth.uid == userId;
-      
-      // La creación de documentos de usuario se gestiona desde el panel de configuración (que debería tener lógica de administrador)
-      // o a través de funciones de backend. Permitimos la creación si el usuario está autenticado.
-      allow create: if request.auth != null;
+
+    /**
+     * @description Manages product data.
+     * @path /products/{productId}
+     * @allow (get, list): Any user can read product data.
+     * @allow (create): Only an authenticated user can create a product if they set themselves as the owner.
+     * @allow (update, delete): Only the owner of the product can modify or delete it, and only if the document exists.
+     * @deny (create): If the user tries to set an incorrect owner ID.
+     * @deny (update, delete): If the document does not exist.
+     * @deny (update, delete): If a non-owner attempts to modify or delete a product.
+     * @principle Allows public read access, but enforces ownership for write operations.
+     */
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isExistingOwner(resource.data.ownerId);
+      allow read: if true;
     }
 
-    // Reglas para las demás colecciones de la aplicación
-    // Se permite leer y escribir en productos, categorías, clientes, ventas e inventario
-    // si el usuario ha iniciado sesión. Esto es un buen punto de partida.
-    // En una aplicación más compleja, se podrían definir reglas más granulares por rol.
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+    /**
+     * @description Manages user profile data.
+     * @path /users/{userId}
+     * @allow (get, list): Only the user themselves can read their profile.
+     * @allow (create): Only the user themselves can create their profile (self-registration).
+     * @allow (update, delete): Only the user themselves can modify or delete their profile, and only if the document exists.
+     * @deny (get, list): If a non-owner attempts to read user data.
+     * @deny (create): If a different userId other than the authenticated user is used.
+     * @deny (update, delete): If the document does not exist.
+     * @deny (update, delete): If a non-owner attempts to modify or delete user data.
+     * @principle Enforces strict user-ownership for all data access.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId) && request.resource.data.uid == resource.data.uid;
+      allow delete: if isExistingOwner(userId);
     }
+
+    /**
+     * @description Manages product categories.
+     * @path /categories/{categoryId}
+     * @allow (get, list): Any user can read category data.
+     * @allow (create): Only an authenticated user can create a category if they set themselves as the owner.
+     * @allow (update, delete): Only the owner of the category can modify or delete it, and only if the document exists.
+     * @deny (create): If the user tries to set an incorrect owner ID.
+     * @deny (update, delete): If the document does not exist.
+     * @deny (update, delete): If a non-owner attempts to modify or delete a category.
+     * @principle Allows public read access, but enforces ownership for write operations.
+     */
+    match /categories/{categoryId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isExistingOwner(resource.data.ownerId);
+    }
+
+    /**
+     * @description Manages client data.
+     * @path /clients/{clientId}
+     * @allow (get, list): Any user can read client data.
+     * @allow (create): Only an authenticated user can create a client if they set themselves as the owner.
+     * @allow (update, delete): Only the owner of the client can modify or delete it, and only if the document exists.
+     * @deny (create): If the user tries to set an incorrect owner ID.
+     * @deny (update, delete): If the document does not exist.
+     * @deny (update, delete): If a non-owner attempts to modify or delete a client.
+     * @principle Allows public read access, but enforces ownership for write operations.
+     */
+    match /clients/{clientId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isExistingOwner(resource.data.ownerId);
+    }
+
+    /**
+     * @description Manages sales data.
+     * @path /sales/{saleId}
+     * @allow (get, list): Any user can read sales data.
+     * @allow (create): Only an authenticated user can create a sale if they set themselves as the owner.
+     * @allow (update, delete): Only the owner of the sale can modify or delete it, and only if the document exists.
+     * @deny (create): If the user tries to set an incorrect owner ID.
+     * @deny (update, delete): If the document does not exist.
+     * @deny (update, delete): If a non-owner attempts to modify or delete a sale.
+     * @principle Allows public read access, but enforces ownership for write operations.
+     */
+    match /sales/{saleId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isExistingOwner(resource.data.ownerId);
+    }
+
+    /**
+     * @description Manages cash register session data.
+     * @path /cashSessions/{sessionId}
+     * @allow (get, list): Any user can read cash register session data.
+     * @allow (create): Only an authenticated user can create a cash register session if they set themselves as the owner.
+     * @allow (update, delete): Only the owner of the cash register session can modify or delete it, and only if the document exists.
+     * @deny (create): If the user tries to set an incorrect owner ID.
+     * @deny (update, delete): If the document does not exist.
+     * @deny (update, delete): If a non-owner attempts to modify or delete a cash register session.
+     * @principle Allows public read access, but enforces ownership for write operations.
+     */
+    match /cashSessions/{sessionId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isExistingOwner(resource.data.ownerId);
+    }
+
+  }
+
+  // Helper Functions
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+  function isExistingOwner(ownerId) {
+    return isSignedIn() && request.auth.uid == ownerId && resource != null;
   }
 }
