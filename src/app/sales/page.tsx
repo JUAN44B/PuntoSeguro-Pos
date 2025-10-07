@@ -2,11 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, orderBy, doc, updateDoc, increment } from 'firebase/firestore';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { collection, query, orderBy, doc, updateDoc, increment, limit, startAfter, endBefore, limitToLast } from 'firebase/firestore';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, FileText, Undo } from 'lucide-react';
+import { Search, FileText, Undo, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ReceiptDialog } from '../pos/components/receipt-dialog';
 import type { CartItem } from '../pos/page';
 import { ReturnDialog } from './components/return-dialog';
@@ -35,6 +35,7 @@ export type Sale = {
     userName: string;
 };
 
+const ITEMS_PER_PAGE = 10;
 
 const getPaymentMethodName = (method: string) => {
     return method;
@@ -42,9 +43,32 @@ const getPaymentMethodName = (method: string) => {
 
 export default function SalesHistoryPage() {
     const firestore = useFirestore();
-    // Query sales and order them by creation date, descending
-    const salesQuery = query(collection(firestore, 'sales'), orderBy('createdAt', 'desc'));
-    const { data: sales, loading, error } = useCollection(salesQuery);
+    
+    const [page, setPage] = useState(1);
+    const [paginationCursors, setPaginationCursors] = useState<any[]>([null]);
+    const [direction, setDirection] = useState<'next' | 'prev'>('next');
+
+    // Base query
+    const salesCollection = collection(firestore, 'sales');
+    const baseQuery = query(salesCollection, orderBy('createdAt', 'desc'));
+
+    // Dynamic query for pagination
+    let salesQuery = query(baseQuery, limit(ITEMS_PER_PAGE));
+    if (page > 1) {
+        const cursor = paginationCursors[page - 1];
+        if (direction === 'next') {
+            salesQuery = query(baseQuery, startAfter(cursor), limit(ITEMS_PER_PAGE));
+        } else {
+             // For 'prev', Firestore doesn't have a simple previous(). We must reverse order, get last items, and reverse array.
+             // This is complex. A simpler approach for 'prev' is to refetch from the beginning up to that point,
+             // but let's stick to startAfter for simplicity now and reset to page 1 as a strategy.
+             // For a true 'prev', we need to manage cursors more complexly.
+             // Let's just use startAfter for next page logic.
+             salesQuery = query(baseQuery, startAfter(cursor), limit(ITEMS_PER_PAGE));
+        }
+    }
+    
+    const { data: sales, loading, error, snapshot } = useCollection(salesQuery);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [isReceiptOpen, setIsReceiptOpen] = useState(false);
@@ -60,6 +84,21 @@ export default function SalesHistoryPage() {
         setSelectedSale(sale);
         setIsReturnOpen(true);
     }
+
+     const handleNextPage = () => {
+        if (!snapshot || snapshot.docs.length < ITEMS_PER_PAGE) return;
+        const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+        setPaginationCursors(prev => [...prev, lastDoc]);
+        setDirection('next');
+        setPage(prev => prev + 1);
+    };
+
+    const handlePrevPage = () => {
+        if (page <= 1) return;
+        setDirection('prev');
+        setPage(prev => prev - 1);
+        setPaginationCursors(prev => prev.slice(0, -1));
+    };
 
     const handleProcessReturn = async (returnedItems: { id: string; quantity: number }[]) => {
         if (!selectedSale) return;
@@ -185,6 +224,33 @@ export default function SalesHistoryPage() {
                             ))}
                         </div>
                     </CardContent>
+                    <CardFooter>
+                         <div className="flex items-center justify-between w-full">
+                            <span className="text-sm text-muted-foreground">
+                                Página {page}
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handlePrevPage}
+                                    disabled={page <= 1}
+                                >
+                                    <ChevronLeft className="h-4 w-4 mr-1" />
+                                    Anterior
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleNextPage}
+                                    disabled={loading || (snapshot && snapshot.docs.length < ITEMS_PER_PAGE)}
+                                >
+                                    Siguiente
+                                    <ChevronRight className="h-4 w-4 ml-1" />
+                                </Button>
+                            </div>
+                        </div>
+                    </CardFooter>
                 </Card>
             </div>
             {selectedSale && (
