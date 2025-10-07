@@ -20,10 +20,11 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, ArrowUp, ArrowDown, Package, TrendingUp, TrendingDown, Loader2, Trophy } from 'lucide-react';
+import { Download, ArrowUp, ArrowDown, Package, TrendingUp, TrendingDown, Loader2, Trophy, CalendarDays } from 'lucide-react';
 import type { Sale } from '../sales/page';
 import type { Product } from '../products/components/product-dialog';
 import { getMockData } from '@/lib/mock-data';
+import Logo from '@/components/logo';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ffc658'];
 
@@ -52,16 +53,19 @@ export default function ReportsPage() {
     if (!input) return;
 
     setIsExporting(true);
+    // Temporarily make it visible for capture
+    input.style.display = 'block';
+    
     try {
         const canvas = await html2canvas(input, { 
             scale: 2,
             useCORS: true,
+            backgroundColor: null, // Use transparent background
         });
         const imgData = canvas.toDataURL('image/png');
         
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
         const imgWidth = canvas.width;
         const imgHeight = canvas.height;
         const ratio = imgWidth / imgHeight;
@@ -70,11 +74,13 @@ export default function ReportsPage() {
         const height = width / ratio;
         
         pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-        pdf.save('reporte-rendimiento.pdf');
+        pdf.save(`reporte-aliru-${new Date().toLocaleDateString('es-MX')}.pdf`);
     } catch(error) {
         console.error("Error al exportar a PDF:", error);
     } finally {
         setIsExporting(false);
+        // Hide it again
+        input.style.display = 'none';
     }
   };
 
@@ -199,156 +205,266 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex items-center">
-        <h1 className="font-semibold text-4xl">Reportes de Rendimiento</h1>
-        <div className="ml-auto flex items-center gap-2">
-          <Button onClick={handleExportToPdf} disabled={isExporting}>
-            {isExporting ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-                <Download className="h-4 w-4 mr-2" />
-            )}
-            {isExporting ? 'Exportando...' : 'Exportar a PDF'}
-          </Button>
-        </div>
-      </div>
-      
-      <div ref={reportsRef} className='bg-background p-4'>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-1 lg:col-span-5">
-            <CardHeader>
-              <CardTitle>Ventas del Mes en Curso</CardTitle>
-              <CardDescription>Resumen diario de los ingresos del mes. Total del mes: <span className='font-bold text-primary'>{formatCurrency(monthlySalesData.total)}</span></CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlySalesData.daily}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Día del Mes', position: 'insideBottom', offset: -5 }}/>
-                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`}/>
-                    <Tooltip
-                      contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }}
-                      formatter={(value) => [formatCurrency(value as number), "Ventas"]}
-                    />
-                    <Bar dataKey="value" fill="hsl(var(--primary))" name="Ventas" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="col-span-1 lg:col-span-2 space-y-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Empleado del Mes</CardTitle>
-                <Trophy className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {employeeOfTheMonth ? (
-                  <>
-                    <div className="text-2xl font-bold text-amber-500">{employeeOfTheMonth.name}</div>
-                    <p className="text-xs text-muted-foreground">Con {formatCurrency(employeeOfTheMonth.total)} en ventas.</p>
-                  </>
-                ) : <p className="text-sm text-muted-foreground">Aún no hay datos de ventas este mes.</p>}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className='pb-2'>
-                <CardTitle className="text-sm font-medium">Mejor Día de Ventas (Mes)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {monthlySalesData.bestDay ? (
-                  <>
-                    <div className="text-2xl font-bold text-green-500">{formatCurrency(monthlySalesData.bestDay.value)}</div>
-                    <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.bestDay.date} del mes.</p>
-                  </>
-                ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className='pb-2'>
-                <CardTitle className="text-sm font-medium">Peor Día de Ventas (Mes)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {monthlySalesData.worstDay ? (
-                  <>
-                    <div className="text-2xl font-bold text-destructive">{formatCurrency(monthlySalesData.worstDay.value)}</div>
-                    <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.worstDay.date} del mes.</p>
-                  </>
-                ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
-              </CardContent>
-            </Card>
+    <>
+      <div className="flex flex-col gap-8">
+        <div className="flex items-center">
+          <h1 className="font-semibold text-4xl">Reportes de Rendimiento</h1>
+          <div className="ml-auto flex items-center gap-2">
+            <Button onClick={handleExportToPdf} disabled={isExporting}>
+              {isExporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                  <Download className="h-4 w-4 mr-2" />
+              )}
+              {isExporting ? 'Exportando...' : 'Exportar a PDF'}
+            </Button>
           </div>
         </div>
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
-          <Card>
+        {/* Visible Content */}
+        <div className='bg-background p-4 rounded-lg border'>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Card className="col-span-1 lg:col-span-5">
               <CardHeader>
-                  <CardTitle className='flex items-center gap-2'><TrendingUp className='h-5 w-5'/> Top 5 Productos Más Vendidos</CardTitle>
-                  <CardDescription>Unidades vendidas en el mes.</CardDescription>
+                <CardTitle>Ventas del Mes en Curso</CardTitle>
+                <CardDescription>Resumen diario de los ingresos del mes. Total del mes: <span className='font-bold text-primary'>{formatCurrency(monthlySalesData.total)}</span></CardDescription>
               </CardHeader>
               <CardContent>
-                 <div className="h-[250px]">
-                   <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={productSalesData.topProducts} layout="vertical">
-                        <XAxis type="number" hide />
-                        <YAxis type="category" dataKey="name" width={100} stroke="#888888" fontSize={12} tickLine={false} axisLine={false}/>
-                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }} formatter={(value) => [value, "Unidades"]} />
-                        <Bar dataKey="quantity" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]}/>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlySalesData.daily}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Día del Mes', position: 'insideBottom', offset: -5 }}/>
+                      <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`}/>
+                      <Tooltip
+                        contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }}
+                        formatter={(value) => [formatCurrency(value as number), "Ventas"]}
+                      />
+                      <Bar dataKey="value" fill="hsl(var(--primary))" name="Ventas" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
-          </Card>
-          <Card>
-              <CardHeader>
-                  <CardTitle>Ventas por Categoría</CardTitle>
-                  <CardDescription>Distribución de unidades vendidas por categoría.</CardDescription>
-              </CardHeader>
-              <CardContent className='flex justify-center'>
-                   <div className="h-[250px] w-[250px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                              <Pie data={productSalesData.byCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                                  {productSalesData.byCategory.map((entry, index) => (
-                                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                  ))}
-                              </Pie>
-                              <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }}/>
-                              <Legend/>
-                          </PieChart>
+            </Card>
+
+            <div className="col-span-1 lg:col-span-2 space-y-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Empleado del Mes</CardTitle>
+                  <Trophy className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  {employeeOfTheMonth ? (
+                    <>
+                      <div className="text-2xl font-bold text-amber-500">{employeeOfTheMonth.name}</div>
+                      <p className="text-xs text-muted-foreground">Con {formatCurrency(employeeOfTheMonth.total)} en ventas.</p>
+                    </>
+                  ) : <p className="text-sm text-muted-foreground">Aún no hay datos de ventas este mes.</p>}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className='pb-2'>
+                  <CardTitle className="text-sm font-medium">Mejor Día de Ventas (Mes)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {monthlySalesData.bestDay ? (
+                    <>
+                      <div className="text-2xl font-bold text-green-500">{formatCurrency(monthlySalesData.bestDay.value)}</div>
+                      <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.bestDay.date} del mes.</p>
+                    </>
+                  ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className='pb-2'>
+                  <CardTitle className="text-sm font-medium">Peor Día de Ventas (Mes)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {monthlySalesData.worstDay ? (
+                    <>
+                      <div className="text-2xl font-bold text-destructive">{formatCurrency(monthlySalesData.worstDay.value)}</div>
+                      <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.worstDay.date} del mes.</p>
+                    </>
+                  ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
+            <Card>
+                <CardHeader>
+                    <CardTitle className='flex items-center gap-2'><TrendingUp className='h-5 w-5'/> Top 5 Productos Más Vendidos</CardTitle>
+                    <CardDescription>Unidades vendidas en el mes.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                   <div className="h-[250px]">
+                     <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={productSalesData.topProducts} layout="vertical">
+                          <XAxis type="number" hide />
+                          <YAxis type="category" dataKey="name" width={100} stroke="#888888" fontSize={12} tickLine={false} axisLine={false} interval={0} />
+                          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }} formatter={(value) => [value, "Unidades"]} />
+                          <Bar dataKey="quantity" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]}/>
+                        </BarChart>
                       </ResponsiveContainer>
-                   </div>
-              </CardContent>
-          </Card>
-          <Card>
-              <CardHeader>
-                  <CardTitle className='flex items-center gap-2'><Package className='h-5 w-5'/> Estado del Inventario</CardTitle>
-                  <CardDescription>Productos que requieren atención.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                  <div className='mb-4'>
-                      <h4 className='font-semibold text-sm mb-2 flex items-center gap-2 text-destructive'><ArrowDown/>Pocas Existencias (5 o menos)</h4>
-                      {inventoryStatus.lowStock.length > 0 ? (
-                          <ul className='text-xs text-muted-foreground list-disc pl-4'>
-                              {inventoryStatus.lowStock.map(p => <li key={p.id}>{p.name} ({p.stock} uds.)</li>)}
-                          </ul>
-                      ) : <p className='text-xs text-muted-foreground'>¡Todo bien por aquí!</p>}
-                  </div>
-                   <div>
-                      <h4 className='font-semibold text-sm mb-2 flex items-center gap-2 text-green-600'><ArrowUp/>Exceso de Existencias (más de 50)</h4>
-                      {inventoryStatus.highStock.length > 0 ? (
-                          <ul className='text-xs text-muted-foreground list-disc pl-4'>
-                              {inventoryStatus.highStock.map(p => <li key={p.id}>{p.name} ({p.stock} uds.)</li>)}
-                          </ul>
-                      ) : <p className='text-xs text-muted-foreground'>No hay productos con exceso de stock.</p>}
-                  </div>
-              </CardContent>
-          </Card>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Ventas por Categoría</CardTitle>
+                    <CardDescription>Distribución de unidades vendidas por categoría.</CardDescription>
+                </CardHeader>
+                <CardContent className='flex justify-center'>
+                     <div className="h-[250px] w-[250px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie data={productSalesData.byCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                                    {productSalesData.byCategory.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }}/>
+                                <Legend/>
+                            </PieChart>
+                        </ResponsiveContainer>
+                     </div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle className='flex items-center gap-2'><Package className='h-5 w-5'/> Estado del Inventario</CardTitle>
+                    <CardDescription>Productos que requieren atención.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className='mb-4'>
+                        <h4 className='font-semibold text-sm mb-2 flex items-center gap-2 text-destructive'><ArrowDown/>Pocas Existencias (5 o menos)</h4>
+                        {inventoryStatus.lowStock.length > 0 ? (
+                            <ul className='text-xs text-muted-foreground list-disc pl-4 space-y-1'>
+                                {inventoryStatus.lowStock.map(p => <li key={p.id}>{p.name} ({p.stock} uds.)</li>)}
+                            </ul>
+                        ) : <p className='text-xs text-muted-foreground'>¡Todo bien por aquí!</p>}
+                    </div>
+                     <div>
+                        <h4 className='font-semibold text-sm mb-2 flex items-center gap-2 text-green-600'><ArrowUp/>Exceso de Existencias (más de 50)</h4>
+                        {inventoryStatus.highStock.length > 0 ? (
+                            <ul className='text-xs text-muted-foreground list-disc pl-4 space-y-1'>
+                                {inventoryStatus.highStock.map(p => <li key={p.id}>{p.name} ({p.stock} uds.)</li>)}
+                            </ul>
+                        ) : <p className='text-xs text-muted-foreground'>No hay productos con exceso de stock.</p>}
+                    </div>
+                </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Hidden Content for PDF Export */}
+      <div ref={reportsRef} style={{ display: 'none', position: 'absolute', left: '-9999px', width: '1100px' }} className="bg-white text-black p-12 font-sans">
+        <header className="flex justify-between items-center pb-8 border-b-2 border-gray-200">
+            <div className='w-48'>
+                <Logo />
+            </div>
+            <div className='text-right'>
+                <h1 className="text-4xl font-bold text-gray-800">Reporte de Rendimiento</h1>
+                <p className="text-lg text-gray-500">{new Date().toLocaleDateString('es-MX', { dateStyle: 'full' })}</p>
+            </div>
+        </header>
+
+        <section className="mt-10">
+            <h2 className="text-2xl font-semibold text-gray-700 border-b-2 border-primary pb-2 mb-6">Resumen del Mes</h2>
+            <div className="grid grid-cols-4 gap-6">
+                <div className="col-span-1 bg-blue-50 p-6 rounded-xl">
+                    <h3 className="text-md font-semibold text-blue-800">Ventas Totales del Mes</h3>
+                    <p className="text-4xl font-bold text-blue-900 mt-2">{formatCurrency(monthlySalesData.total)}</p>
+                </div>
+                 <div className="col-span-1 bg-green-50 p-6 rounded-xl">
+                    <h3 className="text-md font-semibold text-green-800 flex items-center gap-2"><Trophy className='h-5 w-5'/> Empleado del Mes</h3>
+                     {employeeOfTheMonth ? (
+                        <>
+                            <p className="text-2xl font-bold text-green-900 mt-2">{employeeOfTheMonth.name}</p>
+                            <p className="text-sm text-green-700">{formatCurrency(employeeOfTheMonth.total)} en ventas</p>
+                        </>
+                    ) : <p className="text-sm text-gray-500">N/A</p>}
+                </div>
+                 <div className="col-span-1 bg-lime-50 p-6 rounded-xl">
+                    <h3 className="text-md font-semibold text-lime-800">Mejor Día de Ventas</h3>
+                    {monthlySalesData.bestDay ? (
+                        <>
+                            <p className="text-2xl font-bold text-lime-900 mt-2">{formatCurrency(monthlySalesData.bestDay.value)}</p>
+                            <p className="text-sm text-lime-700">Día {monthlySalesData.bestDay.date} del mes</p>
+                        </>
+                    ) : <p className="text-sm text-gray-500">N/A</p>}
+                </div>
+                 <div className="col-span-1 bg-red-50 p-6 rounded-xl">
+                    <h3 className="text-md font-semibold text-red-800">Peor Día de Ventas</h3>
+                    {monthlySalesData.worstDay ? (
+                        <>
+                            <p className="text-2xl font-bold text-red-900 mt-2">{formatCurrency(monthlySalesData.worstDay.value)}</p>
+                            <p className="text-sm text-red-700">Día {monthlySalesData.worstDay.date} del mes</p>
+                        </>
+                     ) : <p className="text-sm text-gray-500">N/A</p>}
+                </div>
+            </div>
+        </section>
+
+        <section className="mt-10">
+            <h2 className="text-2xl font-semibold text-gray-700 border-b-2 border-primary pb-2 mb-6">Análisis de Ventas</h2>
+            <div className="h-[350px] bg-gray-50 p-6 rounded-xl">
+                <h3 className='text-lg font-semibold text-gray-600 mb-4'>Ingresos Diarios del Mes</h3>
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlySalesData.daily}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`}/>
+                        <Tooltip formatter={(value) => [formatCurrency(value as number), "Ventas"]} />
+                        <Bar dataKey="value" fill="#2563eb" name="Ventas" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </section>
+
+        <section className="mt-10">
+             <h2 className="text-2xl font-semibold text-gray-700 border-b-2 border-primary pb-2 mb-6">Análisis de Productos</h2>
+             <div className='grid grid-cols-2 gap-8'>
+                <div className='bg-gray-50 p-6 rounded-xl'>
+                    <h3 className='text-lg font-semibold text-gray-600 mb-4'>Top 5 Productos Más Vendidos</h3>
+                    <div className="h-[250px]">
+                       <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={productSalesData.topProducts} layout="vertical" margin={{ left: 50 }}>
+                            <XAxis type="number" hide />
+                            <YAxis type="category" dataKey="name" width={100} stroke="#888888" fontSize={12} tickLine={false} axisLine={false} interval={0} />
+                            <Tooltip formatter={(value) => [value, "Unidades"]} />
+                            <Bar dataKey="quantity" fill="#8884d8" radius={[0, 4, 4, 0]}/>
+                          </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+                 <div className='bg-gray-50 p-6 rounded-xl flex flex-col items-center'>
+                    <h3 className='text-lg font-semibold text-gray-600 mb-4'>Ventas por Categoría</h3>
+                     <div className="h-[250px] w-[350px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie data={productSalesData.byCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                                    {productSalesData.byCategory.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip/>
+                                <Legend/>
+                            </PieChart>
+                        </ResponsiveContainer>
+                     </div>
+                </div>
+             </div>
+        </section>
+
+        <footer className="mt-12 pt-6 border-t-2 border-gray-200 text-center">
+            <p className="text-sm text-gray-500">Reporte generado por ALIRU POS System</p>
+        </footer>
+      </div>
+    </>
   );
 }
+
+    
