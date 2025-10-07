@@ -11,8 +11,8 @@ import { CloseCashDrawerDialog } from './components/close-cash-drawer-dialog';
 
 export type CashSession = {
     id: string;
-    openedAt: { seconds: number };
-    closedAt?: { seconds: number };
+    openedAt: { seconds: number } | null;
+    closedAt?: { seconds: number } | null;
     openingBalance: number;
     closingBalance?: number;
     expectedBalance?: number;
@@ -115,7 +115,7 @@ export default function CashManagementPage() {
                             <CardHeader>
                                 <CardTitle>Caja Abierta</CardTitle>
                                 <CardDescription>
-                                    La caja fue abierta por <span className='font-semibold'>{activeSession.userName}</span> el {new Date(activeSession.openedAt.seconds * 1000).toLocaleString('es-MX')}.
+                                    La caja fue abierta por <span className='font-semibold'>{activeSession.userName}</span> el {activeSession.openedAt ? new Date(activeSession.openedAt.seconds * 1000).toLocaleString('es-MX') : 'Calculando...'}.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="grid md:grid-cols-3 gap-6">
@@ -146,7 +146,7 @@ export default function CashManagementPage() {
                                 <div className='mt-8 pt-6 border-t w-full text-left'>
                                     <h3 className='font-semibold'>Último Corte de Caja</h3>
                                     <p className='text-sm text-muted-foreground'>
-                                        Cerrada por <span className='font-semibold'>{lastClosedSession.userName}</span> el {new Date(lastClosedSession.closedAt!.seconds * 1000).toLocaleString('es-MX')}
+                                        Cerrada por <span className='font-semibold'>{lastClosedSession.userName}</span> el {lastClosedSession.closedAt ? new Date(lastClosedSession.closedAt.seconds * 1000).toLocaleString('es-MX') : 'Calculando...'}
                                     </p>
                                     <div className='grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4'>
                                         <div className="p-3 border rounded-lg text-sm">
