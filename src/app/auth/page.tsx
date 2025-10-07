@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -11,33 +9,43 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import Logo from '@/components/logo';
 import { Loader2, AlertCircle } from 'lucide-react';
 
+// This is a simplified, local-only authentication for demo purposes.
+// It does NOT use Firebase.
+
 export default function AuthPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const auth = useAuth();
     const router = useRouter();
     
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email || !password) {
-            setError('Por favor, ingresa correo y contraseña.');
-            return;
-        }
         setLoading(true);
         setError(null);
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-            router.push('/');
-        } catch (error: any) {
-            console.error("Error de autenticación:", error);
-            if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-                setError('Credenciales inválidas. Por favor, intenta de nuevo.');
-            } else {
-                setError('Ocurrió un error inesperado. Inténtalo más tarde.');
+
+        // Hardcoded credentials for local admin mode
+        const isAdmin = email === 'admin@local.com' && password === 'admin123';
+
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        if (isAdmin) {
+            // In a real app, you'd set a session token. Here, we'll use localStorage.
+            try {
+                localStorage.setItem('local-admin-auth', JSON.stringify({
+                    uid: 'local-admin',
+                    email: 'admin@local.com',
+                    displayName: 'Admin Local',
+                    role: 'Administrador',
+                }));
+                router.push('/');
+            } catch (e) {
+                setError('Tu navegador no es compatible con el modo local.');
+                setLoading(false);
             }
-        } finally {
+        } else {
+            setError('Credenciales inválidas. Usa "admin@local.com" y "admin123" para el modo local.');
             setLoading(false);
         }
     };
@@ -49,8 +57,8 @@ export default function AuthPage() {
                     <div className="flex justify-center mb-6">
                         <Logo />
                     </div>
-                    <h2 className="text-2xl font-bold text-center mb-2">Bienvenido de Vuelta</h2>
-                    <p className="text-muted-foreground text-center mb-8">Ingresa a tu cuenta para continuar</p>
+                    <h2 className="text-2xl font-bold text-center mb-2">Modo Administrador Local</h2>
+                    <p className="text-muted-foreground text-center mb-8">Accede con credenciales de demostración.</p>
                     
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div className="space-y-2">
@@ -58,7 +66,7 @@ export default function AuthPage() {
                             <Input
                                 id="email"
                                 type="email"
-                                placeholder="tu@correo.com"
+                                placeholder="admin@local.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -71,7 +79,7 @@ export default function AuthPage() {
                             <Input 
                                 id="password" 
                                 type="password" 
-                                placeholder='••••••••'
+                                placeholder="admin123"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required 
@@ -93,6 +101,9 @@ export default function AuthPage() {
                             {loading ? <Loader2 className="animate-spin" /> : 'Ingresar'}
                         </Button>
                     </form>
+                    <p className="text-xs text-center text-muted-foreground mt-6">
+                        Estás en un modo de demostración. Los datos no se guardarán.
+                    </p>
                 </div>
             </div>
         </div>

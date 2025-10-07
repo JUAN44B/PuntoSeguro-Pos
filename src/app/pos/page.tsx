@@ -23,14 +23,11 @@ import Image from 'next/image';
 import { PaymentDialog } from './components/payment-dialog';
 import { ReceiptDialog } from './components/receipt-dialog';
 import { DiscountDialog } from './components/discount-dialog';
-import { useFirestore, useCollection, useUser } from '@/firebase';
-import { collection, addDoc, serverTimestamp, doc, updateDoc, increment, query, orderBy, limit, deleteDoc } from 'firebase/firestore';
+import { useUser } from '@/firebase';
 import type { Product } from '../products/components/product-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CashSession } from '../cash-management/page';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
-
+import { getMockData } from '@/lib/mock-data';
 
 export type CartItem = {
   id: string;
@@ -50,22 +47,21 @@ type PendingSale = {
 type ProductFromDB = Product & { id: string };
 
 export default function POSPage() {
-  const firestore = useFirestore();
-  const { data: products, loading } = useCollection(collection(firestore, 'products'));
   const { user } = useUser();
+  const [products, setProducts] = useState<ProductFromDB[]>([]);
+  const [sessions, setSessions] = useState<CashSession[]>([]);
+  const [pendingSales, setPendingSales] = useState<PendingSale[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const data = getMockData();
+    setProducts(data.products);
+    setSessions(data.cashSessions);
+    setPendingSales([]); // Start with no pending sales in mock mode
+    setLoading(false);
+  }, []);
 
-  // Get active cash session
-  const sessionsQuery = query(
-      collection(firestore, 'cashSessions'),
-      orderBy('openedAt', 'desc'),
-      limit(1)
-  );
-  const { data: sessions } = useCollection(sessionsQuery);
-  const activeSession = sessions.length > 0 && (sessions[0] as CashSession).status === 'abierta' ? sessions[0] as CashSession : null;
-
-  // Get pending sales
-  const pendingSalesQuery = query(collection(firestore, 'pendingSales'), orderBy('savedAt', 'desc'));
-  const { data: pendingSales, loading: pendingSalesLoading } = useCollection(pendingSalesQuery);
+  const activeSession = sessions.length > 0 && sessions[0].status === 'abierta' ? sessions[0] : null;
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,7 +73,6 @@ export default function POSPage() {
   const [posError, setPosError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Clear error when cart changes
     if (posError) setPosError(null);
   }, [cart]);
 
@@ -122,7 +117,7 @@ export default function POSPage() {
       return prevCart
         .map(item => {
             if (item.id === productId) {
-                const productInDb = (products as ProductFromDB[]).find(p => p.id === productId);
+                const productInDb = products.find(p => p.id === productId);
                 const newQuantity = item.quantity + amount;
                 if (productInDb && newQuantity > productInDb.stock) {
                     setPosError(`No puedes agregar más de ${productInDb.stock} unidades de "${item.name}".`);
@@ -165,96 +160,66 @@ export default function POSPage() {
       setPosError('No puedes guardar una venta vacía.');
       return;
     }
-    try {
-        await addDoc(collection(firestore, 'pendingSales'), {
-            savedAt: serverTimestamp(),
-            cart: cart
-        });
-        cancelSale();
-    } catch(e) {
-        console.error('Error saving sale: ', e);
-        setPosError('Error al guardar la venta.');
-    }
+    const newPendingSale: PendingSale = {
+        id: new Date().toISOString(),
+        savedAt: { seconds: Date.now() / 1000 },
+        cart: cart
+    };
+    setPendingSales(prev => [newPendingSale, ...prev]);
+    cancelSale();
   }
   
-  const handleLoadSale = async (pendingSale: PendingSale) => {
+  const handleLoadSale = (pendingSale: PendingSale) => {
     if (cart.length > 0) {
         const proceed = confirm('Tienes una venta en curso. ¿Deseas reemplazarla con la venta guardada?');
         if (!proceed) return;
     }
     setCart(pendingSale.cart);
-    await deleteDoc(doc(firestore, 'pendingSales', pendingSale.id));
+    handleDeletePendingSale(pendingSale.id);
   };
   
-  const handleDeletePendingSale = async (pendingSaleId: string) => {
-    await deleteDoc(doc(firestore, 'pendingSales', pendingSaleId));
+  const handleDeletePendingSale = (pendingSaleId: string) => {
+    setPendingSales(prev => prev.filter(s => s.id !== pendingSaleId));
   }
 
 
   const handlePaymentSuccess = async (paymentMethod: string) => {
     if (!user) {
-        setPosError('Error: No se ha podido identificar al usuario. Por favor, recarga la página.');
+        setPosError('Error: No se ha podido identificar al usuario.');
         return;
     }
 
     const saleId = `ALIRU-${Date.now().toString().slice(-6)}`;
-    const saleData = {
-      saleId,
-      createdAt: serverTimestamp(),
-      items: cart.map(({ image, ...item }) => ({
-        ...item,
-        price: item.price * (1 - item.discount / 100), // Final price with discount
-      })),
-      total,
-      subtotal,
-      iva,
-      paymentMethod,
-      userId: user.uid,
-      userName: user.displayName,
-      returned: false,
-    };
     
-    try {
-        // 1. Save the sale record
-        await addDoc(collection(firestore, 'sales'), saleData);
-        
-        // 2. Update stock for each product sold
-        for (const item of cart) {
-            const productRef = doc(firestore, 'products', item.id);
-            await updateDoc(productRef, {
-            stock: increment(-item.quantity)
-            });
+    // In mock mode, just simulate success
+    setLastSale({ cart, total, paymentMethod, userName: user.displayName || 'Vendedor' });
+    setIsPaymentOpen(false);
+    setIsReceiptOpen(true);
+    
+    // Simulate stock update
+    const newProducts = [...products];
+    cart.forEach(cartItem => {
+        const productIndex = newProducts.findIndex(p => p.id === cartItem.id);
+        if(productIndex !== -1) {
+            newProducts[productIndex].stock -= cartItem.quantity;
         }
+    });
+    setProducts(newProducts);
 
-        // 3. If payment is cash, update the active cash session
-        if (paymentMethod === 'Efectivo' && activeSession) {
-            const sessionRef = doc(firestore, 'cashSessions', activeSession.id);
-            await updateDoc(sessionRef, {
-                cashSales: increment(total)
-            });
+    // Simulate cash session update
+    if (paymentMethod === 'Efectivo' && activeSession) {
+        const newSessions = [...sessions];
+        const sessionIndex = newSessions.findIndex(s => s.id === activeSession.id);
+        if(sessionIndex !== -1) {
+            newSessions[sessionIndex].cashSales += total;
+            setSessions(newSessions);
         }
-        
-        // 4. Prepare for receipt
-        setLastSale({ cart, total, paymentMethod, userName: user.displayName || 'Vendedor' });
-        setIsPaymentOpen(false);
-        setIsReceiptOpen(true);
-        setCart([]); // Clear cart after successful payment
-    } catch(serverError) {
-        // This is where we emit the contextual error
-        const permissionError = new FirestorePermissionError({
-          path: `sales/${saleId}`,
-          operation: 'create',
-          requestResourceData: saleData,
-        });
-
-        errorEmitter.emit('permission-error', permissionError);
-
-        // Also, show a user-friendly error in the UI
-        setPosError('Hubo un error al procesar la venta. Revisa los permisos.');
     }
+
+    setCart([]); // Clear cart
   };
   
-  const filteredProducts = (products as ProductFromDB[] || []).filter(p => 
+  const filteredProducts = (products || []).filter(p => 
     p.status === 'Activo' && (
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.code && p.code.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -414,11 +379,11 @@ export default function POSPage() {
                 <CardTitle>Ventas Pendientes</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 space-y-2">
-                {pendingSalesLoading && <p className='text-center text-muted-foreground'>Cargando...</p>}
-                {!pendingSalesLoading && (pendingSales as PendingSale[]).length === 0 && (
+                {loading && <p className='text-center text-muted-foreground'>Cargando...</p>}
+                {!loading && pendingSales.length === 0 && (
                   <p className='text-center text-muted-foreground py-10'>No hay ventas guardadas.</p>
                 )}
-                {(pendingSales as PendingSale[]).map(sale => {
+                {pendingSales.map(sale => {
                   const saleTotal = sale.cart.reduce((sum, item) => sum + (item.price * (1 - item.discount / 100) * item.quantity), 0);
                   return (
                     <div key={sale.id} className="border p-3 rounded-lg flex justify-between items-center">

@@ -2,9 +2,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { onAuthStateChanged, User as FirebaseAuthUser } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { useAuth, useFirestore } from '../provider';
 
 // This will be the user object available throughout the app
 export type AppUser = {
@@ -14,71 +11,27 @@ export type AppUser = {
   role: 'Administrador' | 'Cajero' | 'Supervisor' | null;
 };
 
-// Define the hardcoded super admin email
-const SUPER_ADMIN_EMAIL = 'admin@aliru.com';
-
+// This hook now checks for a local session first, then would fall back to Firebase
+// but for this implementation, we are only using the local session.
 export function useUser() {
-  const auth = useAuth();
-  const firestore = useFirestore();
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseAuthUser | null) => {
-      if (firebaseUser) {
-        // Check if the logged-in user is the super admin
-        if (firebaseUser.email === SUPER_ADMIN_EMAIL) {
-          const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-
-          // Create a profile for the super admin if it doesn't exist
-          if (!userDoc.exists()) {
-            await setDoc(userDocRef, {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: 'Admin Principal',
-              role: 'Administrador',
-            });
-          }
-
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: 'Admin Principal',
-            role: 'Administrador',
-          });
+    // This code now only runs on the client.
+    try {
+        const localUser = localStorage.getItem('local-admin-auth');
+        if (localUser) {
+            setUser(JSON.parse(localUser));
         } else {
-          // For regular users, get their profile from Firestore
-          const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: userData.displayName || null,
-              role: userData.role || null,
-            });
-          } else {
-            // No profile doc found, maybe a partially created user.
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName,
-              role: null, // No role found
-            });
-          }
+            setUser(null);
         }
-      } else {
-        // User is signed out
+    } catch(e) {
+        console.error("Could not parse local user session.", e);
         setUser(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [auth, firestore]);
+    }
+    setLoading(false);
+  }, []);
 
   return { user, loading };
 }

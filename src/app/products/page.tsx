@@ -1,14 +1,6 @@
 'use client';
 
-import { useState, useMemo } from "react";
-import {
-  collection,
-  addDoc,
-  doc,
-  deleteDoc,
-  setDoc
-} from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
+import { useState, useMemo, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -37,18 +29,25 @@ import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { ProductDialog, Product } from "./components/product-dialog";
+import { getMockData } from "@/lib/mock-data";
 
 export default function ProductsPage() {
-  const firestore = useFirestore();
-  const { data: products, loading } = useCollection(collection(firestore, 'products'));
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Load mock data on component mount
+    setProducts(getMockData().products);
+    setLoading(false);
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const filteredProducts = useMemo(() => {
-    const productList = (products as Product[]) || [];
-    if (!searchTerm) return productList;
-    return productList.filter(product =>
+    if (!searchTerm) return products;
+    return products.filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (product.code && product.code.toLowerCase().includes(searchTerm.toLowerCase()))
     );
@@ -66,26 +65,20 @@ export default function ProductsPage() {
 
   const handleDeleteProduct = async (productId: string) => {
     if (!productId) return;
-    try {
-        await deleteDoc(doc(firestore, "products", productId));
-    } catch(e) {
-        console.error("Error deleting document: ", e);
-    }
+    setProducts(prev => prev.filter(p => p.id !== productId));
   };
   
   const handleSaveProduct = async (productData: Omit<Product, 'id'>) => {
-    try {
-        if (editingProduct && editingProduct.id) {
-            const productRef = doc(firestore, "products", editingProduct.id);
-            await setDoc(productRef, productData, { merge: true });
-        } else {
-            await addDoc(collection(firestore, "products"), productData);
-        }
-        setIsDialogOpen(false);
-        setEditingProduct(null);
-    } catch(e) {
-        console.error("Error saving document: ", e);
+    if (editingProduct && editingProduct.id) {
+        // Update existing product
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...editingProduct, ...productData } : p));
+    } else {
+        // Add new product
+        const newProduct = { ...productData, id: new Date().toISOString() }; // Simple unique ID
+        setProducts(prev => [...prev, newProduct]);
     }
+    setIsDialogOpen(false);
+    setEditingProduct(null);
   };
 
   return (
@@ -107,7 +100,7 @@ export default function ProductsPage() {
             <CardHeader>
                 <CardTitle>Inventario de Productos</CardTitle>
                 <CardDescription>
-                Administra tus productos, actualiza el inventario y consulta los precios.
+                Administra tus productos, actualiza el inventario y consulta los precios. (Modo Demo)
                 </CardDescription>
                 <Input
                   placeholder="Buscar producto por nombre o código..."

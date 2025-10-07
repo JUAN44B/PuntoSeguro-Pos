@@ -1,9 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useFirestore, useCollection, useAuth } from '@/firebase';
-import { collection, doc, updateDoc, deleteDoc, setDoc, getDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -13,14 +10,11 @@ import { UserDialog, UserProfileData } from './components/user-dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-
-// NOTE: This implementation uses the client-side SDK to create users.
-// For enhanced security in a production environment, this operation should ideally
-// be handled by a backend service (e.g., a Firebase Cloud Function) using the Admin SDK.
+import { getMockData } from '@/lib/mock-data';
 
 export type UserProfile = {
-    id: string; // This is the Firestore document ID which is the same as UID
-    uid: string; // This is the Firebase Auth UID
+    id: string;
+    uid: string;
     displayName: string;
     email: string;
     role: 'Administrador' | 'Cajero' | 'Supervisor';
@@ -36,30 +30,28 @@ type CompanyProfileData = {
 };
 
 export default function SettingsPage() {
-    const firestore = useFirestore();
-    const auth = useAuth(); // Use the auth instance from the provider
-    const { data: users, loading } = useCollection(collection(firestore, 'users'));
+    const [users, setUsers] = useState<UserProfile[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setUsers(getMockData().users);
+        setLoading(false);
+    }, []);
+
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const [companyProfile, setCompanyProfile] = useState<CompanyProfileData>({});
-    const [loadingCompany, setLoadingCompany] = useState(true);
+    const [companyProfile, setCompanyProfile] = useState<CompanyProfileData>({
+        name: "ALIRU Refacciones (Demo)",
+        address: "Av. Principal #123, 00000, Ciudad, Estado",
+        phone: "123 456 789",
+        email: "contacto@aliru.com",
+        fiscalId: "XAXX010101000",
+        receiptFooterMessage: "¡Gracias por su compra! (Modo Demo)",
+    });
+    const [loadingCompany, setLoadingCompany] = useState(false);
     const [savingCompany, setSavingCompany] = useState(false);
-
-    useEffect(() => {
-        const fetchCompanyProfile = async () => {
-            setLoadingCompany(true);
-            const docRef = doc(firestore, 'company', 'main');
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                setCompanyProfile(docSnap.data() as CompanyProfileData);
-            }
-            setLoadingCompany(false);
-        };
-        fetchCompanyProfile();
-    }, [firestore]);
-
 
     const handleAddUser = () => {
         setEditingUser(null);
@@ -74,62 +66,37 @@ export default function SettingsPage() {
     };
 
     const handleDeleteUser = async (userId: string) => {
-        if (!userId) return;
-        // NOTE: This only deletes the Firestore document. Deleting the actual
-        // Firebase Auth user requires a backend function with the Admin SDK.
-        try {
-            await deleteDoc(doc(firestore, "users", userId));
-        } catch(e) {
-            console.error("Error deleting user document: ", e);
-            setError("Error al eliminar el perfil de usuario.");
-        }
+        if (!userId || userId === 'local-admin') {
+            alert("No se puede eliminar al administrador local.");
+            return;
+        };
+        setUsers(prev => prev.filter(u => u.id !== userId));
     };
 
     const handleSaveUser = async (userData: UserProfileData) => {
         setError(null);
-        try {
-            if (editingUser) {
-                // Update existing user's Firestore document
-                const userRef = doc(firestore, 'users', editingUser.id);
-                await updateDoc(userRef, {
-                    displayName: userData.displayName,
-                    role: userData.role,
-                });
-            } else {
-                // Create a new user
-                if (!userData.password) {
-                    setError("La contraseña es obligatoria para nuevos usuarios.");
-                    return;
-                }
-                
-                // 1. Create user in Firebase Authentication
-                const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
-                const newUser = userCredential.user;
-
-                // 2. Create user profile in Firestore using the Auth UID as the document ID
-                await setDoc(doc(firestore, 'users', newUser.uid), {
-                    uid: newUser.uid,
-                    displayName: userData.displayName,
-                    email: userData.email,
-                    role: userData.role,
-                });
-
-                // Note: createUserWithEmailAndPassword also signs in the new user.
-                // In a real admin panel, you would likely want to sign them out immediately
-                // and sign the admin back in, but that requires more complex state management.
+        if (editingUser) {
+            // Update existing user
+            setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...editingUser, ...userData } : u));
+        } else {
+            // Create a new user
+            if (!userData.password) {
+                setError("La contraseña es obligatoria para nuevos usuarios.");
+                return;
             }
-            setIsDialogOpen(false);
-            setEditingUser(null);
-        } catch (error: any) {
-            console.error("Error saving user: ", error);
-            if (error.code === 'auth/email-already-in-use') {
-                setError("Este correo electrónico ya está en uso. Por favor, utiliza otro.");
-            } else if (error.code === 'auth/weak-password') {
-                setError("La contraseña es demasiado débil. Debe tener al menos 6 caracteres.");
-            } else {
-                setError("Ocurrió un error al guardar el usuario.");
+            if (users.some(u => u.email === userData.email)) {
+                setError("Este correo electrónico ya está en uso.");
+                return;
             }
+            const newUser: UserProfile = {
+                id: new Date().toISOString(),
+                uid: new Date().toISOString(),
+                ...userData,
+            };
+            setUsers(prev => [...prev, newUser]);
         }
+        setIsDialogOpen(false);
+        setEditingUser(null);
     };
     
     const handleCompanyProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -139,14 +106,9 @@ export default function SettingsPage() {
 
     const handleSaveCompanyProfile = async () => {
         setSavingCompany(true);
-        try {
-            const docRef = doc(firestore, 'company', 'main');
-            await setDoc(docRef, companyProfile, { merge: true });
-        } catch (error) {
-            console.error("Error saving company profile:", error);
-        } finally {
-            setSavingCompany(false);
-        }
+        // In mock mode, we just show a saving state.
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setSavingCompany(false);
     };
 
 
@@ -160,7 +122,7 @@ export default function SettingsPage() {
                 <CardHeader>
                     <CardTitle className='flex items-center gap-2'><Building className='h-5 w-5'/> Datos de la Empresa</CardTitle>
                     <CardDescription>
-                        Esta información aparecerá en los recibos de venta y otros documentos.
+                        Esta información aparecerá en los recibos de venta y otros documentos. (Modo Demo)
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -214,7 +176,7 @@ export default function SettingsPage() {
                 <CardHeader>
                     <CardTitle>Gestión de Usuarios y Roles</CardTitle>
                     <CardDescription>
-                        Agrega, edita y elimina perfiles de usuario y asigna sus roles en el sistema.
+                        Agrega, edita y elimina perfiles de usuario y asigna sus roles en el sistema. (Modo Demo)
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -237,7 +199,7 @@ export default function SettingsPage() {
                                         Cargando usuarios...
                                     </TableCell>
                                 </TableRow>
-                            ) : (users as UserProfile[]).map((user) => (
+                            ) : users.map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell className="font-medium">{user.displayName || 'N/A'}</TableCell>
                                     <TableCell>{user.email}</TableCell>
@@ -256,6 +218,7 @@ export default function SettingsPage() {
                                                 <DropdownMenuItem 
                                                     className="text-destructive"
                                                     onClick={() => handleDeleteUser(user.id)}
+                                                    disabled={user.id === 'local-admin'}
                                                 >
                                                     Eliminar
                                                 </DropdownMenuItem>

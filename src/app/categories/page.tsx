@@ -1,34 +1,38 @@
 'use client';
 
-import { useState } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Trash2, Edit, Save, X } from 'lucide-react';
+import { getMockData } from '@/lib/mock-data';
 
-type Category = {
+export type Category = {
   id: string;
   name: string;
 };
 
 export default function CategoriesPage() {
-  const firestore = useFirestore();
-  const { data: categories, loading } = useCollection(collection(firestore, 'categories'));
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setCategories(getMockData().categories);
+    setLoading(false);
+  }, []);
 
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
 
-  const handleAddCategory = async () => {
+  const handleAddCategory = () => {
     if (newCategoryName.trim() === '') return;
-    try {
-      await addDoc(collection(firestore, 'categories'), { name: newCategoryName.trim() });
-      setNewCategoryName('');
-    } catch (error) {
-      console.error("Error adding category: ", error);
-    }
+    const newCategory: Category = {
+        id: new Date().toISOString(),
+        name: newCategoryName.trim(),
+    };
+    setCategories(prev => [...prev, newCategory]);
+    setNewCategoryName('');
   };
 
   const handleEdit = (category: Category) => {
@@ -36,24 +40,17 @@ export default function CategoriesPage() {
     setEditingCategoryName(category.name);
   };
 
-  const handleUpdateCategory = async () => {
+  const handleUpdateCategory = () => {
     if (!editingCategoryId || editingCategoryName.trim() === '') return;
-    try {
-      const categoryRef = doc(firestore, 'categories', editingCategoryId);
-      await updateDoc(categoryRef, { name: editingCategoryName.trim() });
-      setEditingCategoryId(null);
-      setEditingCategoryName('');
-    } catch (error) {
-      console.error("Error updating category: ", error);
-    }
+    setCategories(prev => prev.map(c => 
+        c.id === editingCategoryId ? { ...c, name: editingCategoryName.trim() } : c
+    ));
+    setEditingCategoryId(null);
+    setEditingCategoryName('');
   };
 
-  const handleDeleteCategory = async (categoryId: string) => {
-    try {
-      await deleteDoc(doc(firestore, 'categories', categoryId));
-    } catch (error) {
-      console.error("Error deleting category: ", error);
-    }
+  const handleDeleteCategory = (categoryId: string) => {
+    setCategories(prev => prev.filter(c => c.id !== categoryId));
   };
 
   return (
@@ -89,7 +86,7 @@ export default function CategoriesPage() {
           <CardContent>
             {loading && <p className="text-muted-foreground">Cargando categorías...</p>}
             <ul className="space-y-3">
-              {(categories as Category[]).map((category) => (
+              {categories.map((category) => (
                 <li key={category.id} className="flex items-center justify-between p-2 rounded-md border bg-background">
                   {editingCategoryId === category.id ? (
                     <div className="flex-1 flex items-center gap-2">

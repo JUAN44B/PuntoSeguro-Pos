@@ -2,14 +2,13 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Home, ShoppingCart, Package, Users, BarChart, Settings, Truck, Building, History, LogOut, User as UserIcon, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from './logo';
 import { ThemeToggle } from './theme-toggle';
 import { Separator } from './ui/separator';
-import { useUser, useAuth } from '@/firebase';
-import { signOut } from 'firebase/auth';
+import { useUser } from '@/firebase';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,16 +34,17 @@ const allNavItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const auth = useAuth();
+  const router = useRouter();
   const { user, loading } = useUser();
 
   const handleLogout = async () => {
+    // In local mode, just clear localStorage and redirect
     try {
-      await signOut(auth);
-      // The redirect is handled by the AuthWrapper in layout.tsx
-    } catch (error) {
-      console.error("Error signing out: ", error);
+        localStorage.removeItem('local-admin-auth');
+    } catch(e) {
+        console.error("Could not clear local session", e);
     }
+    router.push('/auth');
   };
 
   const userRole = user?.role || 'Cajero'; // Default to most restrictive role
@@ -143,5 +143,3 @@ export default function Sidebar() {
     </div>
   );
 }
-
-    

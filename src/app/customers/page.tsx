@@ -1,14 +1,6 @@
 'use client';
 
-import { useState, useMemo } from "react";
-import {
-  collection,
-  addDoc,
-  doc,
-  deleteDoc,
-  setDoc
-} from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
+import { useState, useMemo, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -32,21 +24,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, PlusCircle, UserPlus } from "lucide-react"
+import { MoreHorizontal, UserPlus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { CustomerDialog, Customer } from "./components/customer-dialog";
+import { getMockData } from "@/lib/mock-data";
 
 export default function CustomersPage() {
-  const firestore = useFirestore();
-  const { data: customers, loading } = useCollection(collection(firestore, 'clients'));
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setCustomers(getMockData().customers);
+    setLoading(false);
+  }, []);
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
 
   const filteredCustomers = useMemo(() => {
-    const customerList = (customers as Customer[]) || [];
-    if (!searchTerm) return customerList;
-    return customerList.filter(customer =>
+    if (!searchTerm) return customers;
+    return customers.filter(customer =>
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (customer.phone && customer.phone.toLowerCase().includes(searchTerm.toLowerCase()))
     );
@@ -64,26 +62,18 @@ export default function CustomersPage() {
 
   const handleDeleteCustomer = async (customerId: string) => {
     if (!customerId) return;
-    try {
-        await deleteDoc(doc(firestore, "clients", customerId));
-    } catch(e) {
-        console.error("Error deleting document: ", e);
-    }
+    setCustomers(prev => prev.filter(c => c.id !== customerId));
   };
   
   const handleSaveCustomer = async (customerData: Omit<Customer, 'id'>) => {
-    try {
-        if (editingCustomer && editingCustomer.id) {
-            const customerRef = doc(firestore, "clients", editingCustomer.id);
-            await setDoc(customerRef, customerData, { merge: true });
-        } else {
-            await addDoc(collection(firestore, "clients"), customerData);
-        }
-        setIsDialogOpen(false);
-        setEditingCustomer(null);
-    } catch(e) {
-        console.error("Error saving document: ", e);
+    if (editingCustomer && editingCustomer.id) {
+        setCustomers(prev => prev.map(c => c.id === editingCustomer.id ? { ...editingCustomer, ...customerData } : c));
+    } else {
+        const newCustomer = { ...customerData, id: new Date().toISOString() };
+        setCustomers(prev => [...prev, newCustomer]);
     }
+    setIsDialogOpen(false);
+    setEditingCustomer(null);
   };
 
   return (
@@ -102,7 +92,7 @@ export default function CustomersPage() {
             <CardHeader>
                 <CardTitle>Directorio de Clientes</CardTitle>
                 <CardDescription>
-                Administra la información de tus clientes.
+                Administra la información de tus clientes. (Modo Demo)
                 </CardDescription>
                 <Input
                   placeholder="Buscar cliente por nombre o teléfono..."

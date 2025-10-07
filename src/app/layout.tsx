@@ -36,6 +36,12 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
   if (!user && pathname !== '/auth') {
     return null; // Don't render anything while redirecting
   }
+  
+  // If user is logged in and tries to go to /auth, redirect to home
+  if (user && pathname === '/auth') {
+    router.replace('/');
+    return null;
+  }
 
   if (pathname === '/auth') {
     return <>{children}</>;
