@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import Sidebar from '@/components/sidebar';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { FirebaseProvider } from '@/firebase/provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import { useUser } from '@/firebase';
 import { useEffect } from 'react';
@@ -64,11 +64,11 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
         >
-          <FirebaseClientProvider>
+          <FirebaseProvider>
             <AuthWrapper>
               {children}
             </AuthWrapper>
-          </FirebaseClientProvider>
+          </FirebaseProvider>
         </ThemeProvider>
       </body>
     </html>

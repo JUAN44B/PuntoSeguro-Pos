@@ -5,4 +5,7 @@ interface Events {
   'permission-error': (error: FirestorePermissionError) => void;
 }
 
-export const errorEmitter = createNanoEvents<Events>();
+// Ensure a single instance of the emitter is created and used.
+const errorEmitter = createNanoEvents<Events>();
+
+export { errorEmitter };
