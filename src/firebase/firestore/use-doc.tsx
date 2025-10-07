@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import { doc, onSnapshot, DocumentReference, DocumentData, DocumentSnapshot } from 'firebase/firestore';
-import { useFirestore } from '../provider';
 
 interface UseDocReturn<T> {
     data: T | null;

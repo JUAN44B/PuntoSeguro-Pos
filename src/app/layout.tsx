@@ -10,6 +10,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { useUser } from '@/firebase';
 import { useEffect } from 'react';
 import Logo from '@/components/logo';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
@@ -77,9 +78,11 @@ export default function RootLayout({
             disableTransitionOnChange
         >
           <FirebaseProvider>
-            <AuthWrapper>
-              {children}
-            </AuthWrapper>
+            <FirebaseErrorListener>
+              <AuthWrapper>
+                {children}
+              </AuthWrapper>
+            </FirebaseErrorListener>
           </FirebaseProvider>
         </ThemeProvider>
       </body>

@@ -14,8 +14,6 @@ import type { CartItem } from '../page';
 import { Printer, Share2, Loader2 } from 'lucide-react';
 import Barcode from '@/components/barcode';
 import Logo from '@/components/logo';
-import { useFirestore } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 
 interface ReceiptDialogProps {
   isOpen: boolean;
@@ -38,35 +36,32 @@ type CompanyProfile = {
   receiptFooterMessage?: string;
 };
 
+// Mock company profile for demo mode
+const mockCompanyProfile: CompanyProfile = {
+    name: "ALIRU Refacciones (Demo)",
+    address: "Av. Principal #123, 00000, Ciudad, Estado",
+    phone: "123 456 789",
+    email: "contacto@aliru.com",
+    fiscalId: "XAXX010101000",
+    receiptFooterMessage: "¡Gracias por su compra! (Modo Demo)",
+};
+
 export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps }: ReceiptDialogProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const saleId = saleIdFromProps || `ALIRU-${Date.now().toString().slice(-6)}`;
-  const firestore = useFirestore();
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
-      const fetchCompanyProfile = async () => {
-        try {
-          setLoadingProfile(true);
-          const docRef = doc(firestore, 'company', 'main');
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setCompanyProfile(docSnap.data() as CompanyProfile);
-          } else {
-            setCompanyProfile({}); // No profile found, use defaults
-          }
-        } catch (error) {
-          console.error("Error fetching company profile:", error);
-          setCompanyProfile({});
-        } finally {
-          setLoadingProfile(false);
-        }
-      };
-      fetchCompanyProfile();
+      setLoadingProfile(true);
+      // In demo mode, we just use the mock profile
+      setTimeout(() => {
+        setCompanyProfile(mockCompanyProfile);
+        setLoadingProfile(false);
+      }, 100); // simulate a tiny delay
     }
-  }, [isOpen, firestore]);
+  }, [isOpen]);
 
   const handlePrint = () => {
     const printContent = receiptRef.current;

@@ -2,7 +2,6 @@
 
 import { createContext, useContext, ReactNode } from 'react';
 import { initializeFirebase } from './index';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 // Simple flag to disable all Firebase interactions for local mode
 const FIREBASE_ENABLED = false;
@@ -16,7 +15,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
   return (
     <FirebaseContext.Provider value={value}>
-      {FIREBASE_ENABLED ? <FirebaseErrorListener>{children}</FirebaseErrorListener> : children}
+      {children}
     </FirebaseContext.Provider>
   );
 }
