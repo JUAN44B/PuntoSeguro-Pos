@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -17,14 +17,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Minus, X, Search, Save, Ban, Tag } from 'lucide-react';
+import { Plus, Minus, X, Search, Save, Ban, Tag, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import { PaymentDialog } from './components/payment-dialog';
 import { ReceiptDialog } from './components/receipt-dialog';
 import { DiscountDialog } from './components/discount-dialog';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc, increment, query, orderBy, limit } from 'firebase/firestore';
 import type { Product } from '../products/components/product-dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CashSession } from '../cash-management/page';
 
 
 export type CartItem = {
@@ -42,6 +44,15 @@ export default function POSPage() {
   const firestore = useFirestore();
   const { data: products, loading } = useCollection(collection(firestore, 'products'));
 
+  // Get active cash session
+  const sessionsQuery = query(
+      collection(firestore, 'cashSessions'),
+      orderBy('openedAt', 'desc'),
+      limit(1)
+  );
+  const { data: sessions } = useCollection(sessionsQuery);
+  const activeSession = sessions.length > 0 && (sessions[0] as CashSession).status === 'abierta' ? sessions[0] as CashSession : null;
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -49,11 +60,39 @@ export default function POSPage() {
   const [isDiscountOpen, setIsDiscountOpen] = useState(false);
   const [selectedCartItem, setSelectedCartItem] = useState<CartItem | null>(null);
   const [lastSale, setLastSale] = useState<{ cart: CartItem[], total: number, paymentMethod: string } | null>(null);
+  const [posError, setPosError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Clear error when cart changes
+    setPosError(null);
+  }, [cart]);
+
+  const handleOpenPayment = () => {
+    if (cart.length === 0) {
+      setPosError('El carrito está vacío. Agrega productos para poder pagar.');
+      return;
+    }
+    if (!activeSession) {
+      setPosError('No hay una sesión de caja abierta. Ve a "Gestión de Caja" para abrir una.');
+      return;
+    }
+    setPosError(null);
+    setIsPaymentOpen(true);
+  }
 
   const addToCart = (product: ProductFromDB) => {
+    if (product.stock <= 0) {
+      setPosError(`El producto "${product.name}" no tiene existencias.`);
+      return;
+    }
+
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
       if (existingItem) {
+         if (existingItem.quantity >= product.stock) {
+            setPosError(`No puedes agregar más de ${product.stock} unidades de "${product.name}".`);
+            return prevCart;
+         }
         return prevCart.map(item =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
@@ -62,16 +101,24 @@ export default function POSPage() {
       }
       return [...prevCart, { id: product.id, name: product.name, price: product.finalPrice, image: product.image, quantity: 1, discount: 0 }];
     });
+    setPosError(null);
   };
 
   const updateQuantity = (productId: string, amount: number) => {
     setCart(prevCart => {
       return prevCart
-        .map(item =>
-          item.id === productId
-            ? { ...item, quantity: item.quantity + amount }
-            : item
-        )
+        .map(item => {
+            if (item.id === productId) {
+                const productInDb = (products as ProductFromDB[]).find(p => p.id === productId);
+                const newQuantity = item.quantity + amount;
+                if (productInDb && newQuantity > productInDb.stock) {
+                    setPosError(`No puedes agregar más de ${productInDb.stock} unidades de "${item.name}".`);
+                    return item; // return original item
+                }
+                return { ...item, quantity: newQuantity };
+            }
+            return item;
+        })
         .filter(item => item.quantity > 0);
     });
   };
@@ -97,6 +144,7 @@ export default function POSPage() {
 
   const cancelSale = () => {
     setCart([]);
+    setPosError(null);
   }
 
   const handlePaymentSuccess = async (paymentMethod: string) => {
@@ -125,15 +173,23 @@ export default function POSPage() {
           stock: increment(-item.quantity)
         });
       }
+
+      // 3. If payment is cash, update the active cash session
+      if (paymentMethod === 'Efectivo' && activeSession) {
+          const sessionRef = doc(firestore, 'cashSessions', activeSession.id);
+          await updateDoc(sessionRef, {
+              cashSales: increment(total)
+          });
+      }
       
-      // 3. Prepare for receipt
+      // 4. Prepare for receipt
       setLastSale({ cart, total, paymentMethod });
       setIsPaymentOpen(false);
       setIsReceiptOpen(true);
       setCart([]); // Clear cart after successful payment
     } catch (error) {
       console.error("Error processing sale: ", error);
-      // Here you could add a toast or alert to inform the user
+      setPosError('Hubo un error al procesar la venta. Inténtalo de nuevo.');
     }
   };
   
@@ -171,7 +227,7 @@ export default function POSPage() {
               {filteredProducts.map(product => (
                   <Card 
                       key={product.id} 
-                      className="cursor-pointer hover:shadow-lg transition-shadow"
+                      className="cursor-pointer hover:shadow-lg transition-shadow relative"
                       onClick={() => addToCart(product)}
                   >
                       <CardContent className="p-0 flex flex-col items-center justify-center">
@@ -184,6 +240,8 @@ export default function POSPage() {
                                   data-ai-hint="product image"
                               />
                           </div>
+                          {product.stock <= 0 && <div className='absolute inset-0 bg-black/60 flex items-center justify-center rounded-lg'><span className='text-white font-bold text-sm'>SIN STOCK</span></div>}
+                          {product.stock > 0 && product.stock <= 5 && <div className='absolute top-1 right-1 bg-destructive text-destructive-foreground text-xs font-bold px-2 py-0.5 rounded-full'>{product.stock} disp.</div>}
                           <p className="text-sm font-medium p-2 text-center h-12 flex items-center">{product.name}</p>
                           <p className="text-xs font-bold p-2 bg-muted w-full text-center rounded-b-lg">${product.finalPrice.toFixed(2)}</p>
                       </CardContent>
@@ -196,6 +254,14 @@ export default function POSPage() {
         <div className="lg:col-span-1 bg-card border rounded-lg flex flex-col h-full shadow-lg">
           <CardHeader>
             <CardTitle>Venta Actual</CardTitle>
+            {posError && (
+              <Alert variant="destructive" className="mt-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                      {posError}
+                  </AlertDescription>
+              </Alert>
+            )}
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto px-0">
             <Table>
@@ -266,7 +332,7 @@ export default function POSPage() {
                   </div>
               </div>
             <div className="grid grid-cols-1 gap-2">
-              <Button size="lg" className="h-14 text-lg" onClick={() => setIsPaymentOpen(true)} disabled={cart.length === 0}>Pagar</Button>
+              <Button size="lg" className="h-14 text-lg" onClick={handleOpenPayment}>Pagar</Button>
               <div className='grid grid-cols-2 gap-2'>
                   <Button variant="outline" className='gap-2'><Save className='h-4 w-4'/>Guardar Venta</Button>
                   <Button variant="destructive" className='gap-2' onClick={cancelSale}><Ban className='h-4 w-4' />Cancelar</Button>

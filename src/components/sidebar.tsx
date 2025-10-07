@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShoppingCart, Package, Users, BarChart, Settings, Truck, Building, History, LogOut, User as UserIcon } from 'lucide-react';
+import { Home, ShoppingCart, Package, Users, BarChart, Settings, Truck, Building, History, LogOut, User as UserIcon, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from './logo';
 import { ThemeToggle } from './theme-toggle';
@@ -28,6 +28,7 @@ const allNavItems = [
   { href: '/inventory', label: 'Inventario', icon: Truck, roles: ['Administrador', 'Supervisor'] },
   { href: '/customers', label: 'Clientes', icon: Users, roles: ['Administrador', 'Supervisor'] },
   { href: '/sales', label: 'Ventas Históricas', icon: History, roles: ['Administrador', 'Supervisor'] },
+  { href: '/cash-management', label: 'Gestión de Caja', icon: Wallet, roles: ['Administrador', 'Supervisor'] },
   { href: '/reports', label: 'Reportes', icon: BarChart, roles: ['Administrador'] },
   { href: '/settings', label: 'Configuración', icon: Settings, roles: ['Administrador'] },
 ];
