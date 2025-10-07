@@ -1,81 +1,262 @@
 'use client';
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useMemo } from 'react';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, ArrowUp, ArrowDown, Package, TrendingUp, TrendingDown } from 'lucide-react';
+import type { Sale, SaleItem } from '../sales/page';
+import type { Product } from '../products/components/product-dialog';
 
-const salesData = [
-  { date: '01/10', value: 4000 },
-  { date: '02/10', value: 3000 },
-  { date: '03/10', value: 2000 },
-  { date: '04/10', value: 2780 },
-  { date: '05/10', value: 1890 },
-  { date: '06/10', value: 2390 },
-  { date: '07/10', value: 3490 },
-  { date: '08/10', value: 4200 },
-  { date: '09/10', value: 3100 },
-  { date: '10/10', value: 2500 },
-];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ffc658'];
+
+const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+};
 
 export default function ReportsPage() {
+  const firestore = useFirestore();
+  const { data: sales, loading: loadingSales } = useCollection(collection(firestore, 'sales'));
+  const { data: products, loading: loadingProducts } = useCollection(collection(firestore, 'products'));
+
+  const isLoading = loadingSales || loadingProducts;
+
+  const monthlySalesData = useMemo(() => {
+    if (!sales) return { daily: [], total: 0, bestDay: null, worstDay: null };
+
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    
+    const dailySales: { date: string; value: number }[] = Array.from({ length: daysInMonth }, (_, i) => ({
+        date: `${i + 1}`,
+        value: 0
+    }));
+
+    let total = 0;
+    
+    (sales as Sale[]).forEach(sale => {
+      const saleDate = new Date(sale.createdAt.seconds * 1000);
+      if (saleDate >= monthStart) {
+        total += sale.total;
+        const dayOfMonth = saleDate.getDate();
+        dailySales[dayOfMonth - 1].value += sale.total;
+      }
+    });
+
+    const validDays = dailySales.filter(d => d.value > 0);
+    const bestDay = validDays.length > 0 ? validDays.reduce((max, day) => day.value > max.value ? day : max) : null;
+    const worstDay = validDays.length > 0 ? validDays.reduce((min, day) => day.value < min.value ? day : min) : null;
+
+    return { daily: dailySales, total, bestDay, worstDay };
+  }, [sales]);
+
+  const productSalesData = useMemo(() => {
+    if (!sales || !products) return { topProducts: [], byCategory: [] };
+
+    const productSales: { [key: string]: { name: string; quantity: number, category: string } } = {};
+
+    (sales as Sale[]).forEach(sale => {
+      sale.items.forEach(item => {
+        const productInfo = (products as Product[]).find(p => p.id === item.id);
+        if (productSales[item.id]) {
+          productSales[item.id].quantity += item.quantity;
+        } else {
+          productSales[item.id] = {
+            name: item.name,
+            quantity: item.quantity,
+            category: productInfo?.category || 'Sin categoría'
+          };
+        }
+      });
+    });
+    
+    const topProducts = Object.values(productSales)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5);
+
+    const categorySales: { [key: string]: number } = {};
+     Object.values(productSales).forEach(p => {
+        if(categorySales[p.category]){
+            categorySales[p.category] += p.quantity;
+        } else {
+            categorySales[p.category] = p.quantity;
+        }
+     });
+    
+    const byCategory = Object.keys(categorySales).map(name => ({name, value: categorySales[name]}));
+
+    return { topProducts, byCategory };
+  }, [sales, products]);
+
+  const inventoryStatus = useMemo(() => {
+    if (!products) return { lowStock: [], highStock: [] };
+    const lowStock = (products as Product[]).filter(p => p.stock <= 5 && p.status === 'Activo').sort((a,b) => a.stock - b.stock);
+    const highStock = (products as Product[]).filter(p => p.stock > 50 && p.status === 'Activo').sort((a,b) => b.stock - a.stock);
+    return { lowStock, highStock };
+  }, [products]);
+
+  if(isLoading) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div className="flex items-center">
+            <div className="h-10 w-64 bg-muted rounded-md animate-pulse" />
+            <div className="ml-auto h-10 w-24 bg-muted rounded-md animate-pulse" />
+        </div>
+        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
+          <Card className="col-span-1 lg:col-span-5"><CardHeader><div className="h-6 w-48 bg-muted rounded-md animate-pulse" /></CardHeader><CardContent><div className='h-[300px] w-full bg-muted rounded-md animate-pulse'/></CardContent></Card>
+          <div className="col-span-1 lg:col-span-2 space-y-4">
+             <Card><CardContent className='p-6'><div className='h-20 w-full bg-muted rounded-md animate-pulse'/></CardContent></Card>
+             <Card><CardContent className='p-6'><div className='h-20 w-full bg-muted rounded-md animate-pulse'/></CardContent></Card>
+             <Card><CardContent className='p-6'><div className='h-20 w-full bg-muted rounded-md animate-pulse'/></CardContent></Card>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center">
-        <h1 className="font-semibold text-4xl">Reportes</h1>
+        <h1 className="font-semibold text-4xl">Reportes de Rendimiento</h1>
         <div className="ml-auto flex items-center gap-2">
           <Button>
             <Download className="h-4 w-4 mr-2" />
-            Exportar
+            Exportar a PDF
           </Button>
         </div>
       </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
-        <Card>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-1 lg:col-span-5">
           <CardHeader>
-            <CardTitle>Ventas del Mes</CardTitle>
-            <CardDescription>Un resumen de los ingresos de ventas del mes actual.</CardDescription>
+            <CardTitle>Ventas del Mes en Curso</CardTitle>
+            <CardDescription>Resumen diario de los ingresos del mes. Total del mes: <span className='font-bold text-primary'>{formatCurrency(monthlySalesData.total)}</span></CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesData}>
+                <BarChart data={monthlySalesData.daily}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+                  <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Día del Mes', position: 'insideBottom', offset: -5 }}/>
+                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`}/>
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--background))',
-                      borderColor: 'hsl(var(--border))',
-                    }}
+                    contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }}
+                    formatter={(value) => [formatCurrency(value as number), "Ventas"]}
                   />
-                  <Legend />
-                  <Bar dataKey="value" fill="hsl(var(--primary))" name="Ventas ($)" />
+                  <Bar dataKey="value" fill="hsl(var(--primary))" name="Ventas" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
-      </div>
-      
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-            <CardHeader>
-                <CardTitle>Ventas por Producto</CardTitle>
-                <CardDescription>Análisis de los productos más vendidos.</CardDescription>
+
+        <div className="col-span-1 lg:col-span-2 space-y-4">
+          <Card>
+            <CardHeader className='pb-2'>
+              <CardTitle className="text-sm font-medium">Mejor Día de Ventas (Mes)</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className='text-sm text-muted-foreground'>Próximamente...</p>
+              {monthlySalesData.bestDay ? (
+                <>
+                  <div className="text-2xl font-bold text-green-500">{formatCurrency(monthlySalesData.bestDay.value)}</div>
+                  <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.bestDay.date} del mes.</p>
+                </>
+              ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className='pb-2'>
+              <CardTitle className="text-sm font-medium">Peor Día de Ventas (Mes)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {monthlySalesData.worstDay ? (
+                <>
+                  <div className="text-2xl font-bold text-destructive">{formatCurrency(monthlySalesData.worstDay.value)}</div>
+                  <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.worstDay.date} del mes.</p>
+                </>
+              ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+            <CardHeader>
+                <CardTitle className='flex items-center gap-2'><TrendingUp className='h-5 w-5'/> Top 5 Productos Más Vendidos</CardTitle>
+                <CardDescription>Unidades vendidas en el mes.</CardDescription>
+            </CardHeader>
+            <CardContent>
+               <div className="h-[250px]">
+                 <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={productSalesData.topProducts} layout="vertical">
+                      <XAxis type="number" hide />
+                      <YAxis type="category" dataKey="name" width={100} stroke="#888888" fontSize={12} tickLine={false} axisLine={false}/>
+                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }} formatter={(value) => [value, "Unidades"]} />
+                      <Bar dataKey="quantity" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]}/>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
             </CardContent>
         </Card>
         <Card>
             <CardHeader>
-                <CardTitle>Existencias Bajas</CardTitle>
-                <CardDescription>Productos que necesitan ser reabastecidos.</CardDescription>
+                <CardTitle>Ventas por Categoría</CardTitle>
+                <CardDescription>Distribución de unidades vendidas por categoría.</CardDescription>
+            </CardHeader>
+            <CardContent className='flex justify-center'>
+                 <div className="h-[250px] w-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie data={productSalesData.byCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                                {productSalesData.byCategory.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }}/>
+                            <Legend/>
+                        </PieChart>
+                    </ResponsiveContainer>
+                 </div>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle className='flex items-center gap-2'><Package className='h-5 w-5'/> Estado del Inventario</CardTitle>
+                <CardDescription>Productos que requieren atención.</CardDescription>
             </CardHeader>
             <CardContent>
-                <p className='text-sm text-muted-foreground'>Próximamente...</p>
+                <div className='mb-4'>
+                    <h4 className='font-semibold text-sm mb-2 flex items-center gap-2 text-destructive'><ArrowDown/>Pocas Existencias (5 o menos)</h4>
+                    {inventoryStatus.lowStock.length > 0 ? (
+                        <ul className='text-xs text-muted-foreground list-disc pl-4'>
+                            {inventoryStatus.lowStock.map(p => <li key={p.id}>{p.name} ({p.stock} uds.)</li>)}
+                        </ul>
+                    ) : <p className='text-xs text-muted-foreground'>¡Todo bien por aquí!</p>}
+                </div>
+                 <div>
+                    <h4 className='font-semibold text-sm mb-2 flex items-center gap-2 text-green-600'><ArrowUp/>Exceso de Existencias (más de 50)</h4>
+                    {inventoryStatus.highStock.length > 0 ? (
+                        <ul className='text-xs text-muted-foreground list-disc pl-4'>
+                            {inventoryStatus.highStock.map(p => <li key={p.id}>{p.name} ({p.stock} uds.)</li>)}
+                        </ul>
+                    ) : <p className='text-xs text-muted-foreground'>No hay productos con exceso de stock.</p>}
+                </div>
             </CardContent>
         </Card>
       </div>
