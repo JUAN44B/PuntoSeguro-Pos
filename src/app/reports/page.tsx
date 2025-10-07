@@ -1,8 +1,11 @@
+
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import {
   Bar,
   BarChart,
@@ -18,8 +21,8 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, ArrowUp, ArrowDown, Package, TrendingUp, TrendingDown } from 'lucide-react';
-import type { Sale, SaleItem } from '../sales/page';
+import { Download, ArrowUp, ArrowDown, Package, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
+import type { Sale } from '../sales/page';
 import type { Product } from '../products/components/product-dialog';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ffc658'];
@@ -33,7 +36,41 @@ export default function ReportsPage() {
   const { data: sales, loading: loadingSales } = useCollection(collection(firestore, 'sales'));
   const { data: products, loading: loadingProducts } = useCollection(collection(firestore, 'products'));
 
+  const reportsRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const isLoading = loadingSales || loadingProducts;
+
+  const handleExportToPdf = async () => {
+    const input = reportsRef.current;
+    if (!input) return;
+
+    setIsExporting(true);
+    try {
+        const canvas = await html2canvas(input, { 
+            scale: 2,
+            useCORS: true,
+        });
+        const imgData = canvas.toDataURL('image/png');
+        
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = imgWidth / imgHeight;
+        
+        const width = pdfWidth;
+        const height = width / ratio;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        pdf.save('reporte-rendimiento.pdf');
+    } catch(error) {
+        console.error("Error al exportar a PDF:", error);
+    } finally {
+        setIsExporting(false);
+    }
+  };
+
 
   const monthlySalesData = useMemo(() => {
     if (!sales) return { daily: [], total: 0, bestDay: null, worstDay: null };
@@ -134,133 +171,138 @@ export default function ReportsPage() {
       <div className="flex items-center">
         <h1 className="font-semibold text-4xl">Reportes de Rendimiento</h1>
         <div className="ml-auto flex items-center gap-2">
-          <Button>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar a PDF
+          <Button onClick={handleExportToPdf} disabled={isExporting}>
+            {isExporting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+                <Download className="h-4 w-4 mr-2" />
+            )}
+            {isExporting ? 'Exportando...' : 'Exportar a PDF'}
           </Button>
         </div>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-1 lg:col-span-5">
-          <CardHeader>
-            <CardTitle>Ventas del Mes en Curso</CardTitle>
-            <CardDescription>Resumen diario de los ingresos del mes. Total del mes: <span className='font-bold text-primary'>{formatCurrency(monthlySalesData.total)}</span></CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlySalesData.daily}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Día del Mes', position: 'insideBottom', offset: -5 }}/>
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`}/>
-                  <Tooltip
-                    contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }}
-                    formatter={(value) => [formatCurrency(value as number), "Ventas"]}
-                  />
-                  <Bar dataKey="value" fill="hsl(var(--primary))" name="Ventas" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="col-span-1 lg:col-span-2 space-y-4">
-          <Card>
-            <CardHeader className='pb-2'>
-              <CardTitle className="text-sm font-medium">Mejor Día de Ventas (Mes)</CardTitle>
+      <div ref={reportsRef} className='bg-background p-4'>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <Card className="col-span-1 lg:col-span-5">
+            <CardHeader>
+              <CardTitle>Ventas del Mes en Curso</CardTitle>
+              <CardDescription>Resumen diario de los ingresos del mes. Total del mes: <span className='font-bold text-primary'>{formatCurrency(monthlySalesData.total)}</span></CardDescription>
             </CardHeader>
             <CardContent>
-              {monthlySalesData.bestDay ? (
-                <>
-                  <div className="text-2xl font-bold text-green-500">{formatCurrency(monthlySalesData.bestDay.value)}</div>
-                  <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.bestDay.date} del mes.</p>
-                </>
-              ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthlySalesData.daily}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Día del Mes', position: 'insideBottom', offset: -5 }}/>
+                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`}/>
+                    <Tooltip
+                      contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }}
+                      formatter={(value) => [formatCurrency(value as number), "Ventas"]}
+                    />
+                    <Bar dataKey="value" fill="hsl(var(--primary))" name="Ventas" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
+
+          <div className="col-span-1 lg:col-span-2 space-y-4">
+            <Card>
+              <CardHeader className='pb-2'>
+                <CardTitle className="text-sm font-medium">Mejor Día de Ventas (Mes)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {monthlySalesData.bestDay ? (
+                  <>
+                    <div className="text-2xl font-bold text-green-500">{formatCurrency(monthlySalesData.bestDay.value)}</div>
+                    <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.bestDay.date} del mes.</p>
+                  </>
+                ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className='pb-2'>
+                <CardTitle className="text-sm font-medium">Peor Día de Ventas (Mes)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {monthlySalesData.worstDay ? (
+                  <>
+                    <div className="text-2xl font-bold text-destructive">{formatCurrency(monthlySalesData.worstDay.value)}</div>
+                    <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.worstDay.date} del mes.</p>
+                  </>
+                ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
           <Card>
-            <CardHeader className='pb-2'>
-              <CardTitle className="text-sm font-medium">Peor Día de Ventas (Mes)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {monthlySalesData.worstDay ? (
-                <>
-                  <div className="text-2xl font-bold text-destructive">{formatCurrency(monthlySalesData.worstDay.value)}</div>
-                  <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.worstDay.date} del mes.</p>
-                </>
-              ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
-            </CardContent>
+              <CardHeader>
+                  <CardTitle className='flex items-center gap-2'><TrendingUp className='h-5 w-5'/> Top 5 Productos Más Vendidos</CardTitle>
+                  <CardDescription>Unidades vendidas en el mes.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                 <div className="h-[250px]">
+                   <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={productSalesData.topProducts} layout="vertical">
+                        <XAxis type="number" hide />
+                        <YAxis type="category" dataKey="name" width={100} stroke="#888888" fontSize={12} tickLine={false} axisLine={false}/>
+                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }} formatter={(value) => [value, "Unidades"]} />
+                        <Bar dataKey="quantity" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]}/>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+              </CardContent>
+          </Card>
+          <Card>
+              <CardHeader>
+                  <CardTitle>Ventas por Categoría</CardTitle>
+                  <CardDescription>Distribución de unidades vendidas por categoría.</CardDescription>
+              </CardHeader>
+              <CardContent className='flex justify-center'>
+                   <div className="h-[250px] w-[250px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                              <Pie data={productSalesData.byCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                                  {productSalesData.byCategory.map((entry, index) => (
+                                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                  ))}
+                              </Pie>
+                              <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }}/>
+                              <Legend/>
+                          </PieChart>
+                      </ResponsiveContainer>
+                   </div>
+              </CardContent>
+          </Card>
+          <Card>
+              <CardHeader>
+                  <CardTitle className='flex items-center gap-2'><Package className='h-5 w-5'/> Estado del Inventario</CardTitle>
+                  <CardDescription>Productos que requieren atención.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <div className='mb-4'>
+                      <h4 className='font-semibold text-sm mb-2 flex items-center gap-2 text-destructive'><ArrowDown/>Pocas Existencias (5 o menos)</h4>
+                      {inventoryStatus.lowStock.length > 0 ? (
+                          <ul className='text-xs text-muted-foreground list-disc pl-4'>
+                              {inventoryStatus.lowStock.map(p => <li key={p.id}>{p.name} ({p.stock} uds.)</li>)}
+                          </ul>
+                      ) : <p className='text-xs text-muted-foreground'>¡Todo bien por aquí!</p>}
+                  </div>
+                   <div>
+                      <h4 className='font-semibold text-sm mb-2 flex items-center gap-2 text-green-600'><ArrowUp/>Exceso de Existencias (más de 50)</h4>
+                      {inventoryStatus.highStock.length > 0 ? (
+                          <ul className='text-xs text-muted-foreground list-disc pl-4'>
+                              {inventoryStatus.highStock.map(p => <li key={p.id}>{p.name} ({p.stock} uds.)</li>)}
+                          </ul>
+                      ) : <p className='text-xs text-muted-foreground'>No hay productos con exceso de stock.</p>}
+                  </div>
+              </CardContent>
           </Card>
         </div>
       </div>
-      
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-            <CardHeader>
-                <CardTitle className='flex items-center gap-2'><TrendingUp className='h-5 w-5'/> Top 5 Productos Más Vendidos</CardTitle>
-                <CardDescription>Unidades vendidas en el mes.</CardDescription>
-            </CardHeader>
-            <CardContent>
-               <div className="h-[250px]">
-                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={productSalesData.topProducts} layout="vertical">
-                      <XAxis type="number" hide />
-                      <YAxis type="category" dataKey="name" width={100} stroke="#888888" fontSize={12} tickLine={false} axisLine={false}/>
-                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }} formatter={(value) => [value, "Unidades"]} />
-                      <Bar dataKey="quantity" fill="hsl(var(--accent))" radius={[0, 4, 4, 0]}/>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle>Ventas por Categoría</CardTitle>
-                <CardDescription>Distribución de unidades vendidas por categoría.</CardDescription>
-            </CardHeader>
-            <CardContent className='flex justify-center'>
-                 <div className="h-[250px] w-[250px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie data={productSalesData.byCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                                {productSalesData.byCategory.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }}/>
-                            <Legend/>
-                        </PieChart>
-                    </ResponsiveContainer>
-                 </div>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader>
-                <CardTitle className='flex items-center gap-2'><Package className='h-5 w-5'/> Estado del Inventario</CardTitle>
-                <CardDescription>Productos que requieren atención.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className='mb-4'>
-                    <h4 className='font-semibold text-sm mb-2 flex items-center gap-2 text-destructive'><ArrowDown/>Pocas Existencias (5 o menos)</h4>
-                    {inventoryStatus.lowStock.length > 0 ? (
-                        <ul className='text-xs text-muted-foreground list-disc pl-4'>
-                            {inventoryStatus.lowStock.map(p => <li key={p.id}>{p.name} ({p.stock} uds.)</li>)}
-                        </ul>
-                    ) : <p className='text-xs text-muted-foreground'>¡Todo bien por aquí!</p>}
-                </div>
-                 <div>
-                    <h4 className='font-semibold text-sm mb-2 flex items-center gap-2 text-green-600'><ArrowUp/>Exceso de Existencias (más de 50)</h4>
-                    {inventoryStatus.highStock.length > 0 ? (
-                        <ul className='text-xs text-muted-foreground list-disc pl-4'>
-                            {inventoryStatus.highStock.map(p => <li key={p.id}>{p.name} ({p.stock} uds.)</li>)}
-                        </ul>
-                    ) : <p className='text-xs text-muted-foreground'>No hay productos con exceso de stock.</p>}
-                </div>
-            </CardContent>
-        </Card>
-      </div>
-
     </div>
   );
 }
