@@ -98,6 +98,20 @@
                 "difference": { "type": "number" }
             },
             "required": ["openedAt", "openingBalance", "status", "userId", "userName"]
+        },
+        "companyProfile": {
+            "title": "Company Profile",
+            "description": "Stores the company's information for receipts and general display.",
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "address": { "type": "string" },
+                "phone": { "type": "string" },
+                "email": { "type": "string" },
+                "fiscalId": { "type": "string" },
+                "receiptFooterMessage": { "type": "string" }
+            },
+            "required": ["name"]
         }
     },
     "firestore": {
@@ -124,6 +138,10 @@
         "/cashSessions/{sessionId}": {
             "schema": { "$ref": "#/entities/cashSession" },
             "description": "Stores cash register session information."
+        },
+        "/company/{profileId}": {
+            "schema": { "$ref": "#/entities/companyProfile" },
+            "description": "Stores company profile information. There should only be one document in this collection."
         }
     },
     "auth": {

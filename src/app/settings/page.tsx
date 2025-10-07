@@ -1,15 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFirestore, useCollection, useAuth } from '@/firebase';
-import { collection, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteDoc, setDoc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { UserPlus, MoreHorizontal } from 'lucide-react';
+import { UserPlus, MoreHorizontal, Building, Save, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { UserDialog, UserProfileData } from './components/user-dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 // NOTE: This implementation uses the client-side SDK to create users.
 // For enhanced security in a production environment, this operation should ideally
@@ -23,6 +26,15 @@ export type UserProfile = {
     role: 'Administrador' | 'Cajero' | 'Supervisor';
 };
 
+type CompanyProfileData = {
+    name?: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    fiscalId?: string;
+    receiptFooterMessage?: string;
+};
+
 export default function SettingsPage() {
     const firestore = useFirestore();
     const auth = useAuth(); // Use the auth instance from the provider
@@ -30,6 +42,24 @@ export default function SettingsPage() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    const [companyProfile, setCompanyProfile] = useState<CompanyProfileData>({});
+    const [loadingCompany, setLoadingCompany] = useState(true);
+    const [savingCompany, setSavingCompany] = useState(false);
+
+    useEffect(() => {
+        const fetchCompanyProfile = async () => {
+            setLoadingCompany(true);
+            const docRef = doc(firestore, 'company', 'main');
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                setCompanyProfile(docSnap.data() as CompanyProfileData);
+            }
+            setLoadingCompany(false);
+        };
+        fetchCompanyProfile();
+    }, [firestore]);
+
 
     const handleAddUser = () => {
         setEditingUser(null);
@@ -101,16 +131,84 @@ export default function SettingsPage() {
             }
         }
     };
+    
+    const handleCompanyProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { id, value } = e.target;
+        setCompanyProfile(prev => ({ ...prev, [id]: value }));
+    };
+
+    const handleSaveCompanyProfile = async () => {
+        setSavingCompany(true);
+        try {
+            const docRef = doc(firestore, 'company', 'main');
+            await setDoc(docRef, companyProfile, { merge: true });
+        } catch (error) {
+            console.error("Error saving company profile:", error);
+        } finally {
+            setSavingCompany(false);
+        }
+    };
 
 
     return (
         <div className="flex flex-col gap-8">
             <div className="flex items-center">
                 <h1 className="font-semibold text-4xl">Configuración del Sistema</h1>
-                <div className="ml-auto">
-                    <Button onClick={handleAddUser}><UserPlus className="mr-2 h-4 w-4" /> Agregar Usuario</Button>
-                </div>
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className='flex items-center gap-2'><Building className='h-5 w-5'/> Datos de la Empresa</CardTitle>
+                    <CardDescription>
+                        Esta información aparecerá en los recibos de venta y otros documentos.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {loadingCompany ? (
+                         <div className='flex justify-center items-center h-48'>
+                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="name">Nombre del Negocio</Label>
+                                    <Input id="name" value={companyProfile.name || ''} onChange={handleCompanyProfileChange} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="fiscalId">RFC / ID Fiscal</Label>
+                                    <Input id="fiscalId" value={companyProfile.fiscalId || ''} onChange={handleCompanyProfileChange} />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="address">Dirección</Label>
+                                <Input id="address" value={companyProfile.address || ''} onChange={handleCompanyProfileChange} />
+                            </div>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="phone">Teléfono</Label>
+                                    <Input id="phone" value={companyProfile.phone || ''} onChange={handleCompanyProfileChange} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Correo Electrónico</Label>
+                                    <Input id="email" type="email" value={companyProfile.email || ''} onChange={handleCompanyProfileChange} />
+                                </div>
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="receiptFooterMessage">Mensaje al Pie del Ticket</Label>
+                                <Textarea id="receiptFooterMessage" value={companyProfile.receiptFooterMessage || ''} onChange={handleCompanyProfileChange} placeholder="Ej. ¡Gracias por su compra!" />
+                            </div>
+                            <div className='flex justify-end'>
+                                <Button onClick={handleSaveCompanyProfile} disabled={savingCompany}>
+                                    {savingCompany ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                    Guardar Cambios
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
 
             <Card>
                 <CardHeader>
@@ -120,6 +218,9 @@ export default function SettingsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <div className="flex justify-end mb-4">
+                        <Button onClick={handleAddUser}><UserPlus className="mr-2 h-4 w-4" /> Agregar Usuario</Button>
+                    </div>
                     <Table>
                         <TableHeader>
                             <TableRow>
