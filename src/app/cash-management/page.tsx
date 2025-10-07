@@ -4,10 +4,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { OpenCashDrawerDialog } from './components/open-cash-drawer-dialog';
 import { CloseCashDrawerDialog } from './components/close-cash-drawer-dialog';
-import { useUser } from '@/firebase';
+import { useUser } from '@/hooks/use-user';
 import { getMockData } from '@/lib/mock-data';
 
 export type CashSession = {

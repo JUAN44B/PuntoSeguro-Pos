@@ -5,12 +5,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import Sidebar from '@/components/sidebar';
-import { FirebaseProvider } from '@/firebase/provider';
 import { ThemeProvider } from '@/components/theme-provider';
-import { useUser } from '@/firebase';
+import { useUser } from '@/hooks/use-user';
 import { useEffect } from 'react';
 import Logo from '@/components/logo';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
@@ -77,13 +75,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
         >
-          <FirebaseProvider>
-            <FirebaseErrorListener>
-              <AuthWrapper>
-                {children}
-              </AuthWrapper>
-            </FirebaseErrorListener>
-          </FirebaseProvider>
+          <AuthWrapper>
+            {children}
+          </AuthWrapper>
         </ThemeProvider>
       </body>
     </html>

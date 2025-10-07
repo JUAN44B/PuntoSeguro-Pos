@@ -11,8 +11,7 @@ export type AppUser = {
   role: 'Administrador' | 'Cajero' | 'Supervisor' | null;
 };
 
-// This hook now checks for a local session first, then would fall back to Firebase
-// but for this implementation, we are only using the local session.
+// This hook now checks for a local session first.
 export function useUser() {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);

@@ -24,7 +24,7 @@ import Image from 'next/image';
 import { PaymentDialog } from './components/payment-dialog';
 import { ReceiptDialog } from './components/receipt-dialog';
 import { DiscountDialog } from './components/discount-dialog';
-import { useUser } from '@/firebase';
+import { useUser } from '@/hooks/use-user';
 import type { Product } from '../products/components/product-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CashSession } from '../cash-management/page';

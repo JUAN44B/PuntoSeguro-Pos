@@ -7,8 +7,7 @@ import { Home, ShoppingCart, Package, Users, BarChart, Settings, Truck, Building
 import { cn } from '@/lib/utils';
 import Logo from './logo';
 import { ThemeToggle } from './theme-toggle';
-import { Separator } from './ui/separator';
-import { useUser } from '@/firebase';
+import { useUser } from '@/hooks/use-user';
 import {
   DropdownMenu,
   DropdownMenuContent,
