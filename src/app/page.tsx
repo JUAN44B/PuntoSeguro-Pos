@@ -2,14 +2,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { ArrowRight, DollarSign, PackageSearch, TrendingUp } from 'lucide-react';
 import type { Sale } from './sales/page';
 import type { Product } from './products/components/product-dialog';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { getMockData } from '@/lib/mock-data';
 
 type DailySalesData = {
   name: string;
@@ -17,9 +16,16 @@ type DailySalesData = {
 };
 
 export default function Home() {
-  const firestore = useFirestore();
-  const { data: sales, loading: loadingSales } = useCollection(collection(firestore, 'sales'));
-  const { data: products, loading: loadingProducts } = useCollection(collection(firestore, 'products'));
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const mockData = getMockData();
+    setSales(mockData.sales);
+    setProducts(mockData.products);
+    setLoading(false);
+  }, []);
 
   const [dailySales, setDailySales] = useState(0);
   const [weeklySales, setWeeklySales] = useState(0);
@@ -28,7 +34,7 @@ export default function Home() {
   const [salesChartData, setSalesChartData] = useState<DailySalesData[]>([]);
 
   useEffect(() => {
-    if (sales) {
+    if (sales.length > 0) {
       const now = new Date();
       const todayStart = new Date(now.setHours(0, 0, 0, 0));
       const weekStart = new Date(new Date().setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)));
@@ -47,7 +53,7 @@ export default function Home() {
           last7Days[dayName] = 0;
       }
 
-      (sales as Sale[]).forEach(sale => {
+      sales.forEach(sale => {
         const saleDate = new Date(sale.createdAt.seconds * 1000);
         
         if (saleDate >= todayStart) {
@@ -77,13 +83,13 @@ export default function Home() {
   }, [sales]);
 
   useEffect(() => {
-    if (products) {
-      const lowStock = (products as Product[]).filter(p => p.stock <= 5);
+    if (products.length > 0) {
+      const lowStock = products.filter(p => p.stock <= 5);
       setLowStockProducts(lowStock);
     }
   }, [products]);
   
-  const isLoading = loadingSales || loadingProducts;
+  const isLoading = loading;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);

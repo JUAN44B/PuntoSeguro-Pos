@@ -1,9 +1,8 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +23,7 @@ import {
   } from "@/components/ui/select"
 import { Upload, RefreshCw } from 'lucide-react';
 import Barcode from '@/components/barcode';
+import { getMockData } from '@/lib/mock-data';
 
 
 export type Product = {
@@ -65,8 +65,12 @@ const emptyProduct: Omit<Product, 'id' | 'image'> = {
 };
 
 export function ProductDialog({ isOpen, onOpenChange, onSave, product }: ProductDialogProps) {
-  const firestore = useFirestore();
-  const { data: categories } = useCollection(collection(firestore, 'categories'));
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    setCategories(getMockData().categories);
+  }, []);
+
   const [formData, setFormData] = useState<Omit<Product, 'id' | 'image'>>(emptyProduct);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -178,7 +182,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
                           <SelectValue placeholder="Selecciona una categoría..." />
                       </SelectTrigger>
                       <SelectContent>
-                          {(categories as Category[] || []).map(cat => (
+                          {categories.map(cat => (
                               <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                           ))}
                       </SelectContent>

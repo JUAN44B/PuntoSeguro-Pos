@@ -1,12 +1,7 @@
+
 'use client';
 
-import { useState, useMemo } from "react";
-import {
-  collection,
-  doc,
-  updateDoc
-} from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
+import { useState, useMemo, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -26,17 +21,24 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Product } from "../products/components/product-dialog";
 import { Save } from "lucide-react";
+import { getMockData } from "@/lib/mock-data";
 
 type ProductWithStock = Product & { newStock?: number };
 
 export default function InventoryPage() {
-  const firestore = useFirestore();
-  const { data: products, loading } = useCollection(collection(firestore, 'products'));
+  const [products, setProducts] = useState<ProductWithStock[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setProducts(getMockData().products);
+    setLoading(false);
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [stockData, setStockData] = useState<Record<string, number>>({});
 
   const filteredProducts = useMemo(() => {
-    const productList = (products as Product[]) || [];
+    const productList = products || [];
     if (!searchTerm) return productList;
     return productList.filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -55,19 +57,18 @@ export default function InventoryPage() {
 
   const handleSaveChanges = async (productId: string) => {
     if (stockData[productId] === undefined) return;
+    
+    // In mock mode, we just update the local state
+    setProducts(prev => prev.map(p => {
+        if (p.id === productId) {
+            return { ...p, stock: stockData[productId] };
+        }
+        return p;
+    }));
 
-    try {
-        const productRef = doc(firestore, "products", productId);
-        await updateDoc(productRef, { stock: stockData[productId] });
-        // Optional: show a success toast
-        // We can remove the local state to show the value from DB is now updated
-        const newStockData = { ...stockData };
-        delete newStockData[productId];
-        setStockData(newStockData);
-    } catch (e) {
-        console.error("Error updating stock: ", e);
-        // Optional: show an error toast
-    }
+    const newStockData = { ...stockData };
+    delete newStockData[productId];
+    setStockData(newStockData);
   };
   
   return (
@@ -80,7 +81,7 @@ export default function InventoryPage() {
             <CardHeader>
                 <CardTitle>Control de Existencias</CardTitle>
                 <CardDescription>
-                Visualiza y ajusta rápidamente las existencias de tus productos.
+                Visualiza y ajusta rápidamente las existencias de tus productos. (Modo Demo)
                 </CardDescription>
                 <Input
                   placeholder="Buscar producto por nombre o código..."

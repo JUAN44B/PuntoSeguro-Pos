@@ -1,13 +1,14 @@
+
 'use client';
 
-import { useState } from 'react';
-import { useFirestore, useCollection, useUser } from '@/firebase';
-import { collection, query, where, orderBy, limit, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { OpenCashDrawerDialog } from './components/open-cash-drawer-dialog';
 import { CloseCashDrawerDialog } from './components/close-cash-drawer-dialog';
+import { useUser } from '@/firebase';
+import { getMockData } from '@/lib/mock-data';
 
 export type CashSession = {
     id: string;
@@ -28,60 +29,60 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function CashManagementPage() {
-    const firestore = useFirestore();
     const { user, loading: userLoading } = useUser();
-    
-    // Query for the most recent cash session
-    const sessionsQuery = query(
-        collection(firestore, 'cashSessions'),
-        orderBy('openedAt', 'desc'),
-        limit(1)
-    );
-    const { data: sessions, loading: sessionsLoading, error } = useCollection(sessionsQuery);
+    const [sessions, setSessions] = useState<CashSession[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const mockData = getMockData();
+        // Get the latest session
+        const latestSession = mockData.cashSessions.sort((a,b) => b.openedAt!.seconds - a.openedAt!.seconds)[0];
+        setSessions(latestSession ? [latestSession] : []);
+        setLoading(false);
+    }, []);
 
     const [isOpening, setIsOpening] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
 
-    const activeSession = sessions.length > 0 && (sessions[0] as CashSession).status === 'abierta' ? sessions[0] as CashSession : null;
-    const lastClosedSession = sessions.length > 0 && (sessions[0] as CashSession).status === 'cerrada' ? sessions[0] as CashSession : null;
+    const activeSession = sessions.length > 0 && sessions[0].status === 'abierta' ? sessions[0] : null;
+    const lastClosedSession = sessions.length > 0 && sessions[0].status === 'cerrada' ? sessions[0] : null;
 
-    const isLoading = userLoading || sessionsLoading;
+    const isLoading = userLoading || loading;
 
     const handleOpenSession = async (openingBalance: number) => {
         if (!user) return;
-        try {
-            await addDoc(collection(firestore, 'cashSessions'), {
-                openedAt: serverTimestamp(),
-                openingBalance,
-                cashSales: 0,
-                status: 'abierta',
-                userId: user.uid,
-                userName: user.displayName,
-            });
-            setIsOpening(false);
-        } catch (error) {
-            console.error("Error opening session: ", error);
-        }
+        
+        const newSession: CashSession = {
+            id: new Date().toISOString(),
+            openedAt: { seconds: Date.now() / 1000 },
+            openingBalance,
+            cashSales: 0,
+            status: 'abierta',
+            userId: user.uid,
+            userName: user.displayName || 'Usuario',
+        };
+
+        setSessions([newSession]);
+        setIsOpening(false);
     };
 
     const handleCloseSession = async (closingBalance: number) => {
         if (!activeSession) return;
-        try {
-            const expectedBalance = activeSession.openingBalance + activeSession.cashSales;
-            const difference = closingBalance - expectedBalance;
 
-            const sessionRef = doc(firestore, 'cashSessions', activeSession.id);
-            await updateDoc(sessionRef, {
-                closedAt: serverTimestamp(),
-                closingBalance,
-                expectedBalance,
-                difference,
-                status: 'cerrada',
-            });
-            setIsClosing(false);
-        } catch (error) {
-            console.error("Error closing session: ", error);
-        }
+        const expectedBalance = activeSession.openingBalance + activeSession.cashSales;
+        const difference = closingBalance - expectedBalance;
+
+        const closedSession: CashSession = {
+            ...activeSession,
+            closedAt: { seconds: Date.now() / 1000 },
+            closingBalance,
+            expectedBalance,
+            difference,
+            status: 'cerrada',
+        };
+
+        setSessions([closedSession]);
+        setIsClosing(false);
     };
 
     return (
@@ -97,19 +98,7 @@ export default function CashManagementPage() {
                     </div>
                 )}
                 
-                {!isLoading && error && (
-                    <Card className='border-destructive'>
-                        <CardHeader>
-                            <CardTitle className='flex items-center gap-2 text-destructive'><AlertCircle/> Error</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p>Ocurrió un error al cargar los datos de la sesión de caja. Por favor, intenta de nuevo.</p>
-                            <p className='text-xs text-muted-foreground mt-2'>{error.message}</p>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {!isLoading && !error && (
+                {!isLoading && (
                     activeSession ? (
                         <Card>
                             <CardHeader>

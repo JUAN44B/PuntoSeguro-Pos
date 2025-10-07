@@ -1,9 +1,8 @@
 
+
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import {
@@ -24,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Download, ArrowUp, ArrowDown, Package, TrendingUp, TrendingDown, Loader2, Trophy } from 'lucide-react';
 import type { Sale } from '../sales/page';
 import type { Product } from '../products/components/product-dialog';
+import { getMockData } from '@/lib/mock-data';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ffc658'];
 
@@ -32,13 +32,20 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function ReportsPage() {
-  const firestore = useFirestore();
-  const { data: sales, loading: loadingSales } = useCollection(collection(firestore, 'sales'));
-  const { data: products, loading: loadingProducts } = useCollection(collection(firestore, 'products'));
+    const [sales, setSales] = useState<Sale[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const mockData = getMockData();
+        setSales(mockData.sales);
+        setProducts(mockData.products);
+        setLoading(false);
+    }, []);
 
   const reportsRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const isLoading = loadingSales || loadingProducts;
+  const isLoading = loading;
 
   const handleExportToPdf = async () => {
     const input = reportsRef.current;
@@ -73,7 +80,7 @@ export default function ReportsPage() {
 
 
   const monthlySalesData = useMemo(() => {
-    if (!sales) return { daily: [], total: 0, bestDay: null, worstDay: null };
+    if (sales.length === 0) return { daily: [], total: 0, bestDay: null, worstDay: null };
 
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -86,7 +93,7 @@ export default function ReportsPage() {
 
     let total = 0;
     
-    (sales as Sale[]).forEach(sale => {
+    sales.forEach(sale => {
       const saleDate = new Date(sale.createdAt.seconds * 1000);
       if (saleDate >= monthStart) {
         total += sale.total;
@@ -103,13 +110,13 @@ export default function ReportsPage() {
   }, [sales]);
 
   const employeeOfTheMonth = useMemo(() => {
-    if (!sales) return null;
+    if (sales.length === 0) return null;
     
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const salesByEmployee: { [key: string]: { name: string, total: number } } = {};
 
-    (sales as Sale[]).forEach(sale => {
+    sales.forEach(sale => {
         const saleDate = new Date(sale.createdAt.seconds * 1000);
         if (sale.userName && saleDate >= monthStart) {
             if (salesByEmployee[sale.userId]) {
@@ -128,13 +135,13 @@ export default function ReportsPage() {
   }, [sales]);
 
   const productSalesData = useMemo(() => {
-    if (!sales || !products) return { topProducts: [], byCategory: [] };
+    if (sales.length === 0 || products.length === 0) return { topProducts: [], byCategory: [] };
 
     const productSales: { [key: string]: { name: string; quantity: number, category: string } } = {};
 
-    (sales as Sale[]).forEach(sale => {
+    sales.forEach(sale => {
       sale.items.forEach(item => {
-        const productInfo = (products as Product[]).find(p => p.id === item.id);
+        const productInfo = products.find(p => p.id === item.id);
         if (productSales[item.id]) {
           productSales[item.id].quantity += item.quantity;
         } else {
@@ -166,9 +173,9 @@ export default function ReportsPage() {
   }, [sales, products]);
 
   const inventoryStatus = useMemo(() => {
-    if (!products) return { lowStock: [], highStock: [] };
-    const lowStock = (products as Product[]).filter(p => p.stock <= 5 && p.status === 'Activo').sort((a,b) => a.stock - b.stock);
-    const highStock = (products as Product[]).filter(p => p.stock > 50 && p.status === 'Activo').sort((a,b) => b.stock - a.stock);
+    if (products.length === 0) return { lowStock: [], highStock: [] };
+    const lowStock = products.filter(p => p.stock <= 5 && p.status === 'Activo').sort((a,b) => a.stock - b.stock);
+    const highStock = products.filter(p => p.stock > 50 && p.status === 'Activo').sort((a,b) => b.stock - a.stock);
     return { lowStock, highStock };
   }, [products]);
 
