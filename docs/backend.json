@@ -81,6 +81,30 @@
             },
             "required": ["saleId", "createdAt", "items", "total"]
         },
+        "pendingSale": {
+            "title": "Pending Sale",
+            "description": "Represents a sale that has been saved but not completed.",
+            "type": "object",
+            "properties": {
+                "savedAt": { "type": "string", "format": "date-time" },
+                "cart": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": { "type": "string" },
+                            "name": { "type": "string" },
+                            "price": { "type": "number" },
+                            "quantity": { "type": "number" },
+                            "image": { "type": "string" },
+                            "discount": { "type": "number" }
+                        },
+                        "required": ["id", "name", "price", "quantity"]
+                    }
+                }
+            },
+            "required": ["savedAt", "cart"]
+        },
         "cashSession": {
             "title": "Cash Session",
             "description": "Represents a cash register session for a user.",
@@ -134,6 +158,10 @@
         "/sales/{saleId}": {
             "schema": { "$ref": "#/entities/sale" },
             "description": "Stores completed sale transactions."
+        },
+        "/pendingSales/{pendingSaleId}": {
+            "schema": { "$ref": "#/entities/pendingSale" },
+            "description": "Stores saved sales carts that are not yet completed."
         },
         "/cashSessions/{sessionId}": {
             "schema": { "$ref": "#/entities/cashSession" },

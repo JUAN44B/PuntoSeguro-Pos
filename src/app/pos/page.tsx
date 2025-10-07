@@ -17,13 +17,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Minus, X, Search, Save, Ban, Tag, AlertCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Plus, Minus, X, Search, Save, Ban, Tag, AlertCircle, Trash2, Upload } from 'lucide-react';
 import Image from 'next/image';
 import { PaymentDialog } from './components/payment-dialog';
 import { ReceiptDialog } from './components/receipt-dialog';
 import { DiscountDialog } from './components/discount-dialog';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, serverTimestamp, doc, updateDoc, increment, query, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc, increment, query, orderBy, limit, deleteDoc } from 'firebase/firestore';
 import type { Product } from '../products/components/product-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CashSession } from '../cash-management/page';
@@ -37,6 +38,12 @@ export type CartItem = {
   image: string;
   discount: number; // Percentage discount
 };
+
+type PendingSale = {
+  id: string;
+  savedAt: { seconds: number };
+  cart: CartItem[];
+}
 
 type ProductFromDB = Product & { id: string };
 
@@ -53,6 +60,10 @@ export default function POSPage() {
   const { data: sessions } = useCollection(sessionsQuery);
   const activeSession = sessions.length > 0 && (sessions[0] as CashSession).status === 'abierta' ? sessions[0] as CashSession : null;
 
+  // Get pending sales
+  const pendingSalesQuery = query(collection(firestore, 'pendingSales'), orderBy('savedAt', 'desc'));
+  const { data: pendingSales, loading: pendingSalesLoading } = useCollection(pendingSalesQuery);
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -64,7 +75,7 @@ export default function POSPage() {
 
   useEffect(() => {
     // Clear error when cart changes
-    setPosError(null);
+    if (posError) setPosError(null);
   }, [cart]);
 
   const handleOpenPayment = () => {
@@ -101,7 +112,6 @@ export default function POSPage() {
       }
       return [...prevCart, { id: product.id, name: product.name, price: product.finalPrice, image: product.image, quantity: 1, discount: 0 }];
     });
-    setPosError(null);
   };
 
   const updateQuantity = (productId: string, amount: number) => {
@@ -146,6 +156,37 @@ export default function POSPage() {
     setCart([]);
     setPosError(null);
   }
+
+  const handleSaveSale = async () => {
+    if(cart.length === 0) {
+      setPosError('No puedes guardar una venta vacía.');
+      return;
+    }
+    try {
+        await addDoc(collection(firestore, 'pendingSales'), {
+            savedAt: serverTimestamp(),
+            cart: cart
+        });
+        cancelSale();
+    } catch(e) {
+        console.error('Error saving sale: ', e);
+        setPosError('Error al guardar la venta.');
+    }
+  }
+  
+  const handleLoadSale = async (pendingSale: PendingSale) => {
+    if (cart.length > 0) {
+        const proceed = confirm('Tienes una venta en curso. ¿Deseas reemplazarla con la venta guardada?');
+        if (!proceed) return;
+    }
+    setCart(pendingSale.cart);
+    await deleteDoc(doc(firestore, 'pendingSales', pendingSale.id));
+  };
+  
+  const handleDeletePendingSale = async (pendingSaleId: string) => {
+    await deleteDoc(doc(firestore, 'pendingSales', pendingSaleId));
+  }
+
 
   const handlePaymentSuccess = async (paymentMethod: string) => {
     const saleId = `ALIRU-${Date.now().toString().slice(-6)}`;
@@ -250,95 +291,133 @@ export default function POSPage() {
           </div>
         </div>
 
-        {/* Cart */}
+        {/* Cart and Pending Sales */}
         <div className="lg:col-span-1 bg-card border rounded-lg flex flex-col h-full shadow-lg">
-          <CardHeader>
-            <CardTitle>Venta Actual</CardTitle>
-            {posError && (
-              <Alert variant="destructive" className="mt-2">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                      {posError}
-                  </AlertDescription>
-              </Alert>
-            )}
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto px-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Producto</TableHead>
-                  <TableHead>Cant.</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                  {cart.length === 0 && (
-                      <TableRow>
-                          <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
-                              Agrega productos a la venta
-                          </TableCell>
-                      </TableRow>
-                  )}
-                  {cart.map(item => {
-                      const finalPrice = item.price * (1 - item.discount / 100);
-                      const totalItemPrice = finalPrice * item.quantity;
-                      return (
-                      <TableRow key={item.id}>
-                          <TableCell className='font-medium'>
-                            <div>{item.name}</div>
-                            {item.discount > 0 && (
-                                <div className='text-xs text-green-500'>-{item.discount}%</div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                          <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, -1)}><Minus className="h-3 w-3" /></Button>
-                              <span>{item.quantity}</span>
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-3 w-3" /></Button>
-                          </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className='flex flex-col items-end'>
-                                {item.discount > 0 && <span className='text-xs line-through text-muted-foreground'>${(item.price * item.quantity).toFixed(2)}</span>}
-                                <button onClick={() => handleDiscountClick(item)} className="font-bold flex items-center gap-1 hover:text-primary transition-colors">
-                                  ${totalItemPrice.toFixed(2)}
-                                  <Tag className='h-3 w-3' />
-                                </button>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFromCart(item.id)}><X className="h-4 w-4 text-destructive" /></Button>
-                          </TableCell>
-                      </TableRow>
-                  )})}
-              </TableBody>
-            </Table>
-          </CardContent>
-          <div className="p-6 border-t mt-auto">
-              <div className="space-y-2 mb-6">
-                  <div className="flex justify-between text-sm">
-                      <span>Subtotal</span>
-                      <span>${subtotal.toFixed(2)}</span>
+          <Tabs defaultValue="current" className="h-full flex flex-col">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="current">Venta Actual</TabsTrigger>
+              <TabsTrigger value="pending">Ventas Pendientes ({pendingSales.length})</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="current" className="flex-1 flex flex-col">
+              <CardHeader>
+                <CardTitle>Venta Actual</CardTitle>
+                {posError && (
+                  <Alert variant="destructive" className="mt-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                          {posError}
+                      </AlertDescription>
+                  </Alert>
+                )}
+              </CardHeader>
+              <CardContent className="flex-1 overflow-y-auto px-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Producto</TableHead>
+                      <TableHead>Cant.</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                      {cart.length === 0 && (
+                          <TableRow>
+                              <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
+                                  Agrega productos a la venta
+                              </TableCell>
+                          </TableRow>
+                      )}
+                      {cart.map(item => {
+                          const finalPrice = item.price * (1 - item.discount / 100);
+                          const totalItemPrice = finalPrice * item.quantity;
+                          return (
+                          <TableRow key={item.id}>
+                              <TableCell className='font-medium'>
+                                <div>{item.name}</div>
+                                {item.discount > 0 && (
+                                    <div className='text-xs text-green-500'>-{item.discount}%</div>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                              <div className="flex items-center gap-1">
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, -1)}><Minus className="h-3 w-3" /></Button>
+                                  <span>{item.quantity}</span>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, 1)}><Plus className="h-3 w-3" /></Button>
+                              </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className='flex flex-col items-end'>
+                                    {item.discount > 0 && <span className='text-xs line-through text-muted-foreground'>${(item.price * item.quantity).toFixed(2)}</span>}
+                                    <button onClick={() => handleDiscountClick(item)} className="font-bold flex items-center gap-1 hover:text-primary transition-colors">
+                                      ${totalItemPrice.toFixed(2)}
+                                      <Tag className='h-3 w-3' />
+                                    </button>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeFromCart(item.id)}><X className="h-4 w-4 text-destructive" /></Button>
+                              </TableCell>
+                          </TableRow>
+                      )})}
+                  </TableBody>
+                </Table>
+              </CardContent>
+              <div className="p-6 border-t mt-auto">
+                  <div className="space-y-2 mb-6">
+                      <div className="flex justify-between text-sm">
+                          <span>Subtotal</span>
+                          <span>${subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                          <span>IVA (16%)</span>
+                          <span>${iva.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-lg">
+                          <span>Total</span>
+                          <span>${total.toFixed(2)}</span>
+                      </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                      <span>IVA (16%)</span>
-                      <span>${iva.toFixed(2)}</span>
+                <div className="grid grid-cols-1 gap-2">
+                  <Button size="lg" className="h-14 text-lg" onClick={handleOpenPayment} disabled={cart.length === 0}>Pagar</Button>
+                  <div className='grid grid-cols-2 gap-2'>
+                      <Button variant="outline" className='gap-2' onClick={handleSaveSale} disabled={cart.length === 0}><Save className='h-4 w-4'/>Guardar Venta</Button>
+                      <Button variant="destructive" className='gap-2' onClick={cancelSale}><Ban className='h-4 w-4' />Cancelar</Button>
                   </div>
-                  <div className="flex justify-between font-bold text-lg">
-                      <span>Total</span>
-                      <span>${total.toFixed(2)}</span>
-                  </div>
+                </div>
               </div>
-            <div className="grid grid-cols-1 gap-2">
-              <Button size="lg" className="h-14 text-lg" onClick={handleOpenPayment}>Pagar</Button>
-              <div className='grid grid-cols-2 gap-2'>
-                  <Button variant="outline" className='gap-2'><Save className='h-4 w-4'/>Guardar Venta</Button>
-                  <Button variant="destructive" className='gap-2' onClick={cancelSale}><Ban className='h-4 w-4' />Cancelar</Button>
-              </div>
-            </div>
-          </div>
+            </TabsContent>
+
+            <TabsContent value="pending" className="flex-1 flex flex-col overflow-y-auto">
+              <CardHeader>
+                <CardTitle>Ventas Pendientes</CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 space-y-2">
+                {pendingSalesLoading && <p className='text-center text-muted-foreground'>Cargando...</p>}
+                {!pendingSalesLoading && (pendingSales as PendingSale[]).length === 0 && (
+                  <p className='text-center text-muted-foreground py-10'>No hay ventas guardadas.</p>
+                )}
+                {(pendingSales as PendingSale[]).map(sale => {
+                  const saleTotal = sale.cart.reduce((sum, item) => sum + (item.price * (1 - item.discount / 100) * item.quantity), 0);
+                  return (
+                    <div key={sale.id} className="border p-3 rounded-lg flex justify-between items-center">
+                        <div>
+                            <p className='font-semibold'>Total: ${saleTotal.toFixed(2)}</p>
+                            <p className='text-xs text-muted-foreground'>
+                                Guardada: {new Date(sale.savedAt.seconds * 1000).toLocaleTimeString()} | {sale.cart.length} productos
+                            </p>
+                        </div>
+                        <div className='flex gap-2'>
+                           <Button size="sm" variant="outline" className='gap-1' onClick={() => handleLoadSale(sale)}><Upload className='h-4 w-4'/> Cargar</Button>
+                           <Button size="sm" variant="ghost" className='text-destructive' onClick={() => handleDeletePendingSale(sale.id)}><Trash2 className='h-4 w-4'/> </Button>
+                        </div>
+                    </div>
+                )})}
+              </CardContent>
+            </TabsContent>
+
+          </Tabs>
         </div>
       </div>
       
