@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function Logo() {
   return (
-    <Link href="/" className="flex flex-col items-center group w-full max-w-[200px]">
+    <Link href="/" className="flex flex-col items-center group w-full max-w-[150px]">
         <div className="w-full h-auto flex items-center justify-center">
             <svg viewBox="0 0 350 150" className="h-full w-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="25" y="10" width="300" height="50" className="fill-primary" rx="5"/>
