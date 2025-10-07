@@ -41,7 +41,7 @@ export type CartItem = {
 
 type PendingSale = {
   id: string;
-  savedAt: { seconds: number };
+  savedAt: { seconds: number } | null;
   cart: CartItem[];
 }
 
@@ -405,7 +405,7 @@ export default function POSPage() {
                         <div>
                             <p className='font-semibold'>Total: ${saleTotal.toFixed(2)}</p>
                             <p className='text-xs text-muted-foreground'>
-                                Guardada: {new Date(sale.savedAt.seconds * 1000).toLocaleTimeString()} | {sale.cart.length} productos
+                                Guardada: {sale.savedAt ? new Date(sale.savedAt.seconds * 1000).toLocaleTimeString() : 'Guardando...'} | {sale.cart.length} productos
                             </p>
                         </div>
                         <div className='flex gap-2'>
