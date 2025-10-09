@@ -154,7 +154,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 pt-4 max-h-[70vh] overflow-y-auto pr-4">
+        <div className="space-y-4 pt-4 max-h-[80vh] overflow-y-auto pr-4">
             <div className="grid grid-cols-3 items-center gap-4">
               <Label className="text-right">Imagen</Label>
               <div className="col-span-2 flex items-center gap-4">
