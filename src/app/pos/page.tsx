@@ -47,6 +47,14 @@ type PendingSale = {
 
 type ProductFromDB = Product & { id: string };
 
+type LastSaleData = {
+    cart: CartItem[];
+    total: number;
+    paymentMethod: string;
+    userName: string;
+    amountReceived?: number;
+};
+
 export default function POSPage() {
   const { user } = useUser();
   const [products, setProducts] = useState<ProductFromDB[]>([]);
@@ -70,7 +78,7 @@ export default function POSPage() {
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [isDiscountOpen, setIsDiscountOpen] = useState(false);
   const [selectedCartItem, setSelectedCartItem] = useState<CartItem | null>(null);
-  const [lastSale, setLastSale] = useState<{ cart: CartItem[], total: number, paymentMethod: string, userName: string } | null>(null);
+  const [lastSale, setLastSale] = useState<LastSaleData | null>(null);
   const [posError, setPosError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -184,7 +192,7 @@ export default function POSPage() {
   }
 
 
-  const handlePaymentSuccess = async (paymentMethod: string) => {
+  const handlePaymentSuccess = async (paymentMethod: string, amountReceived?: number) => {
     if (!user) {
         setPosError('Error: No se ha podido identificar al usuario.');
         return;
@@ -193,7 +201,13 @@ export default function POSPage() {
     const saleId = `ALIRU-${Date.now().toString().slice(-6)}`;
     
     // In mock mode, just simulate success
-    setLastSale({ cart, total, paymentMethod, userName: user.displayName || 'Vendedor' });
+    setLastSale({ 
+        cart, 
+        total, 
+        paymentMethod, 
+        userName: user.displayName || 'Vendedor',
+        amountReceived
+    });
     setIsPaymentOpen(false);
     setIsReceiptOpen(true);
     

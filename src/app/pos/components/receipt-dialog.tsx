@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { CartItem } from '../page';
-import { Printer, Share2, Loader2 } from 'lucide-react';
+import { Printer, Share2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import Barcode from '@/components/barcode';
 import Logo from '@/components/logo';
 
@@ -23,6 +23,7 @@ interface ReceiptDialogProps {
     total: number;
     paymentMethod: string;
     userName: string;
+    amountReceived?: number;
   };
   saleIdFromProps?: string;
 }
@@ -46,15 +47,24 @@ const mockCompanyProfile: CompanyProfile = {
     receiptFooterMessage: "¡Gracias por su compra! (Modo Demo)",
 };
 
+const WhatsAppIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+    </svg>
+);
+
+
 export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps }: ReceiptDialogProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const saleId = saleIdFromProps || `ALIRU-${Date.now().toString().slice(-6)}`;
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setLoadingProfile(true);
+      setIsExpanded(false); // Reset to compact view
       // In demo mode, we just use the mock profile
       setTimeout(() => {
         setCompanyProfile(mockCompanyProfile);
@@ -147,14 +157,37 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
         alert('Hubo un error al generar la imagen del ticket.');
     }
   };
+
+  const handleShareOnWhatsApp = () => {
+    let message = `*Ticket de Compra - ${companyProfile?.name || 'ALIRU'}*\n`;
+    message += `Folio: ${saleId}\n`;
+    message += `Fecha: ${new Date().toLocaleString('es-MX')}\n\n`;
+    message += '*Resumen de Compra:*\n';
+
+    saleData.cart.forEach(item => {
+        const finalPrice = item.price * (1 - (item.discount || 0) / 100);
+        message += `- ${item.quantity}x ${item.name} ($${(finalPrice * item.quantity).toFixed(2)})\n`;
+    });
+
+    message += `\n*Total: $${saleData.total.toFixed(2)}*\n`;
+    if(saleData.paymentMethod === 'Efectivo' && saleData.amountReceived) {
+        message += `Monto Recibido: $${saleData.amountReceived.toFixed(2)}\n`;
+        message += `Cambio: $${(saleData.amountReceived - saleData.total).toFixed(2)}\n`;
+    }
+    message += `\n${companyProfile?.receiptFooterMessage || '¡Gracias por su compra!'}`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
   
   const getPaymentMethodName = (method: string) => {
     return method;
   }
 
-  const { cart, total, userName } = saleData;
+  const { cart, total, userName, amountReceived } = saleData;
   const subtotal = total / 1.16;
   const iva = total - subtotal;
+  const change = amountReceived ? amountReceived - total : 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -173,10 +206,14 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
                   <div className="text-center mb-4 flex flex-col items-center">
                       <Logo />
                       <p className='text-xs font-bold mt-2'>{companyProfile?.name || 'ALIRU Refacciones'}</p>
-                      <p className='text-xs'>{companyProfile?.address || 'Av. Principal #123, 00000, Ciudad, Estado'}</p>
-                      <p className='text-xs'>TLF: {companyProfile?.phone || '123 456 789'}</p>
-                      <p className='text-xs'>{companyProfile?.email || 'contacto@aliru.com'}</p>
-                      {companyProfile?.fiscalId && <p className='text-xs'>RFC: {companyProfile.fiscalId}</p>}
+                      {isExpanded && (
+                          <>
+                            <p className='text-xs'>{companyProfile?.address || 'Av. Principal #123, 00000, Ciudad, Estado'}</p>
+                            <p className='text-xs'>TLF: {companyProfile?.phone || '123 456 789'}</p>
+                            <p className='text-xs'>{companyProfile?.email || 'contacto@aliru.com'}</p>
+                            {companyProfile?.fiscalId && <p className='text-xs'>RFC: {companyProfile.fiscalId}</p>}
+                          </>
+                      )}
                   </div>
 
                   <div className="mb-4 text-xs space-y-1">
@@ -186,71 +223,101 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
                       <p>Forma de pago: {getPaymentMethodName(saleData.paymentMethod)}</p>
                   </div>
 
-                  <div className="text-xs border-t-2 border-b-2 border-black border-dashed py-1">
-                      <div className="flex justify-between font-bold">
-                          <span>PRODUCTO</span>
-                          <span>SUBTOTAL</span>
-                      </div>
+                  {isExpanded && (
+                    <>
+                        <div className="text-xs border-t-2 border-b-2 border-black border-dashed py-1">
+                            <div className="flex justify-between font-bold">
+                                <span>PRODUCTO</span>
+                                <span>SUBTOTAL</span>
+                            </div>
+                        </div>
+
+                        <div className="text-xs py-2 space-y-2">
+                            {cart.map(item => {
+                                const finalPrice = item.price * (1 - (item.discount || 0) / 100);
+                                return (
+                                <div key={item.id}>
+                                    <div className="flex justify-between">
+                                        <span className='break-all'>{item.name}</span>
+                                        <span className='pl-2'>${(finalPrice * item.quantity).toFixed(2)}</span>
+                                    </div>
+                                    <div className='text-gray-600' style={{fontSize: '10px', paddingLeft: '4px'}}>
+                                        {item.quantity} x ${finalPrice.toFixed(2)}
+                                        {item.discount > 0 && <span className='ml-2'>(-{item.discount}%)</span>}
+                                    </div>
+                                    {item.discount > 0 &&
+                                        <div className='text-gray-600' style={{fontSize: '10px', paddingLeft: '4px', textDecoration: 'line-through'}}>
+                                            Precio original: ${item.price.toFixed(2)}
+                                        </div>
+                                    }
+                                </div>
+                            )})}
+                        </div>
+                         <div className="text-xs mt-2 border-t-2 border-dashed border-black pt-2">
+                            <div className="space-y-1">
+                                <div className="flex justify-between">
+                                    <span>Subtotal:</span>
+                                    <span>${subtotal.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>IVA (16%):</span>
+                                    <span>${iva.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                  )}
+                  
+                  <div className="flex justify-between font-bold text-base mt-2 border-t border-black pt-1">
+                      <span>TOTAL:</span>
+                      <span>${total.toFixed(2)}</span>
                   </div>
 
-                  <div className="text-xs py-2 space-y-2">
-                      {cart.map(item => {
-                          const finalPrice = item.price * (1 - (item.discount || 0) / 100);
-                          return (
-                          <div key={item.id}>
-                              <div className="flex justify-between">
-                                  <span className='break-all'>{item.name}</span>
-                                  <span className='pl-2'>${(finalPrice * item.quantity).toFixed(2)}</span>
-                              </div>
-                              <div className='text-gray-600' style={{fontSize: '10px', paddingLeft: '4px'}}>
-                                  {item.quantity} x ${finalPrice.toFixed(2)}
-                                  {item.discount > 0 && <span className='ml-2'>(-{item.discount}%)</span>}
-                              </div>
-                              {item.discount > 0 &&
-                                  <div className='text-gray-600' style={{fontSize: '10px', paddingLeft: '4px', textDecoration: 'line-through'}}>
-                                      Precio original: ${item.price.toFixed(2)}
-                                  </div>
-                              }
-                          </div>
-                      )})}
-                  </div>
-
-                  <div className="text-xs mt-2 border-t-2 border-dashed border-black pt-2">
+                  {paymentMethod === 'Efectivo' && amountReceived && (
+                     <div className="text-xs mt-2 border-t border-dashed border-black pt-2">
                       <div className="space-y-1">
                           <div className="flex justify-between">
-                              <span>Subtotal:</span>
-                              <span>${subtotal.toFixed(2)}</span>
+                              <span>Monto Recibido:</span>
+                              <span>${amountReceived.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between">
-                              <span>IVA (16%):</span>
-                              <span>${iva.toFixed(2)}</span>
+                              <span>Cambio:</span>
+                              <span>${change.toFixed(2)}</span>
                           </div>
                       </div>
-                      <div className="flex justify-between font-bold text-base mt-2 border-t border-black pt-1">
-                          <span>TOTAL:</span>
-                          <span>${total.toFixed(2)}</span>
-                      </div>
                   </div>
-                  
-                  <div className="my-5 flex justify-center">
-                      <Barcode text={saleId} />
-                  </div>
+                  )}
 
-                  <footer className="text-center text-xs space-y-2">
+                  {isExpanded && (
+                    <div className="my-5 flex justify-center">
+                        <Barcode text={saleId} />
+                    </div>
+                  )}
+                  
+                  <footer className="text-center text-xs space-y-2 mt-4">
                       <p>Fue atendido por: {userName}</p>
                       <p className='font-semibold'>{companyProfile?.receiptFooterMessage || '¡Gracias por su compra!'}</p>
-                      <p>Este ticket es imprescindible para cualquier cambio o devolución.</p>
+                      {isExpanded && <p>Este ticket es imprescindible para cualquier cambio o devolución.</p>}
                   </footer>
+
+                   <button onClick={() => setIsExpanded(!isExpanded)} className='no-print w-full flex items-center justify-center text-xs text-blue-600 mt-4 gap-1'>
+                        {isExpanded ? 'Ocultar detalles' : 'Ver detalles'}
+                        {isExpanded ? <ChevronUp className='h-3 w-3'/> : <ChevronDown className='h-3 w-3'/>}
+                    </button>
               </div>
             )}
         </div>
 
-        <DialogFooter className='pt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 no-print'>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className='sm:col-span-1'>Cerrar</Button>
-            <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <DialogFooter className='pt-4 grid grid-cols-1 sm:grid-cols-1 gap-2 no-print'>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
+            <div className="grid grid-cols-3 gap-2">
+                <Button type="button" variant="secondary" onClick={handleShareOnWhatsApp} className="gap-2">
+                    <WhatsAppIcon />
+                    WhatsApp
+                </Button>
                 <Button type="button" variant="secondary" onClick={handleShareAsImage} className="gap-2">
                     <Share2 className="h-4 w-4" />
-                    Compartir
+                    Imagen
                 </Button>
                 <Button type="button" onClick={handlePrint} className="gap-2">
                     <Printer className="h-4 w-4" />

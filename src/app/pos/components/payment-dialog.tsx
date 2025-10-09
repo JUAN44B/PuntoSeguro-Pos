@@ -20,7 +20,7 @@ interface PaymentDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   totalAmount: number;
-  onPaymentSuccess: (paymentMethod: string) => void;
+  onPaymentSuccess: (paymentMethod: string, amountReceived?: number) => void;
 }
 
 const terminals = [
@@ -49,10 +49,13 @@ export function PaymentDialog({ isOpen, onOpenChange, totalAmount, onPaymentSucc
   }, [isOpen]);
 
   const handleConfirmPayment = () => {
-    let paymentMethodName = 'Efectivo';
-    if (activeTab === 'card') paymentMethodName = 'Tarjeta';
-    if (activeTab === 'transfer') paymentMethodName = 'Transferencia';
-    onPaymentSuccess(paymentMethodName);
+    if (activeTab === 'cash') {
+        onPaymentSuccess('Efectivo', Number(amountReceived));
+    } else if (activeTab === 'card') {
+        onPaymentSuccess('Tarjeta');
+    } else if (activeTab === 'transfer') {
+        onPaymentSuccess('Transferencia');
+    }
   };
 
   return (
