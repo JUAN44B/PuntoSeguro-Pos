@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { CartItem } from '../page';
-import { Printer, Share2, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Printer, Share2, Loader2 } from 'lucide-react';
 import Barcode from '@/components/barcode';
 import Logo from '@/components/logo';
 
@@ -59,12 +59,10 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
   const saleId = saleIdFromProps || `ALIRU-${Date.now().toString().slice(-6)}`;
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setLoadingProfile(true);
-      setIsExpanded(false); // Reset to compact view
       // In demo mode, we just use the mock profile
       setTimeout(() => {
         setCompanyProfile(mockCompanyProfile);
@@ -85,7 +83,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
               margin: 0;
             }
             @page {
-              size: 50mm auto;
+              size: 58mm auto;
               margin: 0;
             }
             .printable-receipt {
@@ -107,7 +105,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
           }
         `;
         
-        const printWindow = window.open('', '', 'height=600,width=400');
+        const printWindow = window.open('', '', 'height=600,width=300');
         
         if (printWindow) {
             printWindow.document.write('<html><head><title>Ticket de Venta</title>');
@@ -159,17 +157,23 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
   };
 
   const handleShareOnWhatsApp = () => {
-    let message = `*Ticket de Compra - ${companyProfile?.name || 'ALIRU'}*\n`;
-    message += `Folio: ${saleId}\n`;
+    let message = `*Ticket de Compra - ${companyProfile?.name || 'ALIRU'}*\n\n`;
+    message += `Folio: *${saleId}*\n`;
     message += `Fecha: ${new Date().toLocaleString('es-MX')}\n\n`;
-    message += '*Resumen de Compra:*\n';
-
+    message += '```------------------------------```\n';
+    message += '*RESUMEN DE COMPRA*\n';
+    
     saleData.cart.forEach(item => {
         const finalPrice = item.price * (1 - (item.discount || 0) / 100);
-        message += `- ${item.quantity}x ${item.name} ($${(finalPrice * item.quantity).toFixed(2)})\n`;
+        message += `\n${item.name}\n`;
+        message += `${item.quantity} x $${finalPrice.toFixed(2)} = $${(finalPrice * item.quantity).toFixed(2)}\n`;
     });
 
-    message += `\n*Total: $${saleData.total.toFixed(2)}*\n`;
+    message += '```------------------------------```\n\n';
+    message += `Subtotal: $${(saleData.total / 1.16).toFixed(2)}\n`;
+    message += `IVA (16%): $${(saleData.total - (saleData.total / 1.16)).toFixed(2)}\n`;
+    message += `*TOTAL: $${saleData.total.toFixed(2)}*\n\n`;
+    
     if(saleData.paymentMethod === 'Efectivo' && saleData.amountReceived) {
         message += `Monto Recibido: $${saleData.amountReceived.toFixed(2)}\n`;
         message += `Cambio: $${(saleData.amountReceived - saleData.total).toFixed(2)}\n`;
@@ -196,114 +200,76 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
           <DialogTitle>Venta Completada</DialogTitle>
         </DialogHeader>
         
-        <div className="flex justify-center overflow-y-auto">
+        <div className="overflow-y-auto max-h-[60vh]">
             {loadingProfile ? (
               <div className="h-96 flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div ref={receiptRef} className="bg-white p-4 text-black printable-receipt w-[300px]" style={{fontFamily: "'Courier New', Courier, monospace"}}>
-                  <div className="text-center mb-4 flex flex-col items-center">
-                      <Logo />
-                      <p className='text-xs font-bold mt-2'>{companyProfile?.name || 'ALIRU Refacciones'}</p>
-                      {isExpanded && (
-                          <>
-                            <p className='text-xs'>{companyProfile?.address || 'Av. Principal #123, 00000, Ciudad, Estado'}</p>
-                            <p className='text-xs'>TLF: {companyProfile?.phone || '123 456 789'}</p>
-                            <p className='text-xs'>{companyProfile?.email || 'contacto@aliru.com'}</p>
-                            {companyProfile?.fiscalId && <p className='text-xs'>RFC: {companyProfile.fiscalId}</p>}
-                          </>
-                      )}
+              <div ref={receiptRef} className="bg-white p-2 text-black printable-receipt w-full font-mono text-[10px] leading-tight">
+                  <div className="text-center mb-2 flex flex-col items-center">
+                      <div className="w-24 -ml-2">
+                        <Logo />
+                      </div>
+                      <p className='font-bold text-[11px]'>{companyProfile?.name}</p>
+                      <p>{companyProfile?.address}</p>
+                      <p>TLF: {companyProfile?.phone}</p>
+                      <p>RFC: {companyProfile?.fiscalId}</p>
                   </div>
-
-                  <div className="mb-4 text-xs space-y-1">
-                      <p>Factura simplificada</p>
-                      <p>Nº: {saleId}</p>
-                      <p>Fecha: {new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })}</p>
-                      <p>Forma de pago: {getPaymentMethodName(saleData.paymentMethod)}</p>
-                  </div>
-
-                  {isExpanded && (
-                    <>
-                        <div className="text-xs border-t-2 border-b-2 border-black border-dashed py-1">
-                            <div className="flex justify-between font-bold">
-                                <span>PRODUCTO</span>
-                                <span>SUBTOTAL</span>
-                            </div>
-                        </div>
-
-                        <div className="text-xs py-2 space-y-2">
-                            {cart.map(item => {
-                                const finalPrice = item.price * (1 - (item.discount || 0) / 100);
-                                return (
-                                <div key={item.id}>
-                                    <div className="flex justify-between">
-                                        <span className='break-all'>{item.name}</span>
-                                        <span className='pl-2'>${(finalPrice * item.quantity).toFixed(2)}</span>
-                                    </div>
-                                    <div className='text-gray-600' style={{fontSize: '10px', paddingLeft: '4px'}}>
-                                        {item.quantity} x ${finalPrice.toFixed(2)}
-                                        {item.discount > 0 && <span className='ml-2'>(-{item.discount}%)</span>}
-                                    </div>
-                                    {item.discount > 0 &&
-                                        <div className='text-gray-600' style={{fontSize: '10px', paddingLeft: '4px', textDecoration: 'line-through'}}>
-                                            Precio original: ${item.price.toFixed(2)}
-                                        </div>
-                                    }
-                                </div>
-                            )})}
-                        </div>
-                         <div className="text-xs mt-2 border-t-2 border-dashed border-black pt-2">
-                            <div className="space-y-1">
-                                <div className="flex justify-between">
-                                    <span>Subtotal:</span>
-                                    <span>${subtotal.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>IVA (16%):</span>
-                                    <span>${iva.toFixed(2)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                  )}
                   
-                  <div className="flex justify-between font-bold text-base mt-2 border-t border-black pt-1">
-                      <span>TOTAL:</span>
-                      <span>${total.toFixed(2)}</span>
+                  <div className='border-t border-b border-dashed border-black py-1 my-2'>
+                    <p>Folio: {saleId}</p>
+                    <p>Fecha: {new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })}</p>
+                    <p>Cajero: {userName}</p>
+                    <p>Forma de pago: {getPaymentMethodName(paymentMethod)}</p>
+                  </div>
+                  
+                  <table className='w-full'>
+                    <thead>
+                      <tr className='border-b border-dashed border-black'>
+                        <th className='text-left'>CANT</th>
+                        <th className='text-left'>PRODUCTO</th>
+                        <th className='text-right'>IMPORTE</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cart.map(item => {
+                        const finalPrice = item.price * (1 - (item.discount || 0) / 100);
+                        return (
+                          <tr key={item.id}>
+                            <td className='align-top'>{item.quantity}</td>
+                            <td>
+                              {item.name}
+                              {item.discount > 0 && <div className='text-gray-600'>(-{item.discount}%)</div>}
+                            </td>
+                            <td className='text-right align-top'>${(finalPrice * item.quantity).toFixed(2)}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+
+                  <div className="mt-2 border-t border-dashed border-black pt-2 text-right">
+                      <p>Subtotal: <span>${subtotal.toFixed(2)}</span></p>
+                      <p>IVA (16%): <span>${iva.toFixed(2)}</span></p>
+                      <p className='font-bold text-[12px] mt-1'>TOTAL: <span>${total.toFixed(2)}</span></p>
                   </div>
 
                   {paymentMethod === 'Efectivo' && amountReceived && (
-                     <div className="text-xs mt-2 border-t border-dashed border-black pt-2">
-                      <div className="space-y-1">
-                          <div className="flex justify-between">
-                              <span>Monto Recibido:</span>
-                              <span>${amountReceived.toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                              <span>Cambio:</span>
-                              <span>${change.toFixed(2)}</span>
-                          </div>
-                      </div>
+                     <div className="mt-2 border-t border-dashed border-black pt-2 text-right">
+                          <p>Recibido: <span>${amountReceived.toFixed(2)}</span></p>
+                          <p>Cambio: <span>${change.toFixed(2)}</span></p>
+                     </div>
+                  )}
+
+                  <div className="my-4 flex justify-center">
+                      <Barcode text={saleId} />
                   </div>
-                  )}
-
-                  {isExpanded && (
-                    <div className="my-5 flex justify-center">
-                        <Barcode text={saleId} />
-                    </div>
-                  )}
                   
-                  <footer className="text-center text-xs space-y-2 mt-4">
-                      <p>Fue atendido por: {userName}</p>
-                      <p className='font-semibold'>{companyProfile?.receiptFooterMessage || '¡Gracias por su compra!'}</p>
-                      {isExpanded && <p>Este ticket es imprescindible para cualquier cambio o devolución.</p>}
+                  <footer className="text-center space-y-1">
+                      <p className='font-semibold'>{companyProfile?.receiptFooterMessage}</p>
+                      <p>Este ticket es imprescindible para cualquier cambio o devolución.</p>
                   </footer>
-
-                   <button onClick={() => setIsExpanded(!isExpanded)} className='no-print w-full flex items-center justify-center text-xs text-blue-600 mt-4 gap-1'>
-                        {isExpanded ? 'Ocultar detalles' : 'Ver detalles'}
-                        {isExpanded ? <ChevronUp className='h-3 w-3'/> : <ChevronDown className='h-3 w-3'/>}
-                    </button>
               </div>
             )}
         </div>
@@ -313,11 +279,11 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
             <div className="grid grid-cols-3 gap-2">
                 <Button type="button" variant="secondary" onClick={handleShareOnWhatsApp} className="gap-2">
                     <WhatsAppIcon />
-                    WhatsApp
+                    <span className='hidden sm:inline'>WhatsApp</span>
                 </Button>
                 <Button type="button" variant="secondary" onClick={handleShareAsImage} className="gap-2">
                     <Share2 className="h-4 w-4" />
-                    Imagen
+                    <span className='hidden sm:inline'>Imagen</span>
                 </Button>
                 <Button type="button" onClick={handlePrint} className="gap-2">
                     <Printer className="h-4 w-4" />
