@@ -1,10 +1,12 @@
 
-
 'use client';
 
 import { useMemo, useRef, useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { DateRange } from 'react-day-picker';
+import { addDays, format, startOfMonth } from 'date-fns';
+import { es } from 'date-fns/locale';
 import {
   Bar,
   BarChart,
@@ -20,11 +22,12 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, ArrowUp, ArrowDown, Package, TrendingUp, TrendingDown, Loader2, CalendarDays } from 'lucide-react';
+import { Download, ArrowUp, ArrowDown, Package, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
 import type { Sale } from '../sales/page';
 import type { Product } from '../products/components/product-dialog';
 import { getMockData } from '@/lib/mock-data';
 import Logo from '@/components/logo';
+import { DatePickerWithRange } from '@/components/ui/date-picker-with-range';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#ffc658'];
 
@@ -36,6 +39,11 @@ export default function ReportsPage() {
     const [sales, setSales] = useState<Sale[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    
+    const [date, setDate] = useState<DateRange | undefined>({
+        from: startOfMonth(new Date()),
+        to: new Date(),
+    });
 
     useEffect(() => {
         const mockData = getMockData();
@@ -53,7 +61,6 @@ export default function ReportsPage() {
     if (!input) return;
 
     setIsExporting(true);
-    // Temporarily make it visible for capture
     input.style.display = 'block';
     
     try {
@@ -79,32 +86,63 @@ export default function ReportsPage() {
         console.error("Error al exportar a PDF:", error);
     } finally {
         setIsExporting(false);
-        // Hide it again
         input.style.display = 'none';
     }
   };
 
+  const filteredSales = useMemo(() => {
+    if (!date?.from) return [];
+    const fromDate = date.from;
+    const toDate = date.to ? date.to : fromDate;
 
-  const monthlySalesData = useMemo(() => {
-    if (sales.length === 0) return { daily: [], total: 0, bestDay: null, worstDay: null };
+    return sales.filter(sale => {
+      const saleDate = new Date(sale.createdAt.seconds * 1000);
+      return saleDate >= fromDate && saleDate <= addDays(toDate, 1);
+    });
+  }, [sales, date]);
 
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  const salesChartData = useMemo(() => {
+    if (filteredSales.length === 0 || !date?.from) return { daily: [], total: 0, bestDay: null, worstDay: null };
+
+    const from = date.from;
+    const to = date.to || from;
+    const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 3600 * 24)) + 1;
     
-    const dailySales: { date: string; value: number }[] = Array.from({ length: daysInMonth }, (_, i) => ({
-        date: `${i + 1}`,
-        value: 0
-    }));
+    const dailySales: { date: string; value: number }[] = [];
+    if (diffDays <= 31) { // Agrupar por día si el rango es de un mes o menos
+        dailySales.push(...Array.from({ length: diffDays }, (_, i) => {
+            const currentDate = addDays(from, i);
+            return {
+                date: format(currentDate, 'd MMM', { locale: es }),
+                value: 0
+            };
+        }));
+    } else { // Agrupar por mes si el rango es mayor
+        const monthSet = new Set<string>();
+        filteredSales.forEach(sale => {
+            const saleDate = new Date(sale.createdAt.seconds * 1000);
+            monthSet.add(format(saleDate, 'MMM yyyy', {locale: es}));
+        });
+        dailySales.push(...Array.from(monthSet).map(m => ({date: m, value: 0})).sort());
+    }
 
     let total = 0;
     
-    sales.forEach(sale => {
+    filteredSales.forEach(sale => {
       const saleDate = new Date(sale.createdAt.seconds * 1000);
-      if (saleDate >= monthStart) {
-        total += sale.total;
-        const dayOfMonth = saleDate.getDate();
-        dailySales[dayOfMonth - 1].value += sale.total;
+      total += sale.total;
+      
+      let key = '';
+      if(diffDays <= 31){
+          key = format(saleDate, 'd MMM', { locale: es });
+      } else {
+          key = format(saleDate, 'MMM yyyy', { locale: es });
+      }
+      
+      const dayData = dailySales.find(d => d.date === key);
+      if(dayData) {
+        dayData.value += sale.total;
       }
     });
 
@@ -113,14 +151,14 @@ export default function ReportsPage() {
     const worstDay = validDays.length > 0 ? validDays.reduce((min, day) => day.value < min.value ? day : min) : null;
 
     return { daily: dailySales, total, bestDay, worstDay };
-  }, [sales]);
+  }, [filteredSales, date]);
 
   const productSalesData = useMemo(() => {
-    if (sales.length === 0 || products.length === 0) return { topProducts: [], byCategory: [] };
+    if (filteredSales.length === 0 || products.length === 0) return { topProducts: [], byCategory: [] };
 
     const productSales: { [key: string]: { name: string; quantity: number, category: string } } = {};
 
-    sales.forEach(sale => {
+    filteredSales.forEach(sale => {
       sale.items.forEach(item => {
         const productInfo = products.find(p => p.id === item.id);
         if (productSales[item.id]) {
@@ -151,7 +189,7 @@ export default function ReportsPage() {
     const byCategory = Object.keys(categorySales).map(name => ({name, value: categorySales[name]}));
 
     return { topProducts, byCategory };
-  }, [sales, products]);
+  }, [filteredSales, products]);
 
   const inventoryStatus = useMemo(() => {
     if (products.length === 0) return { lowStock: [], highStock: [] };
@@ -159,6 +197,8 @@ export default function ReportsPage() {
     const highStock = products.filter(p => p.stock > 50 && p.status === 'Activo').sort((a,b) => b.stock - a.stock);
     return { lowStock, highStock };
   }, [products]);
+
+  const dateRangeString = date?.from ? (date.to ? `${format(date.from, "d 'de' LLLL", {locale: es})} al ${format(date.to, "d 'de' LLLL 'de' yyyy", {locale: es})}` : format(date.from, "d 'de' LLLL 'de' yyyy", {locale: es})) : "Mes actual";
 
   if(isLoading) {
     return (
@@ -182,9 +222,10 @@ export default function ReportsPage() {
   return (
     <>
       <div className="flex flex-col gap-8">
-        <div className="flex items-center">
+        <div className="flex items-center gap-4 flex-wrap">
           <h1 className="font-semibold text-4xl">Reportes de Rendimiento</h1>
           <div className="ml-auto flex items-center gap-2">
+            <DatePickerWithRange date={date} setDate={setDate} />
             <Button onClick={handleExportToPdf} disabled={isExporting}>
               {isExporting ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -196,20 +237,19 @@ export default function ReportsPage() {
           </div>
         </div>
         
-        {/* Visible Content */}
         <div className='bg-background p-4 rounded-lg border'>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-1 lg:col-span-5">
               <CardHeader>
-                <CardTitle>Ventas del Mes en Curso</CardTitle>
-                <CardDescription>Resumen diario de los ingresos del mes. Total del mes: <span className='font-bold text-primary'>{formatCurrency(monthlySalesData.total)}</span></CardDescription>
+                <CardTitle>Ventas del Periodo</CardTitle>
+                <CardDescription>Resumen de ingresos de {dateRangeString}. Total del periodo: <span className='font-bold text-primary'>{formatCurrency(salesChartData.total)}</span></CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlySalesData.daily}>
+                    <BarChart data={salesChartData.daily}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Día del Mes', position: 'insideBottom', offset: -5 }}/>
+                      <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} label={{ value: 'Fecha', position: 'insideBottom', offset: -5 }}/>
                       <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`}/>
                       <Tooltip
                         contentStyle={{ backgroundColor: 'hsl(var(--background))', borderColor: 'hsl(var(--border))' }}
@@ -225,28 +265,28 @@ export default function ReportsPage() {
             <div className="col-span-1 lg:col-span-2 space-y-4">
               <Card>
                 <CardHeader className='pb-2'>
-                  <CardTitle className="text-sm font-medium">Mejor Día de Ventas (Mes)</CardTitle>
+                  <CardTitle className="text-sm font-medium">Mejor Día/Periodo de Ventas</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {monthlySalesData.bestDay ? (
+                  {salesChartData.bestDay ? (
                     <>
-                      <div className="text-2xl font-bold text-green-500">{formatCurrency(monthlySalesData.bestDay.value)}</div>
-                      <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.bestDay.date} del mes.</p>
+                      <div className="text-2xl font-bold text-green-500">{formatCurrency(salesChartData.bestDay.value)}</div>
+                      <p className="text-xs text-muted-foreground">{salesChartData.bestDay.date}</p>
                     </>
-                  ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
+                  ) : <p className="text-sm text-muted-foreground">Sin ventas en este periodo.</p>}
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className='pb-2'>
-                  <CardTitle className="text-sm font-medium">Peor Día de Ventas (Mes)</CardTitle>
+                  <CardTitle className="text-sm font-medium">Peor Día/Periodo de Ventas</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {monthlySalesData.worstDay ? (
+                  {salesChartData.worstDay ? (
                     <>
-                      <div className="text-2xl font-bold text-destructive">{formatCurrency(monthlySalesData.worstDay.value)}</div>
-                      <p className="text-xs text-muted-foreground">Ocurrido el día {monthlySalesData.worstDay.date} del mes.</p>
+                      <div className="text-2xl font-bold text-destructive">{formatCurrency(salesChartData.worstDay.value)}</div>
+                      <p className="text-xs text-muted-foreground">{salesChartData.worstDay.date}</p>
                     </>
-                  ) : <p className="text-sm text-muted-foreground">Sin ventas este mes.</p>}
+                  ) : <p className="text-sm text-muted-foreground">Sin ventas en este periodo.</p>}
                 </CardContent>
               </Card>
             </div>
@@ -256,7 +296,7 @@ export default function ReportsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className='flex items-center gap-2'><TrendingUp className='h-5 w-5'/> Top 5 Productos Más Vendidos</CardTitle>
-                    <CardDescription>Unidades vendidas en el mes.</CardDescription>
+                    <CardDescription>Unidades vendidas en el periodo seleccionado.</CardDescription>
                 </CardHeader>
                 <CardContent>
                    <div className="h-[250px]">
@@ -274,7 +314,7 @@ export default function ReportsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Ventas por Categoría</CardTitle>
-                    <CardDescription>Distribución de unidades vendidas por categoría.</CardDescription>
+                    <CardDescription>Distribución de unidades vendidas.</CardDescription>
                 </CardHeader>
                 <CardContent className='flex justify-center'>
                      <div className="h-[250px] w-[250px]">
@@ -295,7 +335,7 @@ export default function ReportsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className='flex items-center gap-2'><Package className='h-5 w-5'/> Estado del Inventario</CardTitle>
-                    <CardDescription>Productos que requieren atención.</CardDescription>
+                    <CardDescription>Productos que requieren atención (no cambia con la fecha).</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className='mb-4'>
@@ -320,7 +360,6 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Hidden Content for PDF Export */}
       <div ref={reportsRef} style={{ display: 'none', position: 'absolute', left: '-9999px', width: '1100px' }} className="bg-white text-black p-12 font-sans">
         <header className="flex justify-between items-center pb-8 border-b-2 border-gray-200">
             <div className='w-48'>
@@ -328,32 +367,32 @@ export default function ReportsPage() {
             </div>
             <div className='text-right'>
                 <h1 className="text-4xl font-bold text-gray-800">Reporte de Rendimiento</h1>
-                <p className="text-lg text-gray-500">{new Date().toLocaleDateString('es-MX', { dateStyle: 'full' })}</p>
+                <p className="text-lg text-gray-500">{dateRangeString}</p>
             </div>
         </header>
 
         <section className="mt-10">
-            <h2 className="text-2xl font-semibold text-gray-700 border-b-2 border-primary pb-2 mb-6">Resumen del Mes</h2>
+            <h2 className="text-2xl font-semibold text-gray-700 border-b-2 border-primary pb-2 mb-6">Resumen del Periodo</h2>
             <div className="grid grid-cols-3 gap-6">
                 <div className="col-span-1 bg-blue-50 p-6 rounded-xl">
-                    <h3 className="text-md font-semibold text-blue-800">Ventas Totales del Mes</h3>
-                    <p className="text-4xl font-bold text-blue-900 mt-2">{formatCurrency(monthlySalesData.total)}</p>
+                    <h3 className="text-md font-semibold text-blue-800">Ventas Totales del Periodo</h3>
+                    <p className="text-4xl font-bold text-blue-900 mt-2">{formatCurrency(salesChartData.total)}</p>
                 </div>
                  <div className="col-span-1 bg-green-50 p-6 rounded-xl">
-                    <h3 className="text-md font-semibold text-green-800">Mejor Día de Ventas</h3>
-                    {monthlySalesData.bestDay ? (
+                    <h3 className="text-md font-semibold text-green-800">Mejor Día/Periodo</h3>
+                    {salesChartData.bestDay ? (
                         <>
-                            <p className="text-2xl font-bold text-green-900 mt-2">{formatCurrency(monthlySalesData.bestDay.value)}</p>
-                            <p className="text-sm text-green-700">Día {monthlySalesData.bestDay.date} del mes</p>
+                            <p className="text-2xl font-bold text-green-900 mt-2">{formatCurrency(salesChartData.bestDay.value)}</p>
+                            <p className="text-sm text-green-700">{salesChartData.bestDay.date}</p>
                         </>
                     ) : <p className="text-sm text-gray-500">N/A</p>}
                 </div>
                  <div className="col-span-1 bg-red-50 p-6 rounded-xl">
-                    <h3 className="text-md font-semibold text-red-800">Peor Día de Ventas</h3>
-                    {monthlySalesData.worstDay ? (
+                    <h3 className="text-md font-semibold text-red-800">Peor Día/Periodo</h3>
+                    {salesChartData.worstDay ? (
                         <>
-                            <p className="text-2xl font-bold text-red-900 mt-2">{formatCurrency(monthlySalesData.worstDay.value)}</p>
-                            <p className="text-sm text-red-700">Día {monthlySalesData.worstDay.date} del mes</p>
+                            <p className="text-2xl font-bold text-red-900 mt-2">{formatCurrency(salesChartData.worstDay.value)}</p>
+                            <p className="text-sm text-red-700">{salesChartData.worstDay.date}</p>
                         </>
                      ) : <p className="text-sm text-gray-500">N/A</p>}
                 </div>
@@ -363,9 +402,9 @@ export default function ReportsPage() {
         <section className="mt-10">
             <h2 className="text-2xl font-semibold text-gray-700 border-b-2 border-primary pb-2 mb-6">Análisis de Ventas</h2>
             <div className="h-[350px] bg-gray-50 p-6 rounded-xl">
-                <h3 className='text-lg font-semibold text-gray-600 mb-4'>Ingresos Diarios del Mes</h3>
+                <h3 className='text-lg font-semibold text-gray-600 mb-4'>Ingresos del Periodo</h3>
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlySalesData.daily}>
+                    <BarChart data={salesChartData.daily}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                         <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`}/>
