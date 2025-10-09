@@ -198,7 +198,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
               {formData.code && <div className="pt-2 flex justify-center"><Barcode text={formData.code}/></div>}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="stock">Existencia</Label>
                     <Input id="stock" type="number" value={formData.stock} onChange={handleNumberChange} />
@@ -249,4 +249,3 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
     </Dialog>
   );
 }
-
