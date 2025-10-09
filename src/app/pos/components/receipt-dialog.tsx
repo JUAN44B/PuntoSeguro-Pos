@@ -132,10 +132,12 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
             scale: 2,
             backgroundColor: '#ffffff',
             useCORS: true,
+            windowWidth: receiptElement.scrollWidth,
+            windowHeight: receiptElement.scrollHeight,
         });
         const dataUrl = canvas.toDataURL('image/png');
         const blob = await (await fetch(dataUrl)).blob();
-        const file = new File([blob], 'ticket-aliru.png', { type: 'image/png' });
+        const file = new File([blob], `ticket-${saleId}.png`, { type: 'image/png' });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
@@ -155,39 +157,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
         alert('Hubo un error al generar la imagen del ticket.');
     }
   };
-
-  const handleShareOnWhatsApp = () => {
-    let message = `*Ticket de Compra - ${companyProfile?.name || 'ALIRU'}*\n\n`;
-    message += `Folio: *${saleId}*\n`;
-    message += `Fecha: ${new Date().toLocaleString('es-MX')}\n\n`;
-    message += '```------------------------------```\n';
-    message += '*RESUMEN DE COMPRA*\n';
-    
-    saleData.cart.forEach(item => {
-        const finalPrice = item.price * (1 - (item.discount || 0) / 100);
-        message += `\n${item.name}\n`;
-        message += `${item.quantity} x $${finalPrice.toFixed(2)} = $${(finalPrice * item.quantity).toFixed(2)}\n`;
-    });
-
-    message += '```------------------------------```\n\n';
-    message += `Subtotal: $${(saleData.total / 1.16).toFixed(2)}\n`;
-    message += `IVA (16%): $${(saleData.total - (saleData.total / 1.16)).toFixed(2)}\n`;
-    message += `*TOTAL: $${saleData.total.toFixed(2)}*\n\n`;
-    
-    if(saleData.paymentMethod === 'Efectivo' && saleData.amountReceived) {
-        message += `Monto Recibido: $${saleData.amountReceived.toFixed(2)}\n`;
-        message += `Cambio: $${(saleData.amountReceived - saleData.total).toFixed(2)}\n`;
-    }
-    message += `\n${companyProfile?.receiptFooterMessage || '¡Gracias por su compra!'}`;
-
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  };
   
-  const getPaymentMethodName = (method: string) => {
-    return method;
-  }
-
   const { cart, total, paymentMethod, userName, amountReceived } = saleData;
   const subtotal = total / 1.16;
   const iva = total - subtotal;
@@ -225,7 +195,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
                     </div>
                      <div className='space-y-1 text-right'>
                         <p>Cajero: <span className='font-semibold text-foreground'>{userName}</span></p>
-                        <p>Forma de pago: <span className='font-semibold text-foreground'>{getPaymentMethodName(paymentMethod)}</span></p>
+                        <p>Forma de pago: <span className='font-semibold text-foreground'>{paymentMethod}</span></p>
                     </div>
                   </div>
 
@@ -295,14 +265,10 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
 
         <DialogFooter className='pt-4 grid grid-cols-1 sm:grid-cols-1 gap-2 no-print'>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cerrar</Button>
-            <div className="grid grid-cols-3 gap-2">
-                <Button type="button" variant="secondary" onClick={handleShareOnWhatsApp} className="gap-2">
-                    <WhatsAppIcon />
-                    <span className='hidden sm:inline'>WhatsApp</span>
-                </Button>
+            <div className="grid grid-cols-2 gap-2">
                 <Button type="button" variant="secondary" onClick={handleShareAsImage} className="gap-2">
-                    <Share2 className="h-4 w-4" />
-                    <span className='hidden sm:inline'>Compartir Imagen</span>
+                    <WhatsAppIcon />
+                    WhatsApp
                 </Button>
                 <Button type="button" onClick={handlePrint} className="gap-2">
                     <Printer className="h-4 w-4" />
