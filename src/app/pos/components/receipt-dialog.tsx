@@ -184,7 +184,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
     return method;
   }
 
-  const { cart, total, userName, amountReceived } = saleData;
+  const { cart, total, paymentMethod, userName, amountReceived } = saleData;
   const subtotal = total / 1.16;
   const iva = total - subtotal;
   const change = amountReceived ? amountReceived - total : 0;
