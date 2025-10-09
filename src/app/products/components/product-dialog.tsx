@@ -146,7 +146,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
@@ -154,95 +154,94 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 max-h-[70vh] overflow-y-auto pr-2">
-          {/* Columna Izquierda */}
-          <div className="space-y-4">
-              <div className="flex flex-col items-center gap-4">
-                  <div className="relative w-32 h-32 border rounded-md flex items-center justify-center bg-muted/40">
-                      {imagePreview ? (
-                          <Image src={imagePreview} alt="Vista previa" fill={true} objectFit="cover" className="rounded-md" />
-                      ) : (
-                          <span className="text-xs text-muted-foreground">Imagen</span>
-                      )}
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Seleccionar archivo
-                  </Button>
-                  <Input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4 max-h-[70vh] overflow-y-auto pr-4">
+          {/* Columna de Imagen */}
+          <div className="flex flex-col items-center gap-4 pt-2">
+              <div className="relative w-40 h-40 border rounded-md flex items-center justify-center bg-muted/40">
+                  {imagePreview ? (
+                      <Image src={imagePreview} alt="Vista previa" fill={true} objectFit="cover" className="rounded-md" />
+                  ) : (
+                      <span className="text-xs text-muted-foreground">Imagen</span>
+                  )}
               </div>
-              <div className="space-y-2">
-                  <Label htmlFor="name">Nombre del Producto</Label>
-                  <Input id="name" value={formData.name} onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))} />
-              </div>
-              <div className="space-y-2">
-                  <Label htmlFor="category">Categoría</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
-                      <SelectTrigger>
-                          <SelectValue placeholder="Selecciona una categoría..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                          {categories.map(cat => (
-                              <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-                          ))}
-                      </SelectContent>
-                  </Select>
-              </div>
+              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Seleccionar archivo
+              </Button>
+              <Input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
           </div>
 
-          {/* Columna Derecha */}
-          <div className="space-y-4">
-              <div className="space-y-2">
-                  <Label htmlFor="code">Código de Barras (EAN-13)</Label>
+          {/* Columnas de Formulario */}
+          <div className="md:col-span-2 space-y-4">
+            <div className="grid grid-cols-3 items-center gap-4">
+              <Label htmlFor="name" className="text-right">Nombre del Producto</Label>
+              <Input id="name" value={formData.name} onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))} className="col-span-2" />
+            </div>
+
+            <div className="grid grid-cols-3 items-center gap-4">
+              <Label htmlFor="category" className="text-right">Categoría</Label>
+               <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
+                  <SelectTrigger className="col-span-2">
+                      <SelectValue placeholder="Selecciona una categoría..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                      {categories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-3 items-start gap-4">
+              <Label htmlFor="code" className="text-right pt-2">Código de Barras</Label>
+              <div className="col-span-2">
                   <div className='flex gap-2'>
                       <Input id="code" value={formData.code} onChange={handleCodeChange} maxLength={13} placeholder="Hasta 13 dígitos numéricos" />
                       <Button variant='outline' size='icon' onClick={() => setFormData(prev => ({...prev, code: generateEAN13()}))}><RefreshCw className='h-4 w-4'/></Button>
                   </div>
                   {formData.code && <div className="pt-2"><Barcode text={formData.code}/></div>}
               </div>
+            </div>
 
-              <div className='grid grid-cols-2 gap-4'>
-                <div className="space-y-2">
-                    <Label htmlFor="stock">Existencia</Label>
-                    <Input id="stock" type="number" value={formData.stock} onChange={handleNumberChange} />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="status">Estado</Label>
-                    <Select value={formData.status} onValueChange={(value) => handleSelectChange('status', value)}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Selecciona..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Activo">Activo</SelectItem>
-                            <SelectItem value="Borrador">Borrador</SelectItem>
-                            <SelectItem value="Archivado">Archivado</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-              </div>
-              
-              <div className='p-4 border rounded-md space-y-4 bg-muted/20'>
-                  <h4 className='font-medium text-sm text-muted-foreground'>Cálculo de Precios</h4>
-                  <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                          <Label htmlFor="purchasePrice">P. Compra</Label>
-                          <Input id="purchasePrice" type="number" value={formData.purchasePrice} onChange={handleNumberChange} placeholder="$" />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="discount">Descuento</Label>
-                          <Input id="discount" type="number" value={formData.discount} onChange={handleNumberChange} placeholder="%" />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="profitMargin">Ganancia</Label>
-                          <Input id="profitMargin" type="number" value={formData.profitMargin} onChange={handleNumberChange} placeholder="%" />
-                      </div>
-                  </div>
-              </div>
+            <div className="grid grid-cols-3 items-center gap-4">
+                <Label htmlFor="stock" className="text-right">Existencia</Label>
+                <Input id="stock" type="number" value={formData.stock} onChange={handleNumberChange} className="col-span-2" />
+            </div>
 
-              <div className="space-y-2">
-                  <Label htmlFor="finalPrice">Precio de Venta Final (Automático)</Label>
-                  <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={(e) => setFormData(prev => ({...prev, finalPrice: Number(e.target.value)}))} className='border-primary border-2 text-lg font-bold text-center' />
-              </div>
+            <div className="grid grid-cols-3 items-center gap-4">
+                <Label htmlFor="status" className="text-right">Estado</Label>
+                <Select value={formData.status} onValueChange={(value) => handleSelectChange('status', value)}>
+                    <SelectTrigger className="col-span-2">
+                        <SelectValue placeholder="Selecciona..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Activo">Activo</SelectItem>
+                        <SelectItem value="Borrador">Borrador</SelectItem>
+                        <SelectItem value="Archivado">Archivado</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            
+            <div className='p-4 border rounded-md space-y-4 bg-muted/20 mt-6'>
+                <h4 className='font-medium text-center text-sm text-muted-foreground mb-4'>Cálculo de Precios</h4>
+                <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="purchasePrice" className="text-right">Precio Compra</Label>
+                    <Input id="purchasePrice" type="number" value={formData.purchasePrice} onChange={handleNumberChange} placeholder="$" className="col-span-2" />
+                </div>
+                <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="discount" className="text-right">Descuento (%)</Label>
+                    <Input id="discount" type="number" value={formData.discount} onChange={handleNumberChange} placeholder="%" className="col-span-2" />
+                </div>
+                <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="profitMargin" className="text-right">Ganancia (%)</Label>
+                    <Input id="profitMargin" type="number" value={formData.profitMargin} onChange={handleNumberChange} placeholder="%" className="col-span-2" />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-3 items-center gap-4 mt-6">
+                <Label htmlFor="finalPrice" className="text-right text-base">Precio Venta Final</Label>
+                <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={(e) => setFormData(prev => ({...prev, finalPrice: Number(e.target.value)}))} className='col-span-2 border-primary border-2 text-lg font-bold' />
+            </div>
           </div>
         </div>
 
@@ -254,3 +253,5 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
     </Dialog>
   );
 }
+
+    
