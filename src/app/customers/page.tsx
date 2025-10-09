@@ -110,11 +110,11 @@ export default function CustomersPage() {
                     <TableHead>Nombre</TableHead>
                     <TableHead>Teléfono</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead className="hidden md:table-cell">Dirección</TableHead>
+                    <TableHead>Dirección</TableHead>
                     <TableHead>RFC</TableHead>
-                    <TableHead className="hidden md:table-cell">C.P.</TableHead>
-                    <TableHead className="hidden lg:table-cell">Uso CFDI</TableHead>
-                    <TableHead className="hidden lg:table-cell">Régimen Fiscal</TableHead>
+                    <TableHead>C.P.</TableHead>
+                    <TableHead>Uso CFDI</TableHead>
+                    <TableHead>Régimen Fiscal</TableHead>
                     <TableHead>
                         <span className="sr-only">Acciones</span>
                     </TableHead>
@@ -139,19 +139,19 @@ export default function CustomersPage() {
                               <TableCell>
                                   {customer.email}
                               </TableCell>
-                              <TableCell className="hidden md:table-cell">
+                              <TableCell>
                                   {customer.address}
                               </TableCell>
                               <TableCell>
                                   {customer.rfc}
                               </TableCell>
-                              <TableCell className="hidden md:table-cell">
+                              <TableCell>
                                 {customer.postalCode}
                               </TableCell>
-                              <TableCell className="hidden lg:table-cell">
+                              <TableCell>
                                 {customer.cfdiUse}
                               </TableCell>
-                              <TableCell className="hidden lg:table-cell">
+                              <TableCell>
                                 {customer.taxRegime}
                               </TableCell>
                               <TableCell>
