@@ -154,7 +154,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 max-h-[70vh] overflow-y-auto pr-2">
           {/* Columna Izquierda */}
           <div className="space-y-4">
               <div className="flex flex-col items-center gap-4">
@@ -246,7 +246,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
           </div>
         </div>
 
-        <DialogFooter className='mt-4'>
+        <DialogFooter className='mt-4 pt-4 border-t'>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button type="submit" onClick={handleSubmit}>Guardar Cambios</Button>
         </DialogFooter>
