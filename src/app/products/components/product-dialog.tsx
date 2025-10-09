@@ -107,14 +107,6 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
     return parseFloat(calculatedPrice.toFixed(2));
   };
 
-  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    // Allow only numbers and limit to 13 digits
-    if (/^\d*$/.test(value) && value.length <= 13) {
-      setFormData(prev => ({ ...prev, code: value }));
-    }
-  };
-
   const handleSelectChange = (id: keyof Omit<Product, 'id' | 'image'>, value: string) => {
     setFormData(prev => ({...prev, [id]: value}));
   }
@@ -124,6 +116,11 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
     const newFormData = { ...formData, [id]: Number(value) };
     const newFinalPrice = calculateFinalPrice(newFormData);
     setFormData({ ...newFormData, finalPrice: newFinalPrice });
+  };
+  
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,7 +143,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
@@ -154,10 +151,10 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 pt-4 max-h-[80vh] overflow-y-auto pr-4">
-            <div className="grid grid-cols-3 items-center gap-4">
-              <Label className="text-right">Imagen</Label>
-              <div className="col-span-2 flex items-center gap-4">
+        <div className="space-y-4 pt-4 max-h-[70vh] overflow-y-auto pr-4">
+            <div className="space-y-2">
+              <Label>Imagen</Label>
+              <div className="flex items-center gap-4">
                 <div className="relative w-24 h-24 border rounded-md flex items-center justify-center bg-muted/40 shrink-0">
                     {imagePreview ? (
                         <Image src={imagePreview} alt="Vista previa" fill={true} objectFit="cover" className="rounded-md" />
@@ -173,15 +170,15 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
               </div>
             </div>
             
-            <div className="grid grid-cols-3 items-center gap-4">
-              <Label htmlFor="name" className="text-right">Nombre del Producto</Label>
-              <Input id="name" value={formData.name} onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))} className="col-span-2" />
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre del Producto</Label>
+              <Input id="name" value={formData.name} onChange={handleTextChange} />
             </div>
 
-            <div className="grid grid-cols-3 items-center gap-4">
-              <Label htmlFor="category" className="text-right">Categoría</Label>
+            <div className="space-y-2">
+              <Label htmlFor="category">Categoría</Label>
                <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
-                  <SelectTrigger className="col-span-2">
+                  <SelectTrigger>
                       <SelectValue placeholder="Selecciona una categoría..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -192,55 +189,55 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
               </Select>
             </div>
 
-            <div className="grid grid-cols-3 items-start gap-4">
-              <Label htmlFor="code" className="text-right pt-2">Código de Barras</Label>
-              <div className="col-span-2">
-                  <div className='flex gap-2'>
-                      <Input id="code" value={formData.code} onChange={handleCodeChange} maxLength={13} placeholder="Hasta 13 dígitos numéricos" />
-                      <Button variant='outline' size='icon' onClick={() => setFormData(prev => ({...prev, code: generateEAN13()}))}><RefreshCw className='h-4 w-4'/></Button>
-                  </div>
-                  {formData.code && <div className="pt-2"><Barcode text={formData.code}/></div>}
+            <div className="space-y-2">
+              <Label htmlFor="code">Código de Barras</Label>
+              <div className='flex gap-2'>
+                  <Input id="code" value={formData.code} onChange={handleTextChange} maxLength={13} placeholder="Hasta 13 dígitos numéricos" />
+                  <Button variant='outline' size='icon' onClick={() => setFormData(prev => ({...prev, code: generateEAN13()}))}><RefreshCw className='h-4 w-4'/></Button>
               </div>
+              {formData.code && <div className="pt-2 flex justify-center"><Barcode text={formData.code}/></div>}
             </div>
 
-            <div className="grid grid-cols-3 items-center gap-4">
-                <Label htmlFor="stock" className="text-right">Existencia</Label>
-                <Input id="stock" type="number" value={formData.stock} onChange={handleNumberChange} className="col-span-2" />
-            </div>
-
-            <div className="grid grid-cols-3 items-center gap-4">
-                <Label htmlFor="status" className="text-right">Estado</Label>
-                <Select value={formData.status} onValueChange={(value) => handleSelectChange('status', value)}>
-                    <SelectTrigger className="col-span-2">
-                        <SelectValue placeholder="Selecciona..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Activo">Activo</SelectItem>
-                        <SelectItem value="Borrador">Borrador</SelectItem>
-                        <SelectItem value="Archivado">Archivado</SelectItem>
-                    </SelectContent>
-                </Select>
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="stock">Existencia</Label>
+                    <Input id="stock" type="number" value={formData.stock} onChange={handleNumberChange} />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="status">Estado</Label>
+                    <Select value={formData.status} onValueChange={(value) => handleSelectChange('status', value)}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Selecciona..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Activo">Activo</SelectItem>
+                            <SelectItem value="Borrador">Borrador</SelectItem>
+                            <SelectItem value="Archivado">Archivado</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
             
-            <div className='p-4 border rounded-md space-y-4 bg-muted/20 mt-6'>
-                <h4 className='font-medium text-center text-sm text-muted-foreground mb-4'>Cálculo de Precios</h4>
-                <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="purchasePrice" className="text-right">Precio Compra</Label>
-                    <Input id="purchasePrice" type="number" value={formData.purchasePrice} onChange={handleNumberChange} placeholder="$" className="col-span-2" />
+            <div className='p-4 border rounded-md space-y-4 bg-muted/20 mt-4'>
+                <h4 className='font-medium text-center text-sm text-muted-foreground'>Cálculo de Precios</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="purchasePrice">P. Compra</Label>
+                        <Input id="purchasePrice" type="number" value={formData.purchasePrice} onChange={handleNumberChange} placeholder="$" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="discount">Desc. (%)</Label>
+                        <Input id="discount" type="number" value={formData.discount} onChange={handleNumberChange} placeholder="%" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="profitMargin">Ganancia (%)</Label>
+                        <Input id="profitMargin" type="number" value={formData.profitMargin} onChange={handleNumberChange} placeholder="%" />
+                    </div>
                 </div>
-                <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="discount" className="text-right">Descuento (%)</Label>
-                    <Input id="discount" type="number" value={formData.discount} onChange={handleNumberChange} placeholder="%" className="col-span-2" />
+                <div className="space-y-2 mt-4">
+                    <Label htmlFor="finalPrice" className="text-base">Precio Venta Final</Label>
+                    <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={(e) => setFormData(prev => ({...prev, finalPrice: Number(e.target.value)}))} className='border-primary border-2 text-lg font-bold' />
                 </div>
-                <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="profitMargin" className="text-right">Ganancia (%)</Label>
-                    <Input id="profitMargin" type="number" value={formData.profitMargin} onChange={handleNumberChange} placeholder="%" className="col-span-2" />
-                </div>
-            </div>
-
-            <div className="grid grid-cols-3 items-center gap-4 mt-6">
-                <Label htmlFor="finalPrice" className="text-right text-base">Precio Venta Final</Label>
-                <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={(e) => setFormData(prev => ({...prev, finalPrice: Number(e.target.value)}))} className='col-span-2 border-primary border-2 text-lg font-bold' />
             </div>
         </div>
 
@@ -252,3 +249,4 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
     </Dialog>
   );
 }
+
