@@ -47,7 +47,8 @@ export default function CustomersPage() {
     if (!searchTerm) return customers;
     return customers.filter(customer =>
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (customer.phone && customer.phone.toLowerCase().includes(searchTerm.toLowerCase()))
+      (customer.phone && customer.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (customer.rfc && customer.rfc.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [customers, searchTerm]);
 
@@ -96,7 +97,7 @@ export default function CustomersPage() {
                 Administra la información de tus clientes. (Modo Demo)
                 </CardDescription>
                 <Input
-                  placeholder="Buscar cliente por nombre o teléfono..."
+                  placeholder="Buscar cliente por nombre, RFC o teléfono..."
                   className="max-w-sm mt-4"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -107,6 +108,7 @@ export default function CustomersPage() {
                 <TableHeader>
                     <TableRow>
                     <TableHead>Nombre</TableHead>
+                    <TableHead>RFC</TableHead>
                     <TableHead>Teléfono</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>
@@ -117,7 +119,7 @@ export default function CustomersPage() {
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center">
+                            <TableCell colSpan={5} className="h-24 text-center">
                             Cargando clientes...
                             </TableCell>
                         </TableRow>
@@ -126,6 +128,9 @@ export default function CustomersPage() {
                           <TableRow key={customer.id}>
                               <TableCell className="font-medium">
                                   {customer.name}
+                              </TableCell>
+                              <TableCell>
+                                  {customer.rfc}
                               </TableCell>
                               <TableCell>
                                   {customer.phone}
@@ -156,7 +161,7 @@ export default function CustomersPage() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center">
+                        <TableCell colSpan={5} className="h-24 text-center">
                           No se encontraron clientes. Comienza agregando uno nuevo.
                         </TableCell>
                       </TableRow>

@@ -24,9 +24,9 @@ export const MOCK_CATEGORIES: Category[] = [
 ];
 
 export const MOCK_CUSTOMERS: Customer[] = [
-    { id: '1', name: 'Juan Pérez', phone: '55-1234-5678', email: 'juan.perez@example.com', address: 'Av. Siempre Viva 742' },
-    { id: '2', name: 'Maria García', phone: '81-8765-4321', email: 'maria.garcia@example.com', address: 'Calle Falsa 123' },
-    { id: '3', name: 'Carlos Sánchez', phone: '33-9876-5432', email: 'carlos.sanchez@example.com', address: 'Privada del Roble 45' },
+    { id: '1', name: 'Juan Pérez', phone: '55-1234-5678', email: 'juan.perez@example.com', address: 'Av. Siempre Viva 742', rfc: 'PEJU800101XYZ', postalCode: '01000', cfdiUse: 'G03', taxRegime: '612' },
+    { id: '2', name: 'Maria García', phone: '81-8765-4321', email: 'maria.garcia@example.com', address: 'Calle Falsa 123', rfc: 'GAGM850202ABC', postalCode: '64000', cfdiUse: 'G01', taxRegime: '626' },
+    { id: '3', name: 'Refacciones El Piston S.A. de C.V.', phone: '33-9876-5432', email: 'compras@elpiston.com', address: 'Parque Industrial Roble 45', rfc: 'RPI010203CDE', postalCode: '45010', cfdiUse: 'G01', taxRegime: '601' },
 ];
 
 export const MOCK_SALES: Sale[] = [
