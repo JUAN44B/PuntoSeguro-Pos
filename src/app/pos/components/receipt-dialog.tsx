@@ -274,7 +274,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
                             <span className='text-muted-foreground'>Recibido</span>
                             <span>${amountReceived.toFixed(2)}</span>
                           </div>
-                           <div className='flex justify-between'>
+                           <div className='flex justify-between font-semibold'>
                             <span className='text-muted-foreground'>Cambio</span>
                             <span className='font-bold'>${change.toFixed(2)}</span>
                           </div>
@@ -302,7 +302,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
                 </Button>
                 <Button type="button" variant="secondary" onClick={handleShareAsImage} className="gap-2">
                     <Share2 className="h-4 w-4" />
-                    <span className='hidden sm:inline'>Imagen</span>
+                    <span className='hidden sm:inline'>Compartir Imagen</span>
                 </Button>
                 <Button type="button" onClick={handlePrint} className="gap-2">
                     <Printer className="h-4 w-4" />
