@@ -60,7 +60,7 @@ export default function ReportsPage() {
         const canvas = await html2canvas(input, { 
             scale: 2,
             useCORS: true,
-            backgroundColor: null, // Use transparent background
+            backgroundColor: '#ffffff',
         });
         const imgData = canvas.toDataURL('image/png');
         
@@ -339,12 +339,12 @@ export default function ReportsPage() {
                     <h3 className="text-md font-semibold text-blue-800">Ventas Totales del Mes</h3>
                     <p className="text-4xl font-bold text-blue-900 mt-2">{formatCurrency(monthlySalesData.total)}</p>
                 </div>
-                 <div className="col-span-1 bg-lime-50 p-6 rounded-xl">
-                    <h3 className="text-md font-semibold text-lime-800">Mejor Día de Ventas</h3>
+                 <div className="col-span-1 bg-green-50 p-6 rounded-xl">
+                    <h3 className="text-md font-semibold text-green-800">Mejor Día de Ventas</h3>
                     {monthlySalesData.bestDay ? (
                         <>
-                            <p className="text-2xl font-bold text-lime-900 mt-2">{formatCurrency(monthlySalesData.bestDay.value)}</p>
-                            <p className="text-sm text-lime-700">Día {monthlySalesData.bestDay.date} del mes</p>
+                            <p className="text-2xl font-bold text-green-900 mt-2">{formatCurrency(monthlySalesData.bestDay.value)}</p>
+                            <p className="text-sm text-green-700">Día {monthlySalesData.bestDay.date} del mes</p>
                         </>
                     ) : <p className="text-sm text-gray-500">N/A</p>}
                 </div>
@@ -410,6 +410,28 @@ export default function ReportsPage() {
                 </div>
              </div>
         </section>
+        
+        <section className='mt-10'>
+          <h2 className="text-2xl font-semibold text-gray-700 border-b-2 border-primary pb-2 mb-6">Análisis de Inventario</h2>
+            <div className='grid grid-cols-2 gap-8'>
+               <div className='bg-red-50 p-6 rounded-xl'>
+                 <h3 className='text-lg font-semibold text-red-800 mb-4'>Productos con Pocas Existencias</h3>
+                  {inventoryStatus.lowStock.length > 0 ? (
+                      <ul className='text-sm text-gray-700 list-disc pl-5 space-y-1'>
+                          {inventoryStatus.lowStock.map(p => <li key={p.id}>{p.name} <strong>({p.stock} uds.)</strong></li>)}
+                      </ul>
+                  ) : <p className='text-sm text-gray-500'>No hay productos con pocas existencias.</p>}
+               </div>
+               <div className='bg-green-50 p-6 rounded-xl'>
+                 <h3 className='text-lg font-semibold text-green-800 mb-4'>Productos con Exceso de Existencias</h3>
+                  {inventoryStatus.highStock.length > 0 ? (
+                      <ul className='text-sm text-gray-700 list-disc pl-5 space-y-1'>
+                          {inventoryStatus.highStock.map(p => <li key={p.id}>{p.name} <strong>({p.stock} uds.)</strong></li>)}
+                      </ul>
+                  ) : <p className='text-sm text-gray-500'>No hay productos con exceso de stock.</p>}
+               </div>
+            </div>
+        </section>
 
         <footer className="mt-12 pt-6 border-t-2 border-gray-200 text-center">
             <p className="text-sm text-gray-500">Reporte generado por ALIRU POS System</p>
@@ -418,7 +440,3 @@ export default function ReportsPage() {
     </>
   );
 }
-
-    
-
-    
