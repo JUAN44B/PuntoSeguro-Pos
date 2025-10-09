@@ -108,9 +108,13 @@ export default function CustomersPage() {
                 <TableHeader>
                     <TableRow>
                     <TableHead>Nombre</TableHead>
-                    <TableHead>RFC</TableHead>
                     <TableHead>Teléfono</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead className="hidden md:table-cell">Dirección</TableHead>
+                    <TableHead>RFC</TableHead>
+                    <TableHead className="hidden md:table-cell">C.P.</TableHead>
+                    <TableHead className="hidden lg:table-cell">Uso CFDI</TableHead>
+                    <TableHead className="hidden lg:table-cell">Régimen Fiscal</TableHead>
                     <TableHead>
                         <span className="sr-only">Acciones</span>
                     </TableHead>
@@ -119,7 +123,7 @@ export default function CustomersPage() {
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={5} className="h-24 text-center">
+                            <TableCell colSpan={9} className="h-24 text-center">
                             Cargando clientes...
                             </TableCell>
                         </TableRow>
@@ -130,13 +134,25 @@ export default function CustomersPage() {
                                   {customer.name}
                               </TableCell>
                               <TableCell>
-                                  {customer.rfc}
-                              </TableCell>
-                              <TableCell>
                                   {customer.phone}
                               </TableCell>
                               <TableCell>
                                   {customer.email}
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                  {customer.address}
+                              </TableCell>
+                              <TableCell>
+                                  {customer.rfc}
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                {customer.postalCode}
+                              </TableCell>
+                              <TableCell className="hidden lg:table-cell">
+                                {customer.cfdiUse}
+                              </TableCell>
+                              <TableCell className="hidden lg:table-cell">
+                                {customer.taxRegime}
                               </TableCell>
                               <TableCell>
                                   <DropdownMenu>
@@ -161,7 +177,7 @@ export default function CustomersPage() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">
+                        <TableCell colSpan={9} className="h-24 text-center">
                           No se encontraron clientes. Comienza agregando uno nuevo.
                         </TableCell>
                       </TableRow>
