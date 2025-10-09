@@ -146,7 +146,7 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
@@ -154,25 +154,25 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4 max-h-[70vh] overflow-y-auto pr-4">
-          {/* Columna de Imagen */}
-          <div className="flex flex-col items-center gap-4 pt-2">
-              <div className="relative w-40 h-40 border rounded-md flex items-center justify-center bg-muted/40">
-                  {imagePreview ? (
-                      <Image src={imagePreview} alt="Vista previa" fill={true} objectFit="cover" className="rounded-md" />
-                  ) : (
-                      <span className="text-xs text-muted-foreground">Imagen</span>
-                  )}
+        <div className="space-y-4 pt-4 max-h-[70vh] overflow-y-auto pr-4">
+            <div className="grid grid-cols-3 items-center gap-4">
+              <Label className="text-right">Imagen</Label>
+              <div className="col-span-2 flex items-center gap-4">
+                <div className="relative w-24 h-24 border rounded-md flex items-center justify-center bg-muted/40 shrink-0">
+                    {imagePreview ? (
+                        <Image src={imagePreview} alt="Vista previa" fill={true} objectFit="cover" className="rounded-md" />
+                    ) : (
+                        <span className="text-xs text-muted-foreground text-center">Sin Imagen</span>
+                    )}
+                </div>
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Seleccionar...
+                </Button>
+                <Input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
               </div>
-              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Seleccionar archivo
-              </Button>
-              <Input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
-          </div>
-
-          {/* Columnas de Formulario */}
-          <div className="md:col-span-2 space-y-4">
+            </div>
+            
             <div className="grid grid-cols-3 items-center gap-4">
               <Label htmlFor="name" className="text-right">Nombre del Producto</Label>
               <Input id="name" value={formData.name} onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))} className="col-span-2" />
@@ -242,7 +242,6 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
                 <Label htmlFor="finalPrice" className="text-right text-base">Precio Venta Final</Label>
                 <Input id="finalPrice" type="number" value={formData.finalPrice} onChange={(e) => setFormData(prev => ({...prev, finalPrice: Number(e.target.value)}))} className='col-span-2 border-primary border-2 text-lg font-bold' />
             </div>
-          </div>
         </div>
 
         <DialogFooter className='mt-4 pt-4 border-t'>
@@ -253,5 +252,3 @@ export function ProductDialog({ isOpen, onOpenChange, onSave, product }: Product
     </Dialog>
   );
 }
-
-    
