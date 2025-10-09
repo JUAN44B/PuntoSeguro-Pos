@@ -102,6 +102,13 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
             .no-print {
                 display: none;
             }
+            .receipt-logo svg text, .receipt-logo svg path, .receipt-logo svg g {
+                fill: #000 !important;
+            }
+            .receipt-primary {
+                 background-color: #000 !important;
+                 color: #fff !important;
+            }
           }
         `;
         
@@ -170,52 +177,52 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
           <DialogTitle>Venta Completada</DialogTitle>
         </DialogHeader>
         
-        <div className="overflow-y-auto max-h-[70vh] printable-receipt">
+        <div className="overflow-y-auto max-h-[70vh] bg-gray-100 dark:bg-gray-800 p-2 rounded-lg printable-receipt">
             {loadingProfile ? (
               <div className="h-96 flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div ref={receiptRef} className="bg-background p-4 rounded-lg">
-                  <div className="text-center mb-6">
+              <div ref={receiptRef} className="bg-white text-black p-4 rounded-lg shadow-sm">
+                  <div className="text-center mb-6 receipt-logo">
                       <div className="w-32 mx-auto mb-2">
                         <Logo />
                       </div>
                       <p className='font-bold text-lg'>{companyProfile?.name}</p>
-                      <p className='text-xs text-muted-foreground'>{companyProfile?.address}</p>
-                      <p className='text-xs text-muted-foreground'>RFC: {companyProfile?.fiscalId}</p>
+                      <p className='text-xs text-gray-600'>{companyProfile?.address}</p>
+                      <p className='text-xs text-gray-600'>RFC: {companyProfile?.fiscalId}</p>
                   </div>
                   
-                  <Separator className="my-4" />
+                  <Separator className="my-4 bg-gray-300" />
 
-                  <div className='grid grid-cols-2 gap-2 text-xs text-muted-foreground mb-4'>
+                  <div className='grid grid-cols-2 gap-2 text-xs text-gray-600 mb-4'>
                     <div className='space-y-1'>
-                        <p>Folio: <span className='font-semibold text-foreground'>{saleId}</span></p>
-                        <p>Fecha: <span className='font-semibold text-foreground'>{new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })}</span></p>
+                        <p>Folio: <span className='font-semibold text-black'>{saleId}</span></p>
+                        <p>Fecha: <span className='font-semibold text-black'>{new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })}</span></p>
                     </div>
                      <div className='space-y-1 text-right'>
-                        <p>Cajero: <span className='font-semibold text-foreground'>{userName}</span></p>
-                        <p>Forma de pago: <span className='font-semibold text-foreground'>{paymentMethod}</span></p>
+                        <p>Cajero: <span className='font-semibold text-black'>{userName}</span></p>
+                        <p>Forma de pago: <span className='font-semibold text-black'>{paymentMethod}</span></p>
                     </div>
                   </div>
 
-                  <div className='border rounded-lg'>
-                     <div className='p-3 bg-muted/30 rounded-t-lg'>
-                        <h4 className='font-semibold text-sm'>Resumen de la Compra</h4>
+                  <div className='border border-gray-200 rounded-lg'>
+                     <div className='p-3 bg-gray-50 rounded-t-lg'>
+                        <h4 className='font-semibold text-sm text-gray-800'>Resumen de la Compra</h4>
                      </div>
                      <div className='p-3 space-y-3 text-sm'>
                         {cart.map(item => {
                             const finalPrice = item.price * (1 - (item.discount || 0) / 100);
                             return (
-                              <div key={item.id} className="flex justify-between items-center">
+                              <div key={item.id} className="flex justify-between items-center border-b border-gray-100 py-2">
                                 <div>
-                                    <p className='font-medium'>{item.name}</p>
-                                    <p className='text-xs text-muted-foreground'>
+                                    <p className='font-medium text-black'>{item.name}</p>
+                                    <p className='text-xs text-gray-500'>
                                         {item.quantity} x ${finalPrice.toFixed(2)}
-                                        {item.discount > 0 && <span className='ml-2 text-green-500'>({item.discount}% off)</span>}
+                                        {item.discount > 0 && <span className='ml-2 text-green-600'>({item.discount}% off)</span>}
                                     </p>
                                 </div>
-                                <p className='font-semibold'>${(finalPrice * item.quantity).toFixed(2)}</p>
+                                <p className='font-semibold text-black'>${(finalPrice * item.quantity).toFixed(2)}</p>
                               </div>
                             )
                         })}
@@ -224,16 +231,16 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
 
                   <div className="mt-4 space-y-2 text-sm">
                       <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>Subtotal</span>
-                        <span>${subtotal.toFixed(2)}</span>
+                        <span className='text-gray-600'>Subtotal</span>
+                        <span className='text-black'>${subtotal.toFixed(2)}</span>
                       </div>
                        <div className='flex justify-between'>
-                        <span className='text-muted-foreground'>IVA (16%)</span>
-                        <span>${iva.toFixed(2)}</span>
+                        <span className='text-gray-600'>IVA (16%)</span>
+                        <span className='text-black'>${iva.toFixed(2)}</span>
                       </div>
                   </div>
                   
-                  <div className='mt-4 p-4 bg-primary text-primary-foreground rounded-lg flex justify-between items-center'>
+                  <div className='mt-4 p-4 bg-primary text-primary-foreground rounded-lg flex justify-between items-center receipt-primary'>
                      <span className='font-bold text-lg'>TOTAL</span>
                      <span className='font-bold text-2xl'>${total.toFixed(2)}</span>
                   </div>
@@ -241,12 +248,12 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
                   {paymentMethod === 'Efectivo' && amountReceived && (
                      <div className="mt-4 space-y-2 text-sm">
                           <div className='flex justify-between'>
-                            <span className='text-muted-foreground'>Recibido</span>
-                            <span>${amountReceived.toFixed(2)}</span>
+                            <span className='text-gray-600'>Recibido</span>
+                            <span className='text-black'>${amountReceived.toFixed(2)}</span>
                           </div>
                            <div className='flex justify-between font-semibold'>
-                            <span className='text-muted-foreground'>Cambio</span>
-                            <span className='font-bold'>${change.toFixed(2)}</span>
+                            <span className='text-gray-600'>Cambio</span>
+                            <span className='font-bold text-black'>${change.toFixed(2)}</span>
                           </div>
                      </div>
                   )}
@@ -255,8 +262,8 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
                       <Barcode text={saleId} />
                   </div>
                   
-                  <footer className="text-center text-xs text-muted-foreground space-y-1">
-                      <p className='font-semibold text-foreground'>{companyProfile?.receiptFooterMessage}</p>
+                  <footer className="text-center text-xs text-gray-500 space-y-1">
+                      <p className='font-semibold text-gray-700'>{companyProfile?.receiptFooterMessage}</p>
                       <p>Este ticket es imprescindible para cualquier cambio o devolución.</p>
                   </footer>
               </div>
