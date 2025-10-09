@@ -14,6 +14,7 @@ import type { CartItem } from '../page';
 import { Printer, Share2, Loader2 } from 'lucide-react';
 import Barcode from '@/components/barcode';
 import Logo from '@/components/logo';
+import { Separator } from '@/components/ui/separator';
 
 interface ReceiptDialogProps {
   isOpen: boolean;
@@ -83,17 +84,15 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
               margin: 0;
             }
             @page {
-              size: 58mm auto;
+              size: 80mm auto;
               margin: 0;
             }
             .printable-receipt {
-              font-family: 'monospace', 'Menlo', 'Consolas', 'Courier New', monospace;
               width: 100%;
-              padding: 2mm;
+              padding: 4mm;
               color: #000;
               background-color: #fff;
-              font-size: 8px;
-              line-height: 1.4;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             }
             .printable-receipt * {
               color: #000 !important;
@@ -105,7 +104,7 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
           }
         `;
         
-        const printWindow = window.open('', '', 'height=600,width=300');
+        const printWindow = window.open('', '', 'height=800,width=400');
         
         if (printWindow) {
             printWindow.document.write('<html><head><title>Ticket de Venta</title>');
@@ -195,79 +194,98 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xs bg-slate-50">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Venta Completada</DialogTitle>
         </DialogHeader>
         
-        <div className="overflow-y-auto max-h-[60vh]">
+        <div className="overflow-y-auto max-h-[70vh] printable-receipt">
             {loadingProfile ? (
               <div className="h-96 flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div ref={receiptRef} className="bg-white p-2 text-black printable-receipt w-full font-mono text-[10px] leading-tight">
-                  <div className="text-center mb-2 flex flex-col items-center">
-                      <div className="w-24 -ml-2">
+              <div ref={receiptRef} className="bg-background p-4 rounded-lg">
+                  <div className="text-center mb-6">
+                      <div className="w-32 mx-auto mb-2">
                         <Logo />
                       </div>
-                      <p className='font-bold text-[11px]'>{companyProfile?.name}</p>
-                      <p>{companyProfile?.address}</p>
-                      <p>TLF: {companyProfile?.phone}</p>
-                      <p>RFC: {companyProfile?.fiscalId}</p>
+                      <p className='font-bold text-lg'>{companyProfile?.name}</p>
+                      <p className='text-xs text-muted-foreground'>{companyProfile?.address}</p>
+                      <p className='text-xs text-muted-foreground'>RFC: {companyProfile?.fiscalId}</p>
                   </div>
                   
-                  <div className='border-t border-b border-dashed border-black py-1 my-2'>
-                    <p>Folio: {saleId}</p>
-                    <p>Fecha: {new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })}</p>
-                    <p>Cajero: {userName}</p>
-                    <p>Forma de pago: {getPaymentMethodName(paymentMethod)}</p>
-                  </div>
-                  
-                  <table className='w-full'>
-                    <thead>
-                      <tr className='border-b border-dashed border-black'>
-                        <th className='text-left'>CANT</th>
-                        <th className='text-left'>PRODUCTO</th>
-                        <th className='text-right'>IMPORTE</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {cart.map(item => {
-                        const finalPrice = item.price * (1 - (item.discount || 0) / 100);
-                        return (
-                          <tr key={item.id}>
-                            <td className='align-top'>{item.quantity}</td>
-                            <td>
-                              {item.name}
-                              {item.discount > 0 && <div className='text-gray-600'>(-{item.discount}%)</div>}
-                            </td>
-                            <td className='text-right align-top'>${(finalPrice * item.quantity).toFixed(2)}</td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+                  <Separator className="my-4" />
 
-                  <div className="mt-2 border-t border-dashed border-black pt-2 text-right">
-                      <p>Subtotal: <span>${subtotal.toFixed(2)}</span></p>
-                      <p>IVA (16%): <span>${iva.toFixed(2)}</span></p>
-                      <p className='font-bold text-[12px] mt-1'>TOTAL: <span>${total.toFixed(2)}</span></p>
+                  <div className='grid grid-cols-2 gap-2 text-xs text-muted-foreground mb-4'>
+                    <div className='space-y-1'>
+                        <p>Folio: <span className='font-semibold text-foreground'>{saleId}</span></p>
+                        <p>Fecha: <span className='font-semibold text-foreground'>{new Date().toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'medium' })}</span></p>
+                    </div>
+                     <div className='space-y-1 text-right'>
+                        <p>Cajero: <span className='font-semibold text-foreground'>{userName}</span></p>
+                        <p>Forma de pago: <span className='font-semibold text-foreground'>{getPaymentMethodName(paymentMethod)}</span></p>
+                    </div>
+                  </div>
+
+                  <div className='border rounded-lg'>
+                     <div className='p-3 bg-muted/30 rounded-t-lg'>
+                        <h4 className='font-semibold text-sm'>Resumen de la Compra</h4>
+                     </div>
+                     <div className='p-3 space-y-3 text-sm'>
+                        {cart.map(item => {
+                            const finalPrice = item.price * (1 - (item.discount || 0) / 100);
+                            return (
+                              <div key={item.id} className="flex justify-between items-center">
+                                <div>
+                                    <p className='font-medium'>{item.name}</p>
+                                    <p className='text-xs text-muted-foreground'>
+                                        {item.quantity} x ${finalPrice.toFixed(2)}
+                                        {item.discount > 0 && <span className='ml-2 text-green-500'>({item.discount}% off)</span>}
+                                    </p>
+                                </div>
+                                <p className='font-semibold'>${(finalPrice * item.quantity).toFixed(2)}</p>
+                              </div>
+                            )
+                        })}
+                     </div>
+                  </div>
+
+                  <div className="mt-4 space-y-2 text-sm">
+                      <div className='flex justify-between'>
+                        <span className='text-muted-foreground'>Subtotal</span>
+                        <span>${subtotal.toFixed(2)}</span>
+                      </div>
+                       <div className='flex justify-between'>
+                        <span className='text-muted-foreground'>IVA (16%)</span>
+                        <span>${iva.toFixed(2)}</span>
+                      </div>
+                  </div>
+                  
+                  <div className='mt-4 p-4 bg-primary text-primary-foreground rounded-lg flex justify-between items-center'>
+                     <span className='font-bold text-lg'>TOTAL</span>
+                     <span className='font-bold text-2xl'>${total.toFixed(2)}</span>
                   </div>
 
                   {paymentMethod === 'Efectivo' && amountReceived && (
-                     <div className="mt-2 border-t border-dashed border-black pt-2 text-right">
-                          <p>Recibido: <span>${amountReceived.toFixed(2)}</span></p>
-                          <p>Cambio: <span>${change.toFixed(2)}</span></p>
+                     <div className="mt-4 space-y-2 text-sm">
+                          <div className='flex justify-between'>
+                            <span className='text-muted-foreground'>Recibido</span>
+                            <span>${amountReceived.toFixed(2)}</span>
+                          </div>
+                           <div className='flex justify-between'>
+                            <span className='text-muted-foreground'>Cambio</span>
+                            <span className='font-bold'>${change.toFixed(2)}</span>
+                          </div>
                      </div>
                   )}
 
-                  <div className="my-4 flex justify-center">
+                  <div className="my-6 flex justify-center">
                       <Barcode text={saleId} />
                   </div>
                   
-                  <footer className="text-center space-y-1">
-                      <p className='font-semibold'>{companyProfile?.receiptFooterMessage}</p>
+                  <footer className="text-center text-xs text-muted-foreground space-y-1">
+                      <p className='font-semibold text-foreground'>{companyProfile?.receiptFooterMessage}</p>
                       <p>Este ticket es imprescindible para cualquier cambio o devolución.</p>
                   </footer>
               </div>
