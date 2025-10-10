@@ -4,6 +4,7 @@ import type { Customer } from '@/app/customers/components/customer-dialog';
 import type { Sale } from '@/app/sales/page';
 import type { UserProfile } from '@/app/settings/page';
 import type { CashSession } from '@/app/cash-management/page';
+import type { Supplier } from '@/app/suppliers/components/supplier-dialog';
 
 export const MOCK_PRODUCTS: Product[] = [
     { id: '1', code: '7501055312345', name: 'Aceite Motor 15W-40', category: 'Lubricantes', purchasePrice: 120, discount: 0, profitMargin: 30, finalPrice: 185.6, stock: 25, status: 'Activo', image: 'https://picsum.photos/seed/prod1/100/100' },
@@ -45,6 +46,13 @@ export const MOCK_CASH_SESSIONS: CashSession[] = [
     { id: '1', openedAt: { seconds: new Date('2023-10-26T09:00:00Z').getTime() / 1000 }, closedAt: null, openingBalance: 1500, cashSales: 934.96, status: 'abierta', userId: 'local-admin', userName: 'Admin Local' }
 ]
 
+export const MOCK_SUPPLIERS: Supplier[] = [
+    { id: '1', name: 'Proveedor de Lubricantes S.A.', contactName: 'Carlos Martinez', phone: '55-5555-1111', email: 'carlos.m@lubricantes.com', rfc: 'LSA010101AAA', address: 'Parque Industrial Norte 1' },
+    { id: '2', name: 'Filtros y Partes Nacionales', contactName: 'Ana Gomez', phone: '81-8181-2222', email: 'ana.g@filtros.com', rfc: 'FPN020202BBB', address: 'Av. Industria 456' },
+    { id: '3', name: 'Frenos Seguros de México', contactName: 'Pedro Ramirez', phone: '33-3333-4444', email: 'pedro.r@frenos.com', rfc: 'FSM030303CCC', address: 'Calle Seguridad 789' },
+];
+
+
 // Function to get a fresh copy of mock data to simulate non-persistence
 export const getMockData = () => ({
     products: JSON.parse(JSON.stringify(MOCK_PRODUCTS)),
@@ -53,4 +61,5 @@ export const getMockData = () => ({
     sales: JSON.parse(JSON.stringify(MOCK_SALES)),
     users: JSON.parse(JSON.stringify(MOCK_USERS)),
     cashSessions: JSON.parse(JSON.stringify(MOCK_CASH_SESSIONS)),
+    suppliers: JSON.parse(JSON.stringify(MOCK_SUPPLIERS)),
 });

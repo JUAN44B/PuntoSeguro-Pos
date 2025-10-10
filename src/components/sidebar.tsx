@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -23,8 +22,9 @@ const allNavItems = [
   { href: '/pos', label: 'Ventas / Caja', icon: ShoppingCart, roles: ['Administrador', 'Supervisor', 'Cajero'] },
   { href: '/products', label: 'Productos', icon: Package, roles: ['Administrador', 'Supervisor'] },
   { href: '/categories', label: 'Categorías', icon: Building, roles: ['Administrador', 'Supervisor'] },
-  { href: '/inventory', label: 'Inventario', icon: Truck, roles: ['Administrador', 'Supervisor'] },
+  { href: '/inventory', label: 'Inventario', icon: Package, roles: ['Administrador', 'Supervisor'] },
   { href: '/customers', label: 'Clientes', icon: Users, roles: ['Administrador', 'Supervisor'] },
+  { href: '/suppliers', label: 'Proveedores', icon: Truck, roles: ['Administrador', 'Supervisor'] },
   { href: '/sales', label: 'Ventas Históricas', icon: History, roles: ['Administrador', 'Supervisor'] },
   { href: '/cash-management', label: 'Gestión de Caja', icon: Wallet, roles: ['Administrador', 'Supervisor'] },
   { href: '/reports', label: 'Reportes', icon: BarChart, roles: ['Administrador'] },
