@@ -137,11 +137,37 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
     try {
         const canvas = await html2canvas(receiptElement, {
             scale: 2,
-            backgroundColor: '#ffffff',
+            backgroundColor: '#ffffff', // Force white background
             useCORS: true,
-            windowWidth: receiptElement.scrollWidth,
-            windowHeight: receiptElement.scrollHeight,
+            onclone: (document) => {
+              // On the cloned document, force styles for dark mode elements
+              const clonedReceipt = document.querySelector('.receipt-force-light');
+              if (clonedReceipt) {
+                const elements = clonedReceipt.querySelectorAll('*');
+                elements.forEach((el) => {
+                  const htmlEl = el as HTMLElement;
+                  htmlEl.style.color = '#000';
+                  // Force stroke and fill for SVGs
+                  if (el.tagName === 'svg' || el.parentElement?.tagName === 'svg') {
+                      htmlEl.style.fill = '#000';
+                      htmlEl.style.stroke = '#000';
+                  }
+                });
+                const logoText = clonedReceipt.querySelectorAll('.receipt-logo svg text');
+                logoText.forEach(t => (t as HTMLElement).style.fill = '#fff');
+                
+                const logoPrimaryBg = clonedReceipt.querySelector('.receipt-logo svg rect');
+                if(logoPrimaryBg) (logoPrimaryBg as HTMLElement).style.fill = 'hsl(var(--primary))';
+
+                const primaryBgElements = clonedReceipt.querySelectorAll('.receipt-primary');
+                primaryBgElements.forEach(el => {
+                    (el as HTMLElement).style.backgroundColor = 'hsl(var(--primary))';
+                    (el as HTMLElement).style.color = 'hsl(var(--primary-foreground))';
+                });
+              }
+            }
         });
+
         const dataUrl = canvas.toDataURL('image/png');
         const blob = await (await fetch(dataUrl)).blob();
         const file = new File([blob], `ticket-${saleId}.png`, { type: 'image/png' });
@@ -177,18 +203,18 @@ export function ReceiptDialog({ isOpen, onOpenChange, saleData, saleIdFromProps 
           <DialogTitle>Venta Completada</DialogTitle>
         </DialogHeader>
         
-        <div className="overflow-y-auto max-h-[70vh] bg-gray-100 dark:bg-gray-800 p-2 rounded-lg printable-receipt">
+        <div className="overflow-y-auto max-h-[70vh] bg-muted/30 p-2 rounded-lg printable-receipt">
             {loadingProfile ? (
               <div className="h-96 flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div ref={receiptRef} className="bg-white text-black p-4 rounded-lg shadow-sm">
+              <div ref={receiptRef} className="bg-white text-black p-4 rounded-lg shadow-sm receipt-force-light">
                   <div className="text-center mb-6 receipt-logo">
                       <div className="w-32 mx-auto mb-2">
                         <Logo />
                       </div>
-                      <p className='font-bold text-lg'>{companyProfile?.name}</p>
+                      <p className='font-bold text-lg text-black'>{companyProfile?.name}</p>
                       <p className='text-xs text-gray-600'>{companyProfile?.address}</p>
                       <p className='text-xs text-gray-600'>RFC: {companyProfile?.fiscalId}</p>
                   </div>
