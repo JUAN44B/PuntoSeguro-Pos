@@ -3,14 +3,6 @@
 
 import { useState, useMemo, useEffect } from "react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter
-} from "@/components/ui/card"
-import {
   Table,
   TableBody,
   TableCell,
@@ -218,34 +210,35 @@ export default function ProductsPage() {
               )}
           </TableBody>
           </Table>
-          <div className="flex items-center justify-between border-t p-4">
-              <span className="text-sm text-muted-foreground">
-                  Mostrando {paginatedProducts.length} de {filteredProducts.length} productos
-              </span>
-              <div className="flex items-center gap-2">
-                  <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handlePrevPage}
-                      disabled={page <= 1}
-                  >
-                      <ChevronLeft className="h-4 w-4 mr-1" />
-                      Anterior
-                  </Button>
-                   <span className="text-sm font-medium">
-                      {page} / {totalPages}
-                  </span>
-                  <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleNextPage}
-                      disabled={page >= totalPages}
-                  >
-                      Siguiente
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-              </div>
-          </div>
+        </div>
+
+        <div className="flex items-center justify-between mt-6">
+            <span className="text-sm text-muted-foreground">
+                Mostrando {paginatedProducts.length} de {filteredProducts.length} productos
+            </span>
+            <div className="flex items-center gap-2">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrevPage}
+                    disabled={page <= 1}
+                >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Anterior
+                </Button>
+                  <span className="text-sm font-medium">
+                    {page} / {totalPages}
+                </span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={page >= totalPages}
+                >
+                    Siguiente
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+            </div>
         </div>
 
         <ProductDialog
